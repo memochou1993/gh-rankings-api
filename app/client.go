@@ -5,28 +5,37 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/memochou1993/github-rankings/app/collection"
+	"github.com/memochou1993/github-rankings/app/model"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Client struct {
-	Endpoint string
-	Token    string
-	Client   *http.Client
+	Client *http.Client
 }
 
 type Query struct {
 	Query string `json:"query"`
 }
 
-func (c *Client) FetchUsers(ctx context.Context) (collection.Users, error) {
-	response := collection.Users{}
-	err := c.fetch(ctx, c.readQuery("users"), &response)
+func (c *Client) GetClient() *http.Client {
+	if c.Client != nil {
+		return c.Client
+	}
 
-	return response, err
+	c.Client = http.DefaultClient
+
+	return c.Client
+}
+
+func (c *Client) SearchUsers(ctx context.Context) (model.SearchUsers, error) {
+	data := model.SearchUsers{}
+	err := c.fetch(ctx, c.readQuery("search_users"), &data)
+
+	return data, err
 }
 
 func (c *Client) fetch(ctx context.Context, q []byte, v interface{}) error {
@@ -52,19 +61,19 @@ func (c *Client) fetch(ctx context.Context, q []byte, v interface{}) error {
 }
 
 func (c *Client) post(ctx context.Context, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodPost, c.Endpoint, body)
+	req, err := http.NewRequest(http.MethodPost, os.Getenv("API_URL"), body)
 
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Token))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("API_TOKEN")))
 
-	return c.Client.Do(req.WithContext(ctx))
+	return c.GetClient().Do(req.WithContext(ctx))
 }
 
 func (c *Client) readQuery(name string) []byte {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/collection/%s.graphql", name))
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/model/%s.graphql", name))
 
 	if err != nil {
 		log.Fatal(err.Error())

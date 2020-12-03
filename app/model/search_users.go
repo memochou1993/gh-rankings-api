@@ -1,9 +1,9 @@
-package collection
+package model
 
-type Users struct {
+type SearchUsers struct {
 	Data struct {
 		Search struct {
-			UserCount int `json:"userCount"`
+			UserCount int `json:"userCount" bson:"userCount"`
 			Edges     []struct {
 				Cursor string `json:"cursor"`
 				Node   struct {
