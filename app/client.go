@@ -31,8 +31,8 @@ func (c *Client) GetClient() *http.Client {
 	return c.Client
 }
 
-func (c *Client) SearchUsers(ctx context.Context) (model.SearchUsers, error) {
-	data := model.SearchUsers{}
+func (c *Client) SearchUsers(ctx context.Context) (model.SearchedUsers, error) {
+	data := model.SearchedUsers{}
 	err := c.fetch(ctx, c.readQuery("search_users"), &data)
 
 	return data, err
@@ -73,7 +73,7 @@ func (c *Client) post(ctx context.Context, body io.Reader) (*http.Response, erro
 }
 
 func (c *Client) readQuery(name string) []byte {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/model/%s.graphql", name))
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", name))
 
 	if err != nil {
 		log.Fatal(err.Error())

@@ -35,7 +35,7 @@ func (d *Database) getClient() *mongo.Client {
 	return d.Client
 }
 
-func (d *Database) StoreSearchUsers(users model.SearchUsers) (*mongo.InsertManyResult, error) {
+func (d *Database) StoreSearchedUsers(users model.SearchedUsers) (*mongo.InsertManyResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 

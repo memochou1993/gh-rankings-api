@@ -1,6 +1,6 @@
 package model
 
-type SearchUsers struct {
+type SearchedUsers struct {
 	Data struct {
 		Search struct {
 			UserCount int `json:"userCount" bson:"userCount"`
