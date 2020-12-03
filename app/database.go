@@ -42,10 +42,32 @@ func (d *Database) StoreSearchUsers(users model.SearchUsers) (*mongo.InsertManyR
 	var items []interface{}
 
 	for _, user := range users.Data.Search.Edges {
-		items = append(items, bson.M{"name": user.Node.Login})
+		items = append(items, bson.M{
+			"id":   user.Node.ID,
+			"name": user.Node.Login,
+		})
 	}
 
 	return d.getCollection("users").InsertMany(ctx, items)
+}
+
+func (d *Database) CreateIndexes(collection string, keys []string) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	c := d.getCollection(collection)
+
+	var models []mongo.IndexModel
+
+	for _, key := range keys {
+		models = append(models, mongo.IndexModel{
+			Keys:    bson.M{key: 1},
+			Options: options.Index().SetName(key),
+		})
+	}
+
+	opts := options.CreateIndexes().SetMaxTime(10 * time.Second)
+	return c.Indexes().CreateMany(ctx, models, opts)
 }
 
 func (d *Database) getCollection(name string) *mongo.Collection {

@@ -17,6 +17,7 @@ func main() {
 
 	database := app.Database{}
 	_, err = database.StoreSearchUsers(users)
+	_, err = database.CreateIndexes("users", []string{"name"})
 
 	if err != nil {
 		log.Println(err.Error())

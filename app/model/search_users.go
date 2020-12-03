@@ -7,6 +7,7 @@ type SearchUsers struct {
 			Edges     []struct {
 				Cursor string `json:"cursor"`
 				Node   struct {
+					ID    string `json:"id"`
 					Login string `json:"login"`
 				} `json:"node"`
 			} `json:"edges"`
