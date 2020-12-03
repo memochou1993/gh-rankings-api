@@ -1,0 +1,18 @@
+query Users {
+  search(query: "repos:>=5 followers:>=10", type: USER, first: 100) {
+    userCount
+    edges {
+      cursor
+      node {
+        ... on User {
+          login
+        }
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+      startCursor
+    }
+  }
+}
