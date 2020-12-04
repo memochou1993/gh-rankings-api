@@ -35,10 +35,37 @@ func (d *Database) getClient() *mongo.Client {
 	return d.Client
 }
 
-func (d *Database) StoreSearchedUsers(users model.SearchedUsers) (*mongo.InsertManyResult, error) {
+func (d *Database) CollectUsers() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
+	count, err := d.getCollection("users").CountDocuments(ctx, bson.M{})
+
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	client := Client{}
+	users, err := client.SearchUsers(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if _, err := d.StoreSearchedUsers(ctx, users); err != nil {
+		return err
+	}
+
+	_, err = d.CreateIndexes(ctx, "users", []string{"name"})
+
+	return err
+}
+
+func (d *Database) StoreSearchedUsers(ctx context.Context, users model.SearchedUsers) (*mongo.InsertManyResult, error) {
 	var items []interface{}
 
 	for _, user := range users.Data.Search.Edges {
@@ -51,10 +78,7 @@ func (d *Database) StoreSearchedUsers(users model.SearchedUsers) (*mongo.InsertM
 	return d.getCollection("users").InsertMany(ctx, items)
 }
 
-func (d *Database) CreateIndexes(collection string, keys []string) ([]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+func (d *Database) CreateIndexes(ctx context.Context, collection string, keys []string) ([]string, error) {
 	c := d.getCollection(collection)
 
 	var models []mongo.IndexModel
