@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/memochou1993/github-rankings/app/model"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,11 +30,18 @@ func (c *Client) GetClient() *http.Client {
 	return c.Client
 }
 
-func (c *Client) SearchUsers(ctx context.Context) (model.SearchedUsers, error) {
-	data := model.SearchedUsers{}
-	err := c.fetch(ctx, c.readQuery("search_users"), &data)
+func (c *Client) SearchInitialUsers(ctx context.Context) (model.InitialUsers, error) {
+	users := model.InitialUsers{}
 
-	return data, err
+	args := model.Arguments{
+		First: 100,
+		Query: "\"repos:>=5 followers:>=10\"",
+		Type:  "USER",
+	}
+
+	err := c.fetch(ctx, []byte(users.GetQuery(args)), &users)
+
+	return users, err
 }
 
 func (c *Client) fetch(ctx context.Context, q []byte, v interface{}) error {
@@ -70,14 +76,4 @@ func (c *Client) post(ctx context.Context, body io.Reader) (*http.Response, erro
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("API_TOKEN")))
 
 	return c.GetClient().Do(req.WithContext(ctx))
-}
-
-func (c *Client) readQuery(name string) []byte {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", name))
-
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	return data
 }

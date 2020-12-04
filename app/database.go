@@ -15,7 +15,7 @@ type Database struct {
 	Client *mongo.Client
 }
 
-func (d *Database) getClient() *mongo.Client {
+func (d *Database) GetClient() *mongo.Client {
 	if d.Client != nil {
 		return d.Client
 	}
@@ -35,7 +35,7 @@ func (d *Database) getClient() *mongo.Client {
 	return d.Client
 }
 
-func (d *Database) CollectUsers() error {
+func (d *Database) CollectInitialUsers() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
@@ -50,13 +50,13 @@ func (d *Database) CollectUsers() error {
 	}
 
 	client := Client{}
-	users, err := client.SearchUsers(ctx)
+	users, err := client.SearchInitialUsers(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := d.StoreSearchedUsers(ctx, users); err != nil {
+	if _, err := d.StoreInitialUsers(ctx, users); err != nil {
 		return err
 	}
 
@@ -65,7 +65,7 @@ func (d *Database) CollectUsers() error {
 	return err
 }
 
-func (d *Database) StoreSearchedUsers(ctx context.Context, users model.SearchedUsers) (*mongo.InsertManyResult, error) {
+func (d *Database) StoreInitialUsers(ctx context.Context, users model.InitialUsers) (*mongo.InsertManyResult, error) {
 	var items []interface{}
 
 	for _, user := range users.Data.Search.Edges {
@@ -95,5 +95,5 @@ func (d *Database) CreateIndexes(ctx context.Context, collection string, keys []
 }
 
 func (d *Database) getCollection(name string) *mongo.Collection {
-	return d.getClient().Database(os.Getenv("DB_DATABASE")).Collection(name)
+	return d.GetClient().Database(os.Getenv("DB_DATABASE")).Collection(name)
 }
