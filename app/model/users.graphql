@@ -1,0 +1,19 @@
+query Users {
+  search(<args>) {
+    userCount
+    edges {
+      cursor
+      node {
+        ... on User {
+          id
+          login
+        }
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+      startCursor
+    }
+  }
+}

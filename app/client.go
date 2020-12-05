@@ -28,8 +28,8 @@ func initClient() {
 	client = http.DefaultClient
 }
 
-func SearchInitialUsers(ctx context.Context) (model.InitialUsers, error) {
-	users := model.InitialUsers{}
+func SearchUsers(ctx context.Context) (model.Users, error) {
+	users := model.Users{}
 	args := model.SearchArguments{
 		First: 100,
 		Query: "\"repos:>=5 followers:>=10\"",

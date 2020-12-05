@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/database"
+	"github.com/memochou1993/github-rankings/app/model"
 	"log"
 	"os"
 	"testing"
@@ -12,27 +13,25 @@ import (
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-
 	tearDown()
-
 	os.Exit(code)
 }
 
-func TestStoreInitialUsers(t *testing.T) {
+func TestStoreUsers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	users, err := app.SearchInitialUsers(ctx)
+	users, err := app.SearchUsers(ctx)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	_, err = database.StoreInitialUsers(ctx, users)
+	_, err = database.StoreUsers(ctx, users)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	count, err := database.Count(ctx, "users")
+	count, err := database.Count(ctx, model.CollectionUsers)
 	if err != nil {
 		t.Error(err.Error())
 	}

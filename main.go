@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := database.CollectInitialUsers(); err != nil {
+	if err := database.CollectUsers(); err != nil {
 		log.Println(err.Error())
 	}
 }

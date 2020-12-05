@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-func CollectInitialUsers() error {
+func CollectUsers() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
-	count, err := Count(ctx, "users")
+	count, err := Count(ctx, model.CollectionUsers)
 	if err != nil {
 		return err
 	}
@@ -21,20 +21,20 @@ func CollectInitialUsers() error {
 		return nil
 	}
 
-	users, err := app.SearchInitialUsers(ctx)
+	users, err := app.SearchUsers(ctx)
 	if err != nil {
 		return err
 	}
-	if _, err := StoreInitialUsers(ctx, users); err != nil {
+	if _, err := StoreUsers(ctx, users); err != nil {
 		return err
 	}
 
-	err = CreateIndexes(ctx, "users", []string{"name"})
+	err = CreateIndexes(ctx, model.CollectionUsers, []string{"name"})
 
 	return err
 }
 
-func StoreInitialUsers(ctx context.Context, users model.InitialUsers) (*mongo.InsertManyResult, error) {
+func StoreUsers(ctx context.Context, users model.Users) (*mongo.InsertManyResult, error) {
 	var items []interface{}
 	for _, user := range users.Data.Search.Edges {
 		items = append(items, bson.M{
@@ -43,5 +43,5 @@ func StoreInitialUsers(ctx context.Context, users model.InitialUsers) (*mongo.In
 		})
 	}
 
-	return GetCollection("users").InsertMany(ctx, items)
+	return GetCollection(model.CollectionUsers).InsertMany(ctx, items)
 }

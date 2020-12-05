@@ -2,7 +2,12 @@ package model
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"strings"
 )
+
+const CollectionUsers = "users"
 
 type SearchArguments struct {
 	After  string `json:"after,omitempty"`
@@ -13,7 +18,7 @@ type SearchArguments struct {
 	Type   string `json:"type,omitempty"`
 }
 
-type InitialUsers struct {
+type Users struct {
 	Data struct {
 		Search struct {
 			UserCount int `json:"userCount" bson:"userCount"`
@@ -33,27 +38,11 @@ type InitialUsers struct {
 	} `json:"data"`
 }
 
-func (u *InitialUsers) GetQuery(args SearchArguments) string {
-	return fmt.Sprintf(`
-		query InitialUsers {
-		  search(%s) {
-			userCount
-			edges {
-			  cursor
-			  node {
-				... on User {
-				  id
-				  login
-				}
-			  }
-			}
-			pageInfo {
-			  endCursor
-			  hasNextPage
-			  startCursor
-			}
-		  }
-		}`,
-		joinArguments(&args),
-	)
+func (u *Users) GetQuery(args SearchArguments) string {
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/model/%s.graphql", CollectionUsers))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return strings.Replace(string(data), "<args>", joinArguments(&args), 1)
 }
