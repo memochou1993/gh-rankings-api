@@ -2,13 +2,10 @@ package model
 
 import (
 	"context"
-	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/database"
+	"github.com/memochou1993/github-rankings/app/query"
 	"go.mongodb.org/mongo-driver/bson"
-	"io/ioutil"
-	"log"
-	"strings"
 	"time"
 )
 
@@ -37,7 +34,7 @@ type Users struct {
 	} `json:"data"`
 }
 
-func (u *Users) CollectUsers() error {
+func (u *Users) Collect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
@@ -48,27 +45,27 @@ func (u *Users) CollectUsers() error {
 	if count > 0 {
 		return nil
 	}
-	if err := u.SearchUsers(ctx); err != nil {
+	if err := u.Search(ctx); err != nil {
 		return err
 	}
-	if err := u.StoreUsers(ctx); err != nil {
+	if err := u.Store(ctx); err != nil {
 		return err
 	}
 
 	return database.CreateIndexes(ctx, CollectionUsers, []string{"name"})
 }
 
-func (u *Users) SearchUsers(ctx context.Context) error {
-	args := &SearchArguments{
+func (u *Users) Search(ctx context.Context) error {
+	args := &query.SearchArguments{
 		First: 100,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
 
-	return app.Fetch(ctx, []byte(u.getQuery(args)), u)
+	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }
 
-func (u *Users) StoreUsers(ctx context.Context) error {
+func (u *Users) Store(ctx context.Context) error {
 	var items []interface{}
 	for _, user := range u.Data.Search.Edges {
 		items = append(items, bson.M{
@@ -80,13 +77,4 @@ func (u *Users) StoreUsers(ctx context.Context) error {
 	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, items)
 
 	return err
-}
-
-func (u *Users) getQuery(args *SearchArguments) string {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", SearchUsers))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	return strings.Replace(string(data), "<args>", joinArguments(args), 1)
 }

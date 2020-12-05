@@ -1,8 +1,9 @@
-package model
+package query
 
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 )
@@ -16,7 +17,16 @@ type SearchArguments struct {
 	Type   string `json:"type,omitempty"`
 }
 
-func joinArguments(v interface{}) string {
+func (args *SearchArguments) Read(query string) string {
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", query))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return strings.Replace(string(data), "<args>", join(args), 1)
+}
+
+func join(v interface{}) string {
 	data, err := json.Marshal(v)
 	if err != nil {
 		log.Fatal(err.Error())

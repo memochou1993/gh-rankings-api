@@ -12,7 +12,7 @@ func TestSearchUsers(t *testing.T) {
 	defer cancel()
 
 	users := &model.Users{}
-	if err := users.SearchUsers(ctx);err != nil {
+	if err := users.Search(ctx); err != nil {
 		t.Error(err.Error())
 		return
 	}

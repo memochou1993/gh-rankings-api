@@ -1,4 +1,4 @@
-package database
+package model
 
 import (
 	"context"
@@ -21,10 +21,10 @@ func TestStoreUsers(t *testing.T) {
 	defer cancel()
 
 	users := &model.Users{}
-	if err := users.SearchUsers(ctx);err != nil {
+	if err := users.Search(ctx); err != nil {
 		t.Error(err.Error())
 	}
-	if err := users.StoreUsers(ctx); err != nil {
+	if err := users.Store(ctx); err != nil {
 		t.Error(err.Error())
 	}
 
