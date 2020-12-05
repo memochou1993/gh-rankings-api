@@ -13,27 +13,23 @@ func CollectInitialUsers() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
-	count, err := getCollection("users").CountDocuments(ctx, bson.M{})
-
+	count, err := Count(ctx, "users")
 	if err != nil {
 		return err
 	}
-
 	if count > 0 {
 		return nil
 	}
 
 	users, err := app.SearchInitialUsers(ctx)
-
 	if err != nil {
 		return err
 	}
-
 	if _, err := StoreInitialUsers(ctx, users); err != nil {
 		return err
 	}
 
-	_, err = CreateIndexes(ctx, "users", []string{"name"})
+	err = CreateIndexes(ctx, "users", []string{"name"})
 
 	return err
 }
@@ -47,5 +43,5 @@ func StoreInitialUsers(ctx context.Context, users model.InitialUsers) (*mongo.In
 		})
 	}
 
-	return getCollection("users").InsertMany(ctx, items)
+	return GetCollection("users").InsertMany(ctx, items)
 }

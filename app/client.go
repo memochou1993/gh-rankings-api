@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app/model"
+	"github.com/memochou1993/github-rankings/util"
 	"io"
 	"log"
 	"net/http"
@@ -19,12 +20,16 @@ type Query struct {
 var client *http.Client
 
 func init() {
+	util.LoadEnv()
+	initClient()
+}
+
+func initClient() {
 	client = http.DefaultClient
 }
 
 func SearchInitialUsers(ctx context.Context) (model.InitialUsers, error) {
 	users := model.InitialUsers{}
-
 	args := model.SearchArguments{
 		First: 100,
 		Query: "\"repos:>=5 followers:>=10\"",
@@ -38,19 +43,16 @@ func SearchInitialUsers(ctx context.Context) (model.InitialUsers, error) {
 
 func fetch(ctx context.Context, q []byte, v interface{}) error {
 	body := &bytes.Buffer{}
-
 	if err := json.NewEncoder(body).Encode(Query{Query: string(q)}); err != nil {
 		return err
 	}
 
 	resp, err := post(ctx, body)
-
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println(err.Error())
 		}
 	}()
-
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,6 @@ func fetch(ctx context.Context, q []byte, v interface{}) error {
 
 func post(ctx context.Context, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, os.Getenv("API_URL"), body)
-
 	if err != nil {
 		return nil, err
 	}

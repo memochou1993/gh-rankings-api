@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,6 +14,11 @@ import (
 var client *mongo.Client
 
 func init() {
+	util.LoadEnv()
+	initClient()
+}
+
+func initClient() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -25,8 +31,20 @@ func init() {
 	}
 }
 
-func CreateIndexes(ctx context.Context, collection string, keys []string) ([]string, error) {
-	c := getCollection(collection)
+func GetDatabase() *mongo.Database {
+	return client.Database(os.Getenv("DB_DATABASE"))
+}
+
+func GetCollection(name string) *mongo.Collection {
+	return GetDatabase().Collection(name)
+}
+
+func Count(ctx context.Context, name string) (int64, error) {
+	return GetCollection(name).CountDocuments(ctx, bson.M{})
+}
+
+func CreateIndexes(ctx context.Context, collection string, keys []string) error {
+	c := GetCollection(collection)
 
 	var models []mongo.IndexModel
 	for _, key := range keys {
@@ -36,10 +54,7 @@ func CreateIndexes(ctx context.Context, collection string, keys []string) ([]str
 		})
 	}
 
-	opts := options.CreateIndexes().SetMaxTime(10 * time.Second)
-	return c.Indexes().CreateMany(ctx, models, opts)
-}
+	_, err := c.Indexes().CreateMany(ctx, models)
 
-func getCollection(name string) *mongo.Collection {
-	return client.Database(os.Getenv("DB_DATABASE")).Collection(name)
+	return err
 }

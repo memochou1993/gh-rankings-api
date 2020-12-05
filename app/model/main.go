@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func joinArguments(i interface{}) string {
-	data, err := json.Marshal(i)
+func joinArguments(v interface{}) string {
+	data, err := json.Marshal(v)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
