@@ -25,7 +25,7 @@ func init() {
 func SearchInitialUsers(ctx context.Context) (model.InitialUsers, error) {
 	users := model.InitialUsers{}
 
-	args := model.Arguments{
+	args := model.SearchArguments{
 		First: 100,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",

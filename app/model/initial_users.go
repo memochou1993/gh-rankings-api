@@ -1,13 +1,10 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"strings"
 )
 
-type Arguments struct {
+type SearchArguments struct {
 	After  string `json:"after,omitempty"`
 	Before string `json:"before,omitempty"`
 	First  int    `json:"first,omitempty"`
@@ -36,7 +33,7 @@ type InitialUsers struct {
 	} `json:"data"`
 }
 
-func (u *InitialUsers) GetQuery(args Arguments) string {
+func (u *InitialUsers) GetQuery(args SearchArguments) string {
 	return fmt.Sprintf(`
 		query InitialUsers {
 		  search(%s) {
@@ -57,27 +54,6 @@ func (u *InitialUsers) GetQuery(args Arguments) string {
 			}
 		  }
 		}`,
-		args.join(),
+		joinArguments(&args),
 	)
-}
-
-func (a *Arguments) join() string {
-	data, err := json.Marshal(a)
-
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	var fields map[string]interface{}
-
-	if err := json.Unmarshal(data, &fields); err != nil {
-		log.Fatal(err.Error())
-	}
-
-	var args []string
-	for field, value := range fields {
-		args = append(args, fmt.Sprintf("%s: %v", field, value))
-	}
-
-	return strings.Join(args, ", ")
 }
