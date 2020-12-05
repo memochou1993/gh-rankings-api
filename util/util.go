@@ -12,8 +12,7 @@ import (
 func LoadEnv() {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := path.Join(path.Dir(filename), "..")
-	err := os.Chdir(dir)
-	if err != nil {
+	if err := os.Chdir(dir); err != nil {
 		log.Fatal(err)
 	}
 
