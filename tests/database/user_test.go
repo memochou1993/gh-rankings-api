@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/database"
 	"github.com/memochou1993/github-rankings/app/model"
 	"log"
@@ -21,13 +20,11 @@ func TestStoreUsers(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	users, err := app.SearchUsers(ctx)
-	if err != nil {
+	users := &model.Users{}
+	if err := users.SearchUsers(ctx);err != nil {
 		t.Error(err.Error())
 	}
-
-	_, err = database.StoreUsers(ctx, users)
-	if err != nil {
+	if err := users.StoreUsers(ctx); err != nil {
 		t.Error(err.Error())
 	}
 
@@ -44,8 +41,7 @@ func tearDown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := database.GetDatabase().Drop(ctx)
-	if err != nil {
+	if err := database.GetDatabase().Drop(ctx); err != nil {
 		log.Fatal(err.Error())
 	}
 }

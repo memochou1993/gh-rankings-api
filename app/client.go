@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/util"
 	"io"
 	"log"
@@ -28,20 +27,7 @@ func initClient() {
 	client = http.DefaultClient
 }
 
-func SearchUsers(ctx context.Context) (model.Users, error) {
-	users := model.Users{}
-	args := model.SearchArguments{
-		First: 100,
-		Query: "\"repos:>=5 followers:>=10\"",
-		Type:  "USER",
-	}
-
-	err := fetch(ctx, []byte(users.GetQuery(args)), &users)
-
-	return users, err
-}
-
-func fetch(ctx context.Context, q []byte, v interface{}) error {
+func Fetch(ctx context.Context, q []byte, v interface{}) error {
 	body := &bytes.Buffer{}
 	if err := json.NewEncoder(body).Encode(Query{Query: string(q)}); err != nil {
 		return err

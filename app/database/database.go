@@ -44,8 +44,6 @@ func Count(ctx context.Context, name string) (int64, error) {
 }
 
 func CreateIndexes(ctx context.Context, collection string, keys []string) error {
-	c := GetCollection(collection)
-
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
@@ -54,7 +52,7 @@ func CreateIndexes(ctx context.Context, collection string, keys []string) error 
 		})
 	}
 
-	_, err := c.Indexes().CreateMany(ctx, models)
+	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
 
 	return err
 }

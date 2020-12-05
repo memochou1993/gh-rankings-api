@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+type SearchArguments struct {
+	After  string `json:"after,omitempty"`
+	Before string `json:"before,omitempty"`
+	First  int    `json:"first,omitempty"`
+	Last   int    `json:"last,omitempty"`
+	Query  string `json:"query,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
 func joinArguments(v interface{}) string {
 	data, err := json.Marshal(v)
 	if err != nil {

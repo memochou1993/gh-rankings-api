@@ -2,12 +2,13 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/memochou1993/github-rankings/app/database"
+	"github.com/memochou1993/github-rankings/app/model"
 	"log"
 )
 
 func main() {
-	if err := database.CollectUsers(); err != nil {
+	users := &model.Users{}
+	if err := users.CollectUsers(); err != nil {
 		log.Println(err.Error())
 	}
 }
