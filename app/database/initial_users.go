@@ -23,8 +23,7 @@ func CollectInitialUsers() error {
 		return nil
 	}
 
-	client := app.Client{}
-	users, err := client.SearchInitialUsers(ctx)
+	users, err := app.SearchInitialUsers(ctx)
 
 	if err != nil {
 		return err
