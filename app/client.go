@@ -34,14 +34,14 @@ func Fetch(ctx context.Context, q []byte, v interface{}) error {
 	}
 
 	resp, err := post(ctx, body)
+	if err != nil {
+		return err
+	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Println(err.Error())
 		}
 	}()
-	if err != nil {
-		return err
-	}
 
 	return json.NewDecoder(resp.Body).Decode(&v)
 }
