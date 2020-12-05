@@ -75,7 +75,6 @@ func (a *Arguments) join() string {
 	}
 
 	var args []string
-
 	for field, value := range fields {
 		args = append(args, fmt.Sprintf("%s: %v", field, value))
 	}
