@@ -1,4 +1,4 @@
-query Users {
+query SearchUsers {
   search(<args>) {
     userCount
     edges {

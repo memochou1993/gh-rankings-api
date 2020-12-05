@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-const CollectionUsers = "users"
+const (
+	CollectionUsers = "users"
+	SearchUsers     = "search_users"
+)
 
 type SearchArguments struct {
 	After  string `json:"after,omitempty"`
@@ -39,7 +42,7 @@ type Users struct {
 }
 
 func (u *Users) GetQuery(args SearchArguments) string {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/model/%s.graphql", CollectionUsers))
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/model/%s.graphql", SearchUsers))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
