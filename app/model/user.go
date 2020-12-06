@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/github-rankings/app/database"
 	"github.com/memochou1993/github-rankings/app/query"
 	"go.mongodb.org/mongo-driver/bson"
+	"log"
 	"time"
 )
 
@@ -63,11 +64,13 @@ func (u *Users) Collect(ctx context.Context) error {
 		created := fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout))
 		followers := ">=10"
 		repos := ">=5"
+		q := fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos)
 		args := &query.SearchArguments{
 			First: 100,
-			Query: fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos),
+			Query: q,
 			Type:  "USER",
 		}
+		log.Println(fmt.Sprintf("Searching users with query: %s", q))
 		for {
 			if u.Data.Search.PageInfo.EndCursor != "" {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
@@ -75,17 +78,20 @@ func (u *Users) Collect(ctx context.Context) error {
 			if err := u.Search(ctx, args); err != nil {
 				return err
 			}
+			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
 			if len(u.Data.Search.Edges) == 0 {
 				break
 			}
 			if err := u.Store(ctx); err != nil {
 				return err
 			}
+			log.Println(fmt.Sprintf("Inserted %d users", len(u.Data.Search.Edges)))
 			if !u.Data.Search.PageInfo.HasNextPage {
 				break
 			}
 		}
 		date = date.AddDate(0, 0, 7)
+		time.Sleep(1 * time.Second)
 	}
 
 	return nil
