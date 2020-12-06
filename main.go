@@ -8,7 +8,7 @@ import (
 
 func main() {
 	users := &model.Users{}
-	if err := users.Collect(); err != nil {
+	if err := users.Init(); err != nil {
 		log.Println(err.Error())
 	}
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/database"
 	"github.com/memochou1993/github-rankings/app/query"
@@ -34,7 +35,7 @@ type Users struct {
 	} `json:"data"`
 }
 
-func (u *Users) Collect() error {
+func (u *Users) Init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
@@ -45,23 +46,39 @@ func (u *Users) Collect() error {
 	if count > 0 {
 		return nil
 	}
-	if err := u.Search(ctx); err != nil {
+	if err := u.Collect(ctx); err != nil {
 		return err
 	}
-	if err := u.Store(ctx); err != nil {
+	if err := u.Index(ctx); err != nil {
 		return err
 	}
 
-	return database.CreateIndexes(ctx, CollectionUsers, []string{"name"})
+	return nil
 }
 
-func (u *Users) Search(ctx context.Context) error {
+func (u *Users) Collect(ctx context.Context) error {
 	args := &query.SearchArguments{
 		First: 100,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
+	u.Data.Search.PageInfo.HasNextPage = true
+	for u.Data.Search.PageInfo.HasNextPage {
+		if u.Data.Search.PageInfo.EndCursor != "" {
+			args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
+		}
+		if err := u.Search(ctx, args); err != nil {
+			return err
+		}
+		if err := u.Store(ctx); err != nil {
+			return err
+		}
+	}
 
+	return nil
+}
+
+func (u *Users) Search(ctx context.Context, args *query.SearchArguments) error {
 	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }
 
@@ -69,7 +86,7 @@ func (u *Users) Store(ctx context.Context) error {
 	var items []interface{}
 	for _, user := range u.Data.Search.Edges {
 		items = append(items, bson.M{
-			"id":   user.Node.ID,
+			"_id":  user.Node.ID,
 			"name": user.Node.Login,
 		})
 	}
@@ -77,4 +94,8 @@ func (u *Users) Store(ctx context.Context) error {
 	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, items)
 
 	return err
+}
+
+func (u *Users) Index(ctx context.Context) error {
+	return database.CreateIndexes(ctx, CollectionUsers, []string{"name"})
 }
