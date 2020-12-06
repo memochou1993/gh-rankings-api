@@ -57,22 +57,35 @@ func (u *Users) Init() error {
 }
 
 func (u *Users) Collect(ctx context.Context) error {
-	args := &query.SearchArguments{
-		First: 100,
-		Query: "\"repos:>=5 followers:>=10\"",
-		Type:  "USER",
-	}
-	u.Data.Search.PageInfo.HasNextPage = true
-	for u.Data.Search.PageInfo.HasNextPage {
-		if u.Data.Search.PageInfo.EndCursor != "" {
-			args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
+	layout := "2006-01-02"
+	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
+	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
+		created := fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout))
+		followers := ">=10"
+		repos := ">=5"
+		args := &query.SearchArguments{
+			First: 100,
+			Query: fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos),
+			Type:  "USER",
 		}
-		if err := u.Search(ctx, args); err != nil {
-			return err
+		for {
+			if u.Data.Search.PageInfo.EndCursor != "" {
+				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
+			}
+			if err := u.Search(ctx, args); err != nil {
+				return err
+			}
+			if len(u.Data.Search.Edges) == 0 {
+				break
+			}
+			if err := u.Store(ctx); err != nil {
+				return err
+			}
+			if !u.Data.Search.PageInfo.HasNextPage {
+				break
+			}
 		}
-		if err := u.Store(ctx); err != nil {
-			return err
-		}
+		date = date.AddDate(0, 0, 7)
 	}
 
 	return nil
