@@ -16,4 +16,12 @@ query SearchUsers {
       startCursor
     }
   }
+  rateLimit {
+    cost
+    limit
+    nodeCount
+    remaining
+    resetAt
+    used
+  }
 }

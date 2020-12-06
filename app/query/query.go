@@ -8,6 +8,21 @@ import (
 	"strings"
 )
 
+type PageInfo struct {
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
+	StartCursor string `json:"startCursor"`
+}
+
+type RateLimit struct {
+	Cost      int
+	Limit     int
+	NodeCount int
+	Remaining int
+	ResetAt   string
+	Used      int
+}
+
 type SearchArguments struct {
 	After  string `json:"after,omitempty"`
 	Before string `json:"before,omitempty"`

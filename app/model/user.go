@@ -19,21 +19,20 @@ const (
 type Users struct {
 	Data struct {
 		Search struct {
-			UserCount int `json:"userCount" bson:"userCount"`
+			UserCount int `json:"userCount"`
 			Edges     []struct {
 				Cursor string `json:"cursor"`
-				Node   struct {
-					ID    string `json:"id"`
-					Login string `json:"login"`
-				} `json:"node"`
+				Node   User   `json:"node"`
 			} `json:"edges"`
-			PageInfo struct {
-				EndCursor   string `json:"endCursor"`
-				HasNextPage bool   `json:"hasNextPage"`
-				StartCursor string `json:"startCursor"`
-			} `json:"pageInfo"`
+			PageInfo query.PageInfo `json:"pageInfo"`
 		} `json:"search"`
+		RateLimit query.RateLimit `json:"rateLimit"`
 	} `json:"data"`
+}
+
+type User struct {
+	ID    string `json:"id"`
+	Login string `json:"login"`
 }
 
 func (u *Users) Init() error {
@@ -78,20 +77,19 @@ func (u *Users) Collect(ctx context.Context) error {
 			if err := u.Search(ctx, args); err != nil {
 				return err
 			}
-			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
+			log.Println(fmt.Sprintf("The call's rate limit status: %d points remaining", u.Data.RateLimit.Remaining))
 			if len(u.Data.Search.Edges) == 0 {
 				break
 			}
 			if err := u.Store(ctx); err != nil {
 				return err
 			}
-			log.Println(fmt.Sprintf("Inserted %d users", len(u.Data.Search.Edges)))
+			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
 			if !u.Data.Search.PageInfo.HasNextPage {
 				break
 			}
 		}
 		date = date.AddDate(0, 0, 7)
-		time.Sleep(1 * time.Second)
 	}
 
 	return nil
@@ -102,15 +100,15 @@ func (u *Users) Search(ctx context.Context, args *query.SearchArguments) error {
 }
 
 func (u *Users) Store(ctx context.Context) error {
-	var items []interface{}
-	for _, user := range u.Data.Search.Edges {
-		items = append(items, bson.M{
-			"_id":  user.Node.ID,
-			"name": user.Node.Login,
+	var documents []interface{}
+	for _, edge := range u.Data.Search.Edges {
+		documents = append(documents, bson.M{
+			"_id":  edge.Node.ID,
+			"name": edge.Node.Login,
 		})
 	}
 
-	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, items)
+	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, documents)
 
 	return err
 }
