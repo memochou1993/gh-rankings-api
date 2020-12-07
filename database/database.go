@@ -25,7 +25,6 @@ func initClient() {
 	var err error
 	opts := options.Client().ApplyURI(os.Getenv("DB_HOST"))
 	client, err = mongo.Connect(ctx, opts)
-
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

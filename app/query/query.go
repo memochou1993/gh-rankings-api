@@ -1,8 +1,8 @@
 package query
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/memochou1993/github-rankings/util"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -32,7 +32,7 @@ func (rl *RateLimit) Check() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if rl.Remaining > 4980 {
+	if rl.Remaining > 0 {
 		return
 	}
 	duration := resetAt.Sub(time.Now().UTC())
@@ -55,24 +55,5 @@ func (args *SearchArguments) Read(query string) string {
 		log.Fatal(err.Error())
 	}
 
-	return strings.Replace(string(data), "<args>", Join(args), 1)
-}
-
-func Join(v interface{}) string {
-	data, err := json.Marshal(v)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	var fields map[string]interface{}
-	if err := json.Unmarshal(data, &fields); err != nil {
-		log.Fatal(err.Error())
-	}
-
-	var args []string
-	for field, value := range fields {
-		args = append(args, fmt.Sprintf("%s: %v", field, value))
-	}
-
-	return strings.Join(args, ", ")
+	return strings.Replace(string(data), "<args>", util.JoinStruct(args), 1)
 }

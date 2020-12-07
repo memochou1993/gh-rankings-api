@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
-	"github.com/memochou1993/github-rankings/app/database"
 	"github.com/memochou1993/github-rankings/app/query"
+	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
@@ -73,11 +74,11 @@ func (u *Users) Collect(ctx context.Context) error {
 			if u.Data.Search.PageInfo.EndCursor != "" {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
 			}
-			log.Println(fmt.Sprintf("Searching users with arguments: \"%s\"", query.Join(args)))
+			util.LogStruct("Search Arguments", args)
 			if err := u.Search(ctx, args); err != nil {
 				return err
 			}
-			log.Println(fmt.Sprintf("The call's rate limit status: %d points remaining", u.Data.RateLimit.Remaining))
+			util.LogStruct("Rate Limit", u.Data.RateLimit)
 			if len(u.Data.Search.Edges) == 0 {
 				break
 			}
