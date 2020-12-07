@@ -69,17 +69,7 @@ func (u *Users) Collect(ctx context.Context) error {
 			Type:  "USER",
 		}
 		for {
-			if u.Data.RateLimit.ResetAt != "" {
-				resetAt, err := time.Parse(time.RFC3339, u.Data.RateLimit.ResetAt)
-				if err != nil {
-					log.Fatal(err.Error())
-				}
-				if u.Data.RateLimit.Remaining == 0 {
-					duration := resetAt.Sub(time.Now().UTC())
-					log.Println(fmt.Sprintf("Wait about %d minutes for next call", int(duration.Minutes())))
-					time.Sleep(duration)
-				}
-			}
+			u.Data.RateLimit.Check()
 			if u.Data.Search.PageInfo.EndCursor != "" {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
 			}

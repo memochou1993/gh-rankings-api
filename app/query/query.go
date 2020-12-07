@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+	"time"
 )
 
 type PageInfo struct {
@@ -21,6 +22,22 @@ type RateLimit struct {
 	Remaining int
 	ResetAt   string
 	Used      int
+}
+
+func (rl *RateLimit) Check() {
+	if rl.ResetAt == "" {
+		return
+	}
+	resetAt, err := time.Parse(time.RFC3339, rl.ResetAt)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if rl.Remaining > 4980 {
+		return
+	}
+	duration := resetAt.Sub(time.Now().UTC())
+	log.Println(fmt.Sprintf("Wait about %d minutes for next call", int(duration.Minutes())))
+	time.Sleep(duration)
 }
 
 type SearchArguments struct {
