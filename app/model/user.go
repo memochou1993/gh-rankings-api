@@ -37,7 +37,7 @@ type User struct {
 }
 
 func (u *Users) Init() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Hour)
 	defer cancel()
 
 	count, err := database.Count(ctx, CollectionUsers)

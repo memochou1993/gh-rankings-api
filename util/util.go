@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -32,17 +33,20 @@ func LogStruct(name string, v interface{}) {
 }
 
 func JoinStruct(v interface{}) string {
-	b, err := json.Marshal(v)
-	if err != nil {
+	b := &bytes.Buffer{}
+	encoder := json.NewEncoder(b)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(v); err != nil {
 		log.Fatal(err.Error())
 	}
 
-	s := string(b)
-	s = strings.TrimPrefix(s, "{")
-	s = strings.TrimSuffix(s, "}")
+	s := b.String()
+	s = strings.Replace(s, "{", "", -1)
+	s = strings.Replace(s, "}", "", -1)
 	s = strings.Replace(s, "\\\"", "_", -1)
 	s = strings.Replace(s, "\"", "", -1)
 	s = strings.Replace(s, "_", "\"", -1)
+	s = strings.Replace(s, "\n", "", -1)
 
 	return s
 }
