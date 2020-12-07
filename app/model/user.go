@@ -31,8 +31,8 @@ type Users struct {
 }
 
 type User struct {
-	ID    string `json:"id"`
 	Login string `json:"login"`
+	Name  string `json:"name"`
 }
 
 func (u *Users) Init() error {
@@ -63,17 +63,27 @@ func (u *Users) Collect(ctx context.Context) error {
 		created := fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout))
 		followers := ">=10"
 		repos := ">=5"
-		q := fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos)
 		args := &query.SearchArguments{
 			First: 100,
-			Query: q,
+			Query: fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos),
 			Type:  "USER",
 		}
-		log.Println(fmt.Sprintf("Searching users with query: %s", q))
 		for {
+			if u.Data.RateLimit.ResetAt != "" {
+				resetAt, err := time.Parse(time.RFC3339, u.Data.RateLimit.ResetAt)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				if u.Data.RateLimit.Remaining == 0 {
+					duration := resetAt.Sub(time.Now().UTC())
+					log.Println(fmt.Sprintf("Wait about %d minutes for next call", int(duration.Minutes())))
+					time.Sleep(duration)
+				}
+			}
 			if u.Data.Search.PageInfo.EndCursor != "" {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
 			}
+			log.Println(fmt.Sprintf("Searching users with arguments: \"%s\"", query.Join(args)))
 			if err := u.Search(ctx, args); err != nil {
 				return err
 			}
@@ -86,6 +96,7 @@ func (u *Users) Collect(ctx context.Context) error {
 			}
 			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
 			if !u.Data.Search.PageInfo.HasNextPage {
+				u.Data.Search.PageInfo.EndCursor = ""
 				break
 			}
 		}
@@ -103,8 +114,8 @@ func (u *Users) Store(ctx context.Context) error {
 	var documents []interface{}
 	for _, edge := range u.Data.Search.Edges {
 		documents = append(documents, bson.M{
-			"_id":  edge.Node.ID,
-			"name": edge.Node.Login,
+			"login": edge.Node.Login,
+			"name":  edge.Node.Name,
 		})
 	}
 

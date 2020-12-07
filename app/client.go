@@ -43,7 +43,7 @@ func Fetch(ctx context.Context, q []byte, v interface{}) error {
 		}
 	}()
 
-	return json.NewDecoder(resp.Body).Decode(&v)
+	return json.NewDecoder(resp.Body).Decode(v)
 }
 
 func post(ctx context.Context, body io.Reader) (*http.Response, error) {

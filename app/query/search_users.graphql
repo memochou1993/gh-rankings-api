@@ -5,8 +5,8 @@ query SearchUsers {
       cursor
       node {
         ... on User {
-          id
           login
+          name
         }
       }
     }

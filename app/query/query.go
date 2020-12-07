@@ -38,10 +38,10 @@ func (args *SearchArguments) Read(query string) string {
 		log.Fatal(err.Error())
 	}
 
-	return strings.Replace(string(data), "<args>", join(args), 1)
+	return strings.Replace(string(data), "<args>", Join(args), 1)
 }
 
-func join(v interface{}) string {
+func Join(v interface{}) string {
 	data, err := json.Marshal(v)
 	if err != nil {
 		log.Fatal(err.Error())
