@@ -37,7 +37,7 @@ type User struct {
 }
 
 func (u *Users) Init() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Hour)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	count, err := database.Count(ctx, CollectionUsers)
@@ -47,17 +47,17 @@ func (u *Users) Init() error {
 	if count > 0 {
 		return nil
 	}
-	if err := u.Collect(ctx); err != nil {
+	if err := u.Collect(); err != nil {
 		return err
 	}
-	if err := u.Index(ctx); err != nil {
+	if err := u.Index(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *Users) Collect(ctx context.Context) error {
+func (u *Users) Collect() error {
 	layout := "2006-01-02"
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
@@ -75,14 +75,14 @@ func (u *Users) Collect(ctx context.Context) error {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
 			}
 			util.LogStruct("Search Arguments", args)
-			if err := u.Search(ctx, args); err != nil {
+			if err := u.Search(args); err != nil {
 				return err
 			}
 			util.LogStruct("Rate Limit", u.Data.RateLimit)
 			if len(u.Data.Search.Edges) == 0 {
 				break
 			}
-			if err := u.Store(ctx); err != nil {
+			if err := u.Store(); err != nil {
 				return err
 			}
 			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
@@ -97,11 +97,17 @@ func (u *Users) Collect(ctx context.Context) error {
 	return nil
 }
 
-func (u *Users) Search(ctx context.Context, args *query.SearchArguments) error {
+func (u *Users) Search(args *query.SearchArguments) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }
 
-func (u *Users) Store(ctx context.Context) error {
+func (u *Users) Store() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	var documents []interface{}
 	for _, edge := range u.Data.Search.Edges {
 		documents = append(documents, bson.M{
@@ -115,6 +121,9 @@ func (u *Users) Store(ctx context.Context) error {
 	return err
 }
 
-func (u *Users) Index(ctx context.Context) error {
+func (u *Users) Index() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	return database.CreateIndexes(ctx, CollectionUsers, []string{"name"})
 }
