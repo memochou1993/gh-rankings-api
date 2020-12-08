@@ -7,8 +7,10 @@ import (
 )
 
 func main() {
-	users := model.Users{}
-	if err := users.Init(); err != nil {
+	userCollection := model.UserCollection{
+		// TODO
+	}
+	if err := userCollection.Init(); err != nil {
 		log.Println(err.Error())
 	}
 }

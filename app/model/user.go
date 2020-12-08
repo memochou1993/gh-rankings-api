@@ -12,12 +12,18 @@ import (
 	"time"
 )
 
+// TODO: Move to struct
 const (
 	CollectionUsers = "users"
 	SearchUsers     = "search_users"
 )
 
-type Users struct {
+type UserCollection struct {
+	Name         string
+	SearchResult SearchResult
+}
+
+type SearchResult struct {
 	Data struct {
 		Search struct {
 			UserCount int `json:"userCount"`
@@ -36,13 +42,10 @@ type User struct {
 	Name  string `json:"name"`
 }
 
-func (u *Users) Init() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	count, err := database.Count(ctx, CollectionUsers)
+func (u *UserCollection) Init() error {
+	count, err := u.Count()
 	if err != nil {
-		return err
+		return nil
 	}
 	if count > 0 {
 		return nil
@@ -57,7 +60,7 @@ func (u *Users) Init() error {
 	return nil
 }
 
-func (u *Users) Collect() error {
+func (u *UserCollection) Collect() error {
 	layout := "2006-01-02"
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
@@ -70,24 +73,32 @@ func (u *Users) Collect() error {
 			Type:  "USER",
 		}
 		for {
-			u.Data.RateLimit.Check()
-			if u.Data.Search.PageInfo.EndCursor != "" {
-				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
+			u.SearchResult.Data.RateLimit.Check()
+			if u.SearchResult.Data.Search.PageInfo.EndCursor != "" {
+				args.After = fmt.Sprintf("\"%s\"", u.SearchResult.Data.Search.PageInfo.EndCursor)
 			}
 			util.LogStruct("Search Arguments", args)
 			if err := u.Search(&args); err != nil {
 				return err
 			}
-			util.LogStruct("Rate Limit", u.Data.RateLimit)
-			if len(u.Data.Search.Edges) == 0 {
+			util.LogStruct("Rate Limit", u.SearchResult.Data.RateLimit)
+			if len(u.SearchResult.Data.Search.Edges) == 0 {
 				break
 			}
-			if err := u.Store(); err != nil {
+
+			var users []interface{}
+			for _, edge := range u.SearchResult.Data.Search.Edges {
+				users = append(users, bson.D{
+					{"login", edge.Node.Login},
+					{"name", edge.Node.Name},
+				})
+			}
+			if err := u.Store(users); err != nil {
 				return err
 			}
-			log.Println(fmt.Sprintf("Discovered %d users", len(u.Data.Search.Edges)))
-			if !u.Data.Search.PageInfo.HasNextPage {
-				u.Data.Search.PageInfo.EndCursor = ""
+			log.Println(fmt.Sprintf("Discovered %d users", len(u.SearchResult.Data.Search.Edges)))
+			if !u.SearchResult.Data.Search.PageInfo.HasNextPage {
+				u.SearchResult.Data.Search.PageInfo.EndCursor = ""
 				break
 			}
 		}
@@ -97,33 +108,32 @@ func (u *Users) Collect() error {
 	return nil
 }
 
-func (u *Users) Store() error {
+func (u *UserCollection) Store(documents []interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	var documents []interface{}
-	for _, edge := range u.Data.Search.Edges {
-		documents = append(documents, bson.D{
-			{"login", edge.Node.Login},
-			{"name", edge.Node.Name},
-		})
-	}
 
 	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, documents)
 
 	return err
 }
 
-func (u *Users) Index() error {
+func (u *UserCollection) Search(args *query.SearchArguments) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), &u.SearchResult)
+}
+
+func (u *UserCollection) Count() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return database.Count(ctx, CollectionUsers)
+}
+
+func (u *UserCollection) Index() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	return database.CreateIndexes(ctx, CollectionUsers, []string{"login"})
-}
-
-func (u *Users) Search(args *query.SearchArguments) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }

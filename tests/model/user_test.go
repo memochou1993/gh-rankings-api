@@ -18,35 +18,43 @@ func TestMain(m *testing.M) {
 }
 
 func TestSearchUsers(t *testing.T) {
-	users := model.Users{}
+	userCollection := model.UserCollection{}
 	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
-	if err := users.Search(&args); err != nil {
+	if err := userCollection.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
-	if len(users.Data.Search.Edges) != 1 {
+	if len(userCollection.SearchResult.Data.Search.Edges) != 1 {
 		t.Fail()
 	}
 }
 
 func TestStoreUsers(t *testing.T) {
-	users := model.Users{}
+	userCollection := model.UserCollection{}
 	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
-	if err := users.Search(&args); err != nil {
-		t.Error(err.Error())
-	}
-	if err := users.Store(); err != nil {
+	if err := userCollection.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
 
-	count, err := database.Count(context.Background(), model.CollectionUsers)
+	var users []interface{}
+	for _, edge := range userCollection.SearchResult.Data.Search.Edges {
+		users = append(users, bson.D{
+			{"login", edge.Node.Login},
+			{"name", edge.Node.Name},
+		})
+	}
+	if err := userCollection.Store(users); err != nil {
+		t.Error(err.Error())
+	}
+
+	count, err := userCollection.Count()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -58,28 +66,27 @@ func TestStoreUsers(t *testing.T) {
 }
 
 func TestIndexUsers(t *testing.T) {
-	users := model.Users{}
-	args := query.SearchArguments{
-		First: 1,
-		Query: "\"repos:>=5 followers:>=10\"",
-		Type:  "USER",
-	}
-	if err := users.Search(&args); err != nil {
-		t.Error(err.Error())
-	}
-	if err := users.Store(); err != nil {
+	ctx := context.Background()
+
+	users := model.UserCollection{}
+	if err := users.Index(); err != nil {
 		t.Error(err.Error())
 	}
 
-	cursor, err := database.GetCollection(model.CollectionUsers).Indexes().List(context.Background())
+	cursor, err := database.GetCollection(model.CollectionUsers).Indexes().List(ctx)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			t.Fatal()
+		}
+	}()
 
 	var indexes []bson.M
-	if err := cursor.All(context.Background(), &indexes); err != nil {
-		log.Fatal(err)
+	if err := cursor.All(ctx, &indexes); err != nil {
+		t.Error(err.Error())
 	}
 	if len(indexes) == 0 {
 		t.Fail()
