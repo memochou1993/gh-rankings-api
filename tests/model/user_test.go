@@ -4,9 +4,7 @@ import (
 	"context"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/app/query"
-	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
-	"log"
 	"os"
 	"testing"
 )
@@ -103,14 +101,6 @@ func TestIndexUsers(t *testing.T) {
 	dropCollection(&userCollection)
 }
 
-func dropCollection(collection model.CollectionInterface) {
-	if err := collection.GetCollection().Drop(context.Background()); err != nil {
-		log.Fatal(err.Error())
-	}
-}
-
 func tearDown() {
-	if err := database.GetDatabase().Drop(context.Background()); err != nil {
-		log.Fatal(err.Error())
-	}
+	dropDatabase()
 }
