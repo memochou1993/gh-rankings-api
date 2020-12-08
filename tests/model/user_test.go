@@ -12,13 +12,22 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	setUp()
 	code := m.Run()
 	tearDown()
 	os.Exit(code)
 }
 
+func setUp() {
+	//
+}
+
 func TestSearchUsers(t *testing.T) {
 	userCollection := model.UserCollection{}
+	if err := userCollection.Init(); err != nil {
+		t.Error(err.Error())
+	}
+
 	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
@@ -34,6 +43,10 @@ func TestSearchUsers(t *testing.T) {
 
 func TestStoreUsers(t *testing.T) {
 	userCollection := model.UserCollection{}
+	if err := userCollection.Init(); err != nil {
+		t.Error(err.Error())
+	}
+
 	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
@@ -42,15 +55,7 @@ func TestStoreUsers(t *testing.T) {
 	if err := userCollection.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
-
-	var users []interface{}
-	for _, edge := range userCollection.SearchResult.Data.Search.Edges {
-		users = append(users, bson.D{
-			{"login", edge.Node.Login},
-			{"name", edge.Node.Name},
-		})
-	}
-	if err := userCollection.Store(users); err != nil {
+	if err := userCollection.StoreSearchResult(); err != nil {
 		t.Error(err.Error())
 	}
 
@@ -62,21 +67,24 @@ func TestStoreUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection()
+	dropCollection(&userCollection)
 }
 
 func TestIndexUsers(t *testing.T) {
-	ctx := context.Background()
-
-	users := model.UserCollection{}
-	if err := users.Index(); err != nil {
+	userCollection := model.UserCollection{}
+	if err := userCollection.Init(); err != nil {
 		t.Error(err.Error())
 	}
 
-	cursor, err := database.GetCollection(model.CollectionUsers).Indexes().List(ctx)
-	if err != nil {
+	ctx := context.Background()
+
+	if err := userCollection.Index([]string{"login"}); err != nil {
 		t.Error(err.Error())
-		return
+	}
+
+	cursor, err := userCollection.GetCollection().Indexes().List(ctx)
+	if err != nil {
+		t.Fatal()
 	}
 	defer func() {
 		if err := cursor.Close(ctx); err != nil {
@@ -86,17 +94,17 @@ func TestIndexUsers(t *testing.T) {
 
 	var indexes []bson.M
 	if err := cursor.All(ctx, &indexes); err != nil {
-		t.Error(err.Error())
+		t.Fatal()
 	}
 	if len(indexes) == 0 {
 		t.Fail()
 	}
 
-	dropCollection()
+	dropCollection(&userCollection)
 }
 
-func dropCollection() {
-	if err := database.GetCollection(model.CollectionUsers).Drop(context.Background()); err != nil {
+func dropCollection(collection model.CollectionInterface) {
+	if err := collection.GetCollection().Drop(context.Background()); err != nil {
 		log.Fatal(err.Error())
 	}
 }

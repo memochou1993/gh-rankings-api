@@ -5,36 +5,26 @@ import (
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/query"
-	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/util"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"time"
 )
 
-// TODO: Move to struct
-const (
-	CollectionUsers = "users"
-	SearchUsers     = "search_users"
-)
-
 type UserCollection struct {
-	Name         string
-	SearchResult SearchResult
-}
-
-type SearchResult struct {
-	Data struct {
-		Search struct {
-			UserCount int `json:"userCount"`
-			Edges     []struct {
-				Cursor string `json:"cursor"`
-				Node   User   `json:"node"`
-			} `json:"edges"`
-			PageInfo query.PageInfo `json:"pageInfo"`
-		} `json:"search"`
-		RateLimit query.RateLimit `json:"rateLimit"`
-	} `json:"data"`
+	Collection
+	SearchResult struct {
+		Data struct {
+			Search struct {
+				UserCount int `json:"userCount"`
+				Edges     []struct {
+					Cursor string `json:"cursor"`
+					Node   User   `json:"node"`
+				} `json:"edges"`
+				PageInfo query.PageInfo `json:"pageInfo"`
+			} `json:"search"`
+			RateLimit query.RateLimit `json:"rateLimit"`
+		} `json:"data"`
+	}
 }
 
 type User struct {
@@ -43,6 +33,8 @@ type User struct {
 }
 
 func (u *UserCollection) Init() error {
+	u.SetCollectionName("users")
+
 	count, err := u.Count()
 	if err != nil {
 		return nil
@@ -50,10 +42,7 @@ func (u *UserCollection) Init() error {
 	if count > 0 {
 		return nil
 	}
-	if err := u.Index(); err != nil {
-		return err
-	}
-	if err := u.Collect(); err != nil {
+	if err := u.Index([]string{"login"}); err != nil {
 		return err
 	}
 
@@ -85,15 +74,7 @@ func (u *UserCollection) Collect() error {
 			if len(u.SearchResult.Data.Search.Edges) == 0 {
 				break
 			}
-
-			var users []interface{}
-			for _, edge := range u.SearchResult.Data.Search.Edges {
-				users = append(users, bson.D{
-					{"login", edge.Node.Login},
-					{"name", edge.Node.Name},
-				})
-			}
-			if err := u.Store(users); err != nil {
+			if err := u.StoreSearchResult(); err != nil {
 				return err
 			}
 			log.Println(fmt.Sprintf("Discovered %d users", len(u.SearchResult.Data.Search.Edges)))
@@ -108,11 +89,16 @@ func (u *UserCollection) Collect() error {
 	return nil
 }
 
-func (u *UserCollection) Store(documents []interface{}) error {
+func (u *UserCollection) StoreSearchResult() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := database.GetCollection(CollectionUsers).InsertMany(ctx, documents)
+	var documents []interface{}
+	for _, edge := range u.SearchResult.Data.Search.Edges {
+		documents = append(documents, edge.Node)
+	}
+
+	_, err := u.GetCollection().InsertMany(ctx, documents)
 
 	return err
 }
@@ -121,19 +107,5 @@ func (u *UserCollection) Search(args *query.SearchArguments) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), &u.SearchResult)
-}
-
-func (u *UserCollection) Count() (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return database.Count(ctx, CollectionUsers)
-}
-
-func (u *UserCollection) Index() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return database.CreateIndexes(ctx, CollectionUsers, []string{"login"})
+	return app.Fetch(ctx, []byte(args.Read("search_users")), &u.SearchResult)
 }
