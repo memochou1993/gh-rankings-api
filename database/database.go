@@ -46,7 +46,7 @@ func CreateIndexes(ctx context.Context, collection string, keys []string) error 
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
-			Keys:    bson.M{key: 1},
+			Keys:    bson.D{{key, 1}},
 			Options: options.Index().SetName(key),
 		})
 	}

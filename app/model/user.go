@@ -47,10 +47,10 @@ func (u *Users) Init() error {
 	if count > 0 {
 		return nil
 	}
-	if err := u.Collect(); err != nil {
+	if err := u.Index(); err != nil {
 		return err
 	}
-	if err := u.Index(); err != nil {
+	if err := u.Collect(); err != nil {
 		return err
 	}
 
@@ -110,9 +110,9 @@ func (u *Users) Store() error {
 
 	var documents []interface{}
 	for _, edge := range u.Data.Search.Edges {
-		documents = append(documents, bson.M{
-			"login": edge.Node.Login,
-			"name":  edge.Node.Name,
+		documents = append(documents, bson.D{
+			{"login", edge.Node.Login},
+			{"name", edge.Node.Name},
 		})
 	}
 
@@ -125,5 +125,5 @@ func (u *Users) Index() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return database.CreateIndexes(ctx, CollectionUsers, []string{"name"})
+	return database.CreateIndexes(ctx, CollectionUsers, []string{"login"})
 }
