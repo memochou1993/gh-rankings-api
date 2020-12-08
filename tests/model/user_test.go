@@ -20,21 +20,23 @@ func setUp() {
 	//
 }
 
-func TestSearchUsers(t *testing.T) {
+func TestFetchUsers(t *testing.T) {
 	userCollection := model.UserCollection{}
 	if err := userCollection.Init(); err != nil {
 		t.Error(err.Error())
 	}
 
-	args := query.SearchArguments{
-		First: 1,
-		Query: "\"repos:>=5 followers:>=10\"",
-		Type:  "USER",
+	args := query.Arguments{
+		SearchArguments: query.SearchArguments{
+			First: 1,
+			Query: "\"repos:>=5 followers:>=10\"",
+			Type:  "USER",
+		},
 	}
-	if err := userCollection.Search(&args); err != nil {
+	if err := userCollection.FetchUsers(&args); err != nil {
 		t.Error(err.Error())
 	}
-	if len(userCollection.SearchResult.Data.Search.Edges) != 1 {
+	if len(userCollection.Response.Data.Search.Edges) != 1 {
 		t.Fail()
 	}
 }
@@ -45,15 +47,17 @@ func TestStoreUsers(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	args := query.SearchArguments{
-		First: 1,
-		Query: "\"repos:>=5 followers:>=10\"",
-		Type:  "USER",
+	args := query.Arguments{
+		SearchArguments: query.SearchArguments{
+			First: 1,
+			Query: "\"repos:>=5 followers:>=10\"",
+			Type:  "USER",
+		},
 	}
-	if err := userCollection.Search(&args); err != nil {
+	if err := userCollection.FetchUsers(&args); err != nil {
 		t.Error(err.Error())
 	}
-	if err := userCollection.StoreSearchResult(); err != nil {
+	if err := userCollection.StoreUsers(); err != nil {
 		t.Error(err.Error())
 	}
 	if count := userCollection.Count(); count != 1 {

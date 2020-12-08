@@ -1,5 +1,5 @@
 query Users {
-  search(<args>) {
+  search(SearchArguments) {
     userCount
     edges {
       cursor

@@ -9,6 +9,52 @@ import (
 	"time"
 )
 
+type Arguments struct {
+	UserArguments         UserArguments
+	SearchArguments       SearchArguments
+	RepositoriesArguments RepositoriesArguments
+}
+
+func (args *Arguments) Read(filename string) []byte {
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return args.Join(data)
+}
+
+func (args *Arguments) Join(data []byte) []byte {
+	s := string(data)
+	s = strings.Replace(s, "UserArguments", util.JoinStruct(args.UserArguments), 1)
+	s = strings.Replace(s, "SearchArguments", util.JoinStruct(args.SearchArguments), 1)
+	s = strings.Replace(s, "RepositoriesArguments", util.JoinStruct(args.RepositoriesArguments), 1)
+
+	return []byte(s)
+}
+
+type UserArguments struct {
+	Login string `json:"login,omitempty"`
+}
+
+type SearchArguments struct {
+	After  string `json:"after,omitempty"`
+	Before string `json:"before,omitempty"`
+	First  int    `json:"first,omitempty"`
+	Last   int    `json:"last,omitempty"`
+	Query  string `json:"query,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
+type RepositoriesArguments struct {
+	After             string `json:"after,omitempty"`
+	Before            string `json:"before,omitempty"`
+	First             int    `json:"first,omitempty"`
+	Last              int    `json:"last,omitempty"`
+	OrderBy           string `json:"orderBy,omitempty"`
+	OwnerAffiliations string `json:"ownerAffiliations,omitempty"`
+}
+
 type PageInfo struct {
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
@@ -36,24 +82,6 @@ func (rl *RateLimit) Check() {
 		log.Fatalln(err.Error())
 	}
 	time.Sleep(resetAt.Sub(time.Now().UTC()))
-}
-
-type SearchArguments struct {
-	After  string `json:"after,omitempty"`
-	Before string `json:"before,omitempty"`
-	First  int    `json:"first,omitempty"`
-	Last   int    `json:"last,omitempty"`
-	Query  string `json:"query,omitempty"`
-	Type   string `json:"type,omitempty"`
-}
-
-func (args *SearchArguments) Read(query string) string {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", query))
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	return strings.Replace(string(data), "<args>", util.JoinStruct(args), 1)
 }
 
 type Error struct {

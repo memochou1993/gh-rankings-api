@@ -14,8 +14,7 @@ func main() {
 	if err := userCollection.Collect(); err != nil {
 		log.Println(err.Error())
 	}
-	// TODO
-	// if err := userCollection.Update(); err != nil {
-	// 	log.Println(err.Error())
-	// }
+	if err := userCollection.Update(); err != nil {
+		log.Println(err.Error())
+	}
 }
