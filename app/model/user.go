@@ -24,22 +24,26 @@ type UserCollection struct {
 			} `json:"search"`
 			RateLimit query.RateLimit `json:"rateLimit"`
 		} `json:"data"`
+		Errors []query.Error `json:"errors"`
 	}
 }
 
 type User struct {
-	Login string `json:"login"`
-	Name  string `json:"name"`
+	AvatarURL string    `json:"avatarUrl"`
+	CreatedAt time.Time `json:"createdAt"`
+	Email     string    `json:"email"`
+	Followers struct {
+		TotalCount int `json:"totalCount"`
+	} `json:"followers"`
+	Location string `json:"location"`
+	Login    string `json:"login"`
+	Name     string `json:"name"`
 }
 
 func (u *UserCollection) Init() error {
 	u.SetCollectionName("users")
 
-	count, err := u.Count()
-	if err != nil {
-		return nil
-	}
-	if count > 0 {
+	if u.Count() > 0 {
 		return nil
 	}
 	if err := u.Index([]string{"login"}); err != nil {
@@ -50,6 +54,10 @@ func (u *UserCollection) Init() error {
 }
 
 func (u *UserCollection) Collect() error {
+	if u.Count() > 0 {
+		return nil
+	}
+
 	layout := "2006-01-02"
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
@@ -70,6 +78,9 @@ func (u *UserCollection) Collect() error {
 			if err := u.Search(&args); err != nil {
 				return err
 			}
+			if len(u.SearchResult.Errors) > 0 {
+				util.LogStruct("Errors", u.SearchResult.Errors)
+			}
 			util.LogStruct("Rate Limit", u.SearchResult.Data.RateLimit)
 			if len(u.SearchResult.Data.Search.Edges) == 0 {
 				break
@@ -89,6 +100,32 @@ func (u *UserCollection) Collect() error {
 	return nil
 }
 
+// TODO
+// func (u *UserCollection) Update() error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	defer cancel()
+//
+// 	cursor , err := u.GetCollection().Find(ctx, bson.M{})
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer func() {
+// 		if err := cursor.Close(ctx); err != nil {
+// 			log.Fatalln(err.Error())
+// 		}
+// 	}()
+//
+// 	for cursor.Next(ctx) {
+// 		user := User{}
+// 		if err := cursor.Decode(&user); err != nil {
+// 			log.Fatalln(err.Error())
+// 		}
+// 		fmt.Println(user.Login)
+// 	}
+//
+// 	return nil
+// }
+
 func (u *UserCollection) StoreSearchResult() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -107,5 +144,5 @@ func (u *UserCollection) Search(args *query.SearchArguments) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return app.Fetch(ctx, []byte(args.Read("search_users")), &u.SearchResult)
+	return app.Fetch(ctx, []byte(args.Read("users")), &u.SearchResult)
 }

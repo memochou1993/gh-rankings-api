@@ -56,12 +56,7 @@ func TestStoreUsers(t *testing.T) {
 	if err := userCollection.StoreSearchResult(); err != nil {
 		t.Error(err.Error())
 	}
-
-	count, err := userCollection.Count()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if count != 1 {
+	if count := userCollection.Count(); count != 1 {
 		t.Fail()
 	}
 

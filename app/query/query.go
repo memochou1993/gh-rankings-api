@@ -25,19 +25,17 @@ type RateLimit struct {
 }
 
 func (rl *RateLimit) Check() {
+	if rl.Remaining > 0 {
+		return
+	}
 	if rl.ResetAt == "" {
 		return
 	}
 	resetAt, err := time.Parse(time.RFC3339, rl.ResetAt)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalln(err.Error())
 	}
-	if rl.Remaining > 0 {
-		return
-	}
-	duration := resetAt.Sub(time.Now().UTC())
-	log.Println(fmt.Sprintf("Wait about %d minutes for next call", int(duration.Minutes())))
-	time.Sleep(duration)
+	time.Sleep(resetAt.Sub(time.Now().UTC()))
 }
 
 type SearchArguments struct {
@@ -52,8 +50,17 @@ type SearchArguments struct {
 func (args *SearchArguments) Read(query string) string {
 	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", query))
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalln(err.Error())
 	}
 
 	return strings.Replace(string(data), "<args>", util.JoinStruct(args), 1)
+}
+
+type Error struct {
+	Type      string `json:"type"`
+	Locations []struct {
+		Line   int `json:"line"`
+		Column int `json:"column"`
+	} `json:"locations"`
+	Message string `json:"message"`
 }

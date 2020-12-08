@@ -39,7 +39,7 @@ func Fetch(ctx context.Context, q []byte, v interface{}) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Println(err.Error())
+			log.Fatalln(err.Error())
 		}
 	}()
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type Collection struct {
 	collectionName string
 }
 
-func (c *Collection) SetCollectionName(collectionName string)  {
+func (c *Collection) SetCollectionName(collectionName string) {
 	c.collectionName = collectionName
 }
 
@@ -27,11 +28,16 @@ func (c *Collection) GetCollection() *mongo.Collection {
 	return database.GetCollection(c.collectionName)
 }
 
-func (c *Collection) Count() (int64, error) {
+func (c *Collection) Count() int64 {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return database.Count(ctx, c.collectionName)
+	count, err := database.Count(ctx, c.collectionName)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return count
 }
 
 func (c *Collection) Index(keys []string) error {

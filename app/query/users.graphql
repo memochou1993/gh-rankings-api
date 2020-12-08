@@ -1,12 +1,20 @@
-query SearchUsers {
+query Users {
   search(<args>) {
     userCount
     edges {
       cursor
       node {
         ... on User {
+          avatarUrl
+          createdAt
+          email
+          followers {
+            totalCount
+          }
+          location
           login
           name
+          url
         }
       }
     }
