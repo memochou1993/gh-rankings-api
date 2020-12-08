@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -19,16 +18,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestSearchUsers(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	users := &model.Users{}
-	args := &query.SearchArguments{
+	users := model.Users{}
+	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
-	if err := users.Search(ctx, args); err != nil {
+	if err := users.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
 	if len(users.Data.Search.Edges) != 1 {
@@ -37,23 +33,20 @@ func TestSearchUsers(t *testing.T) {
 }
 
 func TestStoreUsers(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	users := &model.Users{}
-	args := &query.SearchArguments{
+	users := model.Users{}
+	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
-	if err := users.Search(ctx, args); err != nil {
+	if err := users.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
-	if err := users.Store(ctx); err != nil {
+	if err := users.Store(); err != nil {
 		t.Error(err.Error())
 	}
 
-	count, err := database.Count(ctx, model.CollectionUsers)
+	count, err := database.Count(context.Background(), model.CollectionUsers)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -61,54 +54,48 @@ func TestStoreUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(ctx)
+	dropCollection()
 }
 
 func TestIndexUsers(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	users := &model.Users{}
-	args := &query.SearchArguments{
+	users := model.Users{}
+	args := query.SearchArguments{
 		First: 1,
 		Query: "\"repos:>=5 followers:>=10\"",
 		Type:  "USER",
 	}
-	if err := users.Search(ctx, args); err != nil {
+	if err := users.Search(&args); err != nil {
 		t.Error(err.Error())
 	}
-	if err := users.Store(ctx); err != nil {
+	if err := users.Store(); err != nil {
 		t.Error(err.Error())
 	}
 
-	cursor, err := database.GetCollection(model.CollectionUsers).Indexes().List(ctx)
+	cursor, err := database.GetCollection(model.CollectionUsers).Indexes().List(context.Background())
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
 	var indexes []bson.M
-	if err := cursor.All(ctx, &indexes); err != nil {
+	if err := cursor.All(context.Background(), &indexes); err != nil {
 		log.Fatal(err)
 	}
 	if len(indexes) == 0 {
 		t.Fail()
 	}
 
-	dropCollection(ctx)
+	dropCollection()
 }
 
-func dropCollection(ctx context.Context) {
-	if err := database.GetCollection(model.CollectionUsers).Drop(ctx); err != nil {
+func dropCollection() {
+	if err := database.GetCollection(model.CollectionUsers).Drop(context.Background()); err != nil {
 		log.Fatal(err.Error())
 	}
 }
 
 func tearDown() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := database.GetDatabase().Drop(ctx); err != nil {
+	if err := database.GetDatabase().Drop(context.Background()); err != nil {
 		log.Fatal(err.Error())
 	}
 }

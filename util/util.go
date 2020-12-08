@@ -33,8 +33,8 @@ func LogStruct(name string, v interface{}) {
 }
 
 func JoinStruct(v interface{}) string {
-	b := &bytes.Buffer{}
-	encoder := json.NewEncoder(b)
+	b := bytes.Buffer{}
+	encoder := json.NewEncoder(&b)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(v); err != nil {
 		log.Fatal(err.Error())

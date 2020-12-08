@@ -28,12 +28,12 @@ func initClient() {
 }
 
 func Fetch(ctx context.Context, q []byte, v interface{}) error {
-	body := &bytes.Buffer{}
-	if err := json.NewEncoder(body).Encode(Query{Query: string(q)}); err != nil {
+	body := bytes.Buffer{}
+	if err := json.NewEncoder(&body).Encode(Query{Query: string(q)}); err != nil {
 		return err
 	}
 
-	resp, err := post(ctx, body)
+	resp, err := post(ctx, &body)
 	if err != nil {
 		return err
 	}

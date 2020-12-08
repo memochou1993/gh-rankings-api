@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	users := &model.Users{}
+	users := model.Users{}
 	if err := users.Init(); err != nil {
 		log.Println(err.Error())
 	}

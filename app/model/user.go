@@ -64,7 +64,7 @@ func (u *Users) Collect() error {
 		created := fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout))
 		followers := ">=10"
 		repos := ">=5"
-		args := &query.SearchArguments{
+		args := query.SearchArguments{
 			First: 100,
 			Query: fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos),
 			Type:  "USER",
@@ -75,7 +75,7 @@ func (u *Users) Collect() error {
 				args.After = fmt.Sprintf("\"%s\"", u.Data.Search.PageInfo.EndCursor)
 			}
 			util.LogStruct("Search Arguments", args)
-			if err := u.Search(args); err != nil {
+			if err := u.Search(&args); err != nil {
 				return err
 			}
 			util.LogStruct("Rate Limit", u.Data.RateLimit)
@@ -95,13 +95,6 @@ func (u *Users) Collect() error {
 	}
 
 	return nil
-}
-
-func (u *Users) Search(args *query.SearchArguments) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }
 
 func (u *Users) Store() error {
@@ -126,4 +119,11 @@ func (u *Users) Index() error {
 	defer cancel()
 
 	return database.CreateIndexes(ctx, CollectionUsers, []string{"login"})
+}
+
+func (u *Users) Search(args *query.SearchArguments) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return app.Fetch(ctx, []byte(args.Read(SearchUsers)), u)
 }
