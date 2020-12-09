@@ -257,16 +257,11 @@ func (u *UserCollection) Fetch(q []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	err := app.Fetch(ctx, q, &u.Response)
 	util.Log("DEBUG", u.Response.Data.RateLimit)
-	u.logErrors()
-
-	return app.Fetch(ctx, q, &u.Response)
-}
-
-func (u *UserCollection) logErrors() {
-	if len(u.Response.Errors) > 0 {
-		for _, err := range u.Response.Errors {
-			util.Log("ERROR", err.Message)
-		}
+	for _, err := range u.Response.Errors {
+		util.Log("ERROR", err.Message)
 	}
+
+	return err
 }
