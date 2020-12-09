@@ -21,7 +21,6 @@ query Users {
     pageInfo {
       endCursor
       hasNextPage
-      startCursor
     }
   }
   rateLimit {

@@ -17,7 +17,6 @@ query UserRepositories {
       pageInfo {
         endCursor
         hasNextPage
-        startCursor
       }
     }
   }

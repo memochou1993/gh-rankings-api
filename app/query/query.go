@@ -60,7 +60,6 @@ func (q *ArgumentsQuery) Join() string {
 type PageInfo struct {
 	EndCursor   string `json:"endCursor"`
 	HasNextPage bool   `json:"hasNextPage"`
-	StartCursor string `json:"startCursor"`
 }
 
 type RateLimit struct {
