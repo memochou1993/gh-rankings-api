@@ -76,26 +76,30 @@ func (u *UserCollection) Collect() error {
 		return nil
 	}
 
+	request := query.Request{
+		Schema: query.Read("users"),
+		SearchArguments: query.SearchArguments{
+			First: 100,
+			Type:  "USER",
+		},
+	}
+
 	layout := "2006-01-02"
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
-		created := fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout))
-		followers := ">=10"
-		repos := ">=5"
-		args := query.Arguments{
-			SearchArguments: query.SearchArguments{
-				First: 100,
-				Query: fmt.Sprintf("\"created:%s followers:%s repos:%s\"", created, followers, repos),
-				Type:  "USER",
-			},
+		q := query.ArgumentsQuery{
+			Created:   fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout)),
+			Followers: ">=10",
+			Repos:     ">=5",
 		}
+		request.SearchArguments.Query = q.Join()
 		for {
 			u.Response.Data.RateLimit.Check()
 			if u.Response.Data.Search.PageInfo.EndCursor != "" {
-				args.SearchArguments.After = fmt.Sprintf("\"%s\"", u.Response.Data.Search.PageInfo.EndCursor)
+				request.SearchArguments.After = fmt.Sprintf("\"%s\"", u.Response.Data.Search.PageInfo.EndCursor)
 			}
-			util.LogStruct("Search Arguments", args.SearchArguments)
-			if err := u.FetchUsers(&args); err != nil {
+			util.LogStruct("Search Arguments", request.SearchArguments)
+			if err := u.Fetch(request.Join()); err != nil {
 				return err
 			}
 			if len(u.Response.Errors) > 0 {
@@ -134,23 +138,23 @@ func (u *UserCollection) Update() error {
 		}
 	}()
 
+	request := query.Request{
+		Schema: query.Read("user_repositories"),
+		RepositoriesArguments: query.RepositoriesArguments{
+			First:             100,
+			OrderBy:           "{field:STARGAZERS,direction:DESC}",
+			OwnerAffiliations: "OWNER",
+		},
+	}
+
 	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
 
-		args := query.Arguments{
-			UserArguments: query.UserArguments{
-				Login: fmt.Sprintf("\"%s\"", user.Login),
-			},
-			RepositoriesArguments: query.RepositoriesArguments{
-				First:             100,
-				OrderBy:           "{field: STARGAZERS, direction: DESC}",
-				OwnerAffiliations: "OWNER",
-			},
-		}
-		if err := u.FetchRepositories(&args); err != nil {
+		request.UserArguments.Login = fmt.Sprintf("\"%s\"", user.Login)
+		if err := u.Fetch(request.Join()); err != nil {
 			return err
 		}
 
@@ -175,16 +179,9 @@ func (u *UserCollection) StoreUsers() error {
 	return err
 }
 
-func (u *UserCollection) FetchUsers(args *query.Arguments) error {
+func (u *UserCollection) Fetch(q []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return app.Fetch(ctx, args.Read("users"), &u.Response)
-}
-
-func (u *UserCollection) FetchRepositories(args *query.Arguments) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return app.Fetch(ctx, args.Read("user_repositories"), &u.Response)
+	return app.Fetch(ctx, q, &u.Response)
 }

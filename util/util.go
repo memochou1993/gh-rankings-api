@@ -29,10 +29,10 @@ func LoadEnv() {
 }
 
 func LogStruct(name string, v interface{}) {
-	log.Println(fmt.Sprintf("%s: \"%s\"", name, JoinStruct(v)))
+	log.Println(fmt.Sprintf("%s: \"%s\"", name, JoinStruct(v, ", ")))
 }
 
-func JoinStruct(v interface{}) string {
+func JoinStruct(v interface{}, sep string) string {
 	b := bytes.Buffer{}
 	encoder := json.NewEncoder(&b)
 	encoder.SetEscapeHTML(false)
@@ -48,6 +48,7 @@ func JoinStruct(v interface{}) string {
 	s = strings.Replace(s, "\"", "", -1)
 	s = strings.Replace(s, "_", "\"", -1)
 	s = strings.Replace(s, "\n", "", -1)
+	s = strings.Replace(s, ",", sep, -1)
 
 	return s
 }

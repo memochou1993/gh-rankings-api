@@ -9,26 +9,18 @@ import (
 	"time"
 )
 
-type Arguments struct {
+type Request struct {
+	Schema                []byte
 	UserArguments         UserArguments
 	SearchArguments       SearchArguments
 	RepositoriesArguments RepositoriesArguments
 }
 
-func (args *Arguments) Read(filename string) []byte {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	return args.Join(data)
-}
-
-func (args *Arguments) Join(data []byte) []byte {
-	s := string(data)
-	s = strings.Replace(s, "UserArguments", util.JoinStruct(args.UserArguments), 1)
-	s = strings.Replace(s, "SearchArguments", util.JoinStruct(args.SearchArguments), 1)
-	s = strings.Replace(s, "RepositoriesArguments", util.JoinStruct(args.RepositoriesArguments), 1)
+func (r *Request) Join() []byte {
+	s := string(r.Schema)
+	s = strings.Replace(s, "UserArguments", util.JoinStruct(r.UserArguments, ","), 1)
+	s = strings.Replace(s, "SearchArguments", util.JoinStruct(r.SearchArguments, ","), 1)
+	s = strings.Replace(s, "RepositoriesArguments", util.JoinStruct(r.RepositoriesArguments, ","), 1)
 
 	return []byte(s)
 }
@@ -53,6 +45,16 @@ type RepositoriesArguments struct {
 	Last              int    `json:"last,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
 	OwnerAffiliations string `json:"ownerAffiliations,omitempty"`
+}
+
+type ArgumentsQuery struct {
+	Created   string `json:"created,omitempty"`
+	Followers string `json:"followers,omitempty"`
+	Repos     string `json:"repos,omitempty"`
+}
+
+func (q *ArgumentsQuery) Join() string {
+	return fmt.Sprintf("\"%s\"", util.JoinStruct(q, " "))
 }
 
 type PageInfo struct {
@@ -91,4 +93,13 @@ type Error struct {
 		Column int `json:"column"`
 	} `json:"locations"`
 	Message string `json:"message"`
+}
+
+func Read(filename string) []byte {
+	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return data
 }

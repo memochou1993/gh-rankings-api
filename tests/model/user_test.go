@@ -26,14 +26,16 @@ func TestFetchUsers(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	args := query.Arguments{
+	request := query.Request{
+		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
 			Query: "\"repos:>=5 followers:>=10\"",
 			Type:  "USER",
 		},
 	}
-	if err := userCollection.FetchUsers(&args); err != nil {
+
+	if err := userCollection.Fetch(request.Join()); err != nil {
 		t.Error(err.Error())
 	}
 	if len(userCollection.Response.Data.Search.Edges) != 1 {
@@ -47,14 +49,16 @@ func TestStoreUsers(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	args := query.Arguments{
+	request := query.Request{
+		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
 			Query: "\"repos:>=5 followers:>=10\"",
 			Type:  "USER",
 		},
 	}
-	if err := userCollection.FetchUsers(&args); err != nil {
+
+	if err := userCollection.Fetch(request.Join()); err != nil {
 		t.Error(err.Error())
 	}
 	if err := userCollection.StoreUsers(); err != nil {
