@@ -51,7 +51,7 @@ func TestFetchUsers(t *testing.T) {
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 100,
-			Query: "\"created:2020-01-01..2020-01-01 followers:>=1 repos:>=5\"",
+			Query: query.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10"),
 			Type:  "USER",
 		},
 	}
@@ -73,7 +73,7 @@ func TestFetch(t *testing.T) {
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
-			Query: "\"repos:>=1 followers:>=1\"",
+			Query: query.String("followers:>=1 repos:>=1"),
 			Type:  "USER",
 		},
 	}
@@ -96,7 +96,7 @@ func TestStoreUsers(t *testing.T) {
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
-			Query: "\"repos:>=1 followers:>=1\"",
+			Query: query.String("followers:>=1 repos:>=1"),
 			Type:  "USER",
 		},
 	}

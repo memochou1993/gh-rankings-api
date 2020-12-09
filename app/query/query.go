@@ -30,19 +30,15 @@ type UserArguments struct {
 }
 
 type SearchArguments struct {
-	After  string `json:"after,omitempty"`
-	Before string `json:"before,omitempty"`
-	First  int    `json:"first,omitempty"`
-	Last   int    `json:"last,omitempty"`
-	Query  string `json:"query,omitempty"`
-	Type   string `json:"type,omitempty"`
+	After string `json:"after,omitempty"`
+	First int    `json:"first,omitempty"`
+	Query string `json:"query,omitempty"`
+	Type  string `json:"type,omitempty"`
 }
 
 type RepositoriesArguments struct {
 	After             string `json:"after,omitempty"`
-	Before            string `json:"before,omitempty"`
 	First             int    `json:"first,omitempty"`
-	Last              int    `json:"last,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
 	OwnerAffiliations string `json:"ownerAffiliations,omitempty"`
 }
@@ -51,10 +47,6 @@ type ArgumentsQuery struct {
 	Created   string `json:"created,omitempty"`
 	Followers string `json:"followers,omitempty"`
 	Repos     string `json:"repos,omitempty"`
-}
-
-func (q *ArgumentsQuery) Join() string {
-	return fmt.Sprintf("\"%s\"", util.JoinStruct(q, " "))
 }
 
 type PageInfo struct {
@@ -101,4 +93,15 @@ func Read(filename string) []byte {
 	}
 
 	return data
+}
+
+func Range(from string, to string) string {
+	return fmt.Sprintf("%s..%s", from, to)
+}
+
+func String(v string) string {
+	if v == "" {
+		return v
+	}
+	return fmt.Sprintf("\"%s\"", v)
 }
