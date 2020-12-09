@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"reflect"
 	"runtime"
 	"strings"
 )
@@ -28,8 +29,17 @@ func LoadEnv() {
 	}
 }
 
-func LogStruct(name string, v interface{}) {
-	log.Println(fmt.Sprintf("%s: \"%s\"", name, JoinStruct(v, ", ")))
+func Log(method string, v interface{}) {
+	text := ""
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Struct:
+		text = fmt.Sprintf("[%s] %s", method, JoinStruct(v, ", "))
+	case reflect.String:
+		text = fmt.Sprintf("[%s] %s", method, v)
+	default:
+		text = fmt.Sprintf("[%s] %v", method, v)
+	}
+	log.Println(text)
 }
 
 func JoinStruct(v interface{}, sep string) string {

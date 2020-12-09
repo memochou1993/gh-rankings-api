@@ -23,7 +23,33 @@ type UserCollection struct {
 				} `json:"edges"`
 				PageInfo query.PageInfo `json:"pageInfo"`
 			} `json:"search"`
-			User      User            `json:"user"`
+			User struct {
+				AvatarURL string    `json:"avatarUrl"`
+				CreatedAt time.Time `json:"createdAt"`
+				Email     string    `json:"email"`
+				Followers struct {
+					TotalCount int `json:"totalCount"`
+				} `json:"followers"`
+				Location     string `json:"location"`
+				Login        string `json:"login"`
+				Name         string `json:"name"`
+				Repositories struct {
+					TotalCount int `json:"totalCount"`
+					Edges      []struct {
+						Cursor string `json:"cursor"`
+						Node   struct {
+							Name            string `json:"name"`
+							PrimaryLanguage struct {
+								Name string `json:"name"`
+							} `json:"primaryLanguage"`
+							Stargazers struct {
+								TotalCount int `json:"totalCount"`
+							} `json:"stargazers"`
+						} `json:"node"`
+					} `json:"edges"`
+					PageInfo query.PageInfo `json:"pageInfo"`
+				} `json:"repositories"`
+			} `json:"user"`
 			RateLimit query.RateLimit `json:"rateLimit"`
 		} `json:"data"`
 		Errors []query.Error `json:"errors"`
@@ -40,21 +66,14 @@ type User struct {
 	Location     string `json:"location"`
 	Login        string `json:"login"`
 	Name         string `json:"name"`
-	Repositories struct {
-		TotalCount int `json:"totalCount"`
-		Edges      []struct {
-			Cursor string `json:"cursor"`
-			Node   struct {
-				Name            string `json:"name"`
-				PrimaryLanguage struct {
-					Name string `json:"name"`
-				} `json:"primaryLanguage"`
-				Stargazers struct {
-					TotalCount int `json:"totalCount"`
-				} `json:"stargazers"`
-			} `json:"node"`
-		} `json:"edges"`
-		PageInfo query.PageInfo `json:"pageInfo"`
+	Repositories []struct {
+		Name            string `json:"name"`
+		PrimaryLanguage struct {
+			Name string `json:"name"`
+		} `json:"primaryLanguage"`
+		Stargazers struct {
+			TotalCount int `json:"totalCount"`
+		} `json:"stargazers"`
 	} `json:"repositories"`
 }
 
@@ -83,7 +102,6 @@ func (u *UserCollection) Collect() error {
 			Type:  "USER",
 		},
 	}
-
 	layout := "2006-01-02"
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
@@ -93,35 +111,44 @@ func (u *UserCollection) Collect() error {
 			Repos:     ">=5",
 		}
 		request.SearchArguments.Query = q.Join()
-		for {
-			u.Response.Data.RateLimit.Check()
-			if u.Response.Data.Search.PageInfo.EndCursor != "" {
-				request.SearchArguments.After = fmt.Sprintf("\"%s\"", u.Response.Data.Search.PageInfo.EndCursor)
-			}
-			util.LogStruct("Search Arguments", request.SearchArguments)
-			if err := u.Fetch(request.Join()); err != nil {
-				return err
-			}
-			if len(u.Response.Errors) > 0 {
-				util.LogStruct("Errors", u.Response.Errors)
-			}
-			util.LogStruct("Rate Limit", u.Response.Data.RateLimit)
-			if len(u.Response.Data.Search.Edges) == 0 {
-				break
-			}
-			if err := u.StoreUsers(); err != nil {
-				return err
-			}
-			log.Println(fmt.Sprintf("Discovered %d users", len(u.Response.Data.Search.Edges)))
-			if !u.Response.Data.Search.PageInfo.HasNextPage {
-				u.Response.Data.Search.PageInfo.EndCursor = ""
-				break
-			}
+		if err := u.FetchUsers(&request); err != nil {
+			return err
 		}
 		date = date.AddDate(0, 0, 7)
 	}
 
 	return nil
+}
+
+func (u *UserCollection) FetchUsers(request *query.Request) error {
+	after := &request.SearchArguments.After
+	endCursor := &u.Response.Data.Search.PageInfo.EndCursor
+	u.Response.Data.RateLimit.Check()
+	if *endCursor != "" {
+		*after = fmt.Sprintf("\"%s\"", *endCursor)
+	}
+	util.Log("DEBUG", request.SearchArguments)
+	util.Log("INFO", "Searching users...")
+	if err := u.Fetch(request.Join()); err != nil {
+		return err
+	}
+	u.LogErrors()
+	util.Log("DEBUG", u.Response.Data.RateLimit)
+	count := len(u.Response.Data.Search.Edges)
+	if count == 0 {
+		return nil
+	}
+	if err := u.StoreUsers(); err != nil {
+		return err
+	}
+	util.Log("INFO", fmt.Sprintf("Discovered %d users", count))
+	if !u.Response.Data.Search.PageInfo.HasNextPage {
+		*endCursor = ""
+		*after = ""
+		return nil
+	}
+
+	return u.FetchUsers(request)
 }
 
 func (u *UserCollection) Update() error {
@@ -146,20 +173,43 @@ func (u *UserCollection) Update() error {
 			OwnerAffiliations: "OWNER",
 		},
 	}
-
 	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
-
 		request.UserArguments.Login = fmt.Sprintf("\"%s\"", user.Login)
-		if err := u.Fetch(request.Join()); err != nil {
-			return err
+		after := &request.SearchArguments.After
+		endCursor := &u.Response.Data.Search.PageInfo.EndCursor
+		var repositories []interface{}
+		for {
+			u.Response.Data.RateLimit.Check()
+			if *endCursor != "" {
+				*after = fmt.Sprintf("\"%s\"", *endCursor)
+			}
+			util.Log("DEBUG", request.UserArguments)
+			util.Log("DEBUG", request.RepositoriesArguments)
+			util.Log("INFO", "Searching user repositories...")
+			if err := u.Fetch(request.Join()); err != nil {
+				return err
+			}
+			u.LogErrors()
+			util.Log("DEBUG", u.Response.Data.RateLimit)
+			count := len(u.Response.Data.User.Repositories.Edges)
+			if count == 0 {
+				break
+			}
+			for _, edge := range u.Response.Data.User.Repositories.Edges {
+				repositories = append(repositories, edge.Node)
+			}
+			util.Log("INFO", fmt.Sprintf("Discovered %d repositories", count))
+			if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
+				*endCursor = ""
+				*after = ""
+				break
+			}
 		}
-
-		// TODO
-		log.Print(u.Response.Data.User)
+		u.UpdateRepositories(user, repositories)
 	}
 
 	return nil
@@ -179,9 +229,27 @@ func (u *UserCollection) StoreUsers() error {
 	return err
 }
 
+func (u *UserCollection) UpdateRepositories(user User, documents []interface{}) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{"login", user.Login}}
+	update := bson.D{{"$set", bson.D{{"repositories", documents}}}}
+
+	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
+}
+
 func (u *UserCollection) Fetch(q []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	return app.Fetch(ctx, q, &u.Response)
+}
+
+func (u *UserCollection) LogErrors() {
+	if len(u.Response.Errors) > 0 {
+		for _, err := range u.Response.Errors {
+			util.Log("ERROR", err.Message)
+		}
+	}
 }
