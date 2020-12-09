@@ -55,33 +55,12 @@ func TestFetchUsers(t *testing.T) {
 			Type:  "USER",
 		},
 	}
-	if err := userCollection.FetchUsers(&request); err != nil {
+
+	var users []interface{}
+	if err := userCollection.FetchUsers(&request, &users); err != nil {
 		t.Error(err.Error())
 	}
-	if count := userCollection.Count(); count == 0 {
-		t.Fail()
-	}
-
-	dropCollection(&userCollection)
-}
-
-func TestFetch(t *testing.T) {
-	userCollection := model.UserCollection{}
-	userCollection.SetCollectionName("users")
-
-	request := query.Request{
-		Schema: query.Read("users"),
-		SearchArguments: query.SearchArguments{
-			First: 1,
-			Query: query.String("followers:>=1 repos:>=1"),
-			Type:  "USER",
-		},
-	}
-
-	if err := userCollection.Fetch(request.Join()); err != nil {
-		t.Error(err.Error())
-	}
-	if len(userCollection.Response.Data.Search.Edges) != 1 {
+	if len(users) == 0 {
 		t.Fail()
 	}
 
@@ -95,19 +74,20 @@ func TestStoreUsers(t *testing.T) {
 	request := query.Request{
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
-			First: 1,
-			Query: query.String("followers:>=1 repos:>=1"),
+			First: 100,
+			Query: query.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10"),
 			Type:  "USER",
 		},
 	}
 
-	if err := userCollection.Fetch(request.Join()); err != nil {
+	var users []interface{}
+	if err := userCollection.FetchUsers(&request, &users); err != nil {
 		t.Error(err.Error())
 	}
-	if err := userCollection.StoreUsers(); err != nil {
+	if err := userCollection.StoreUsers(users); err != nil {
 		t.Error(err.Error())
 	}
-	if count := userCollection.Count(); count != 1 {
+	if count := userCollection.Count(); count == 0 {
 		t.Fail()
 	}
 

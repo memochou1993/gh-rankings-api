@@ -121,7 +121,12 @@ func (u *UserCollection) Travel(t *time.Time, r *query.Request) error {
 		Repos:     ">=5",
 	}
 	r.SearchArguments.Query = query.String(util.JoinStruct(q, " "))
-	if err := u.FetchUsers(r); err != nil {
+
+	var users []interface{}
+	if err := u.FetchUsers(r, &users); err != nil {
+		return err
+	}
+	if err := u.StoreUsers(users); err != nil {
 		return err
 	}
 	*t = t.AddDate(0, 0, 7)
@@ -129,23 +134,18 @@ func (u *UserCollection) Travel(t *time.Time, r *query.Request) error {
 	return u.Travel(t, r)
 }
 
-func (u *UserCollection) FetchUsers(r *query.Request) error {
-	u.Response.Data.RateLimit.Check()
-
+func (u *UserCollection) FetchUsers(r *query.Request, users *[]interface{}) error {
 	util.Log("DEBUG", r.SearchArguments)
 	util.Log("INFO", "Searching users...")
 	if err := u.Fetch(r.Join()); err != nil {
 		return err
 	}
-	u.logErrors()
-	util.Log("DEBUG", u.Response.Data.RateLimit)
 	count := len(u.Response.Data.Search.Edges)
 	if count == 0 {
 		return nil
 	}
-
-	if err := u.StoreUsers(); err != nil {
-		return err
+	for _, edge := range u.Response.Data.Search.Edges {
+		*users = append(*users, edge.Node)
 	}
 	util.Log("INFO", fmt.Sprintf("Discovered %d users", count))
 
@@ -155,7 +155,21 @@ func (u *UserCollection) FetchUsers(r *query.Request) error {
 	}
 	r.SearchArguments.After = query.String(u.Response.Data.Search.PageInfo.EndCursor)
 
-	return u.FetchUsers(r)
+	return u.FetchUsers(r, users)
+}
+
+func (u *UserCollection) StoreUsers(users []interface{}) error {
+	if len(users) == 0 {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := u.GetCollection().InsertMany(ctx, users)
+	util.Log("INFO", fmt.Sprintf("Stored %d users", len(users)))
+
+	return err
 }
 
 func (u *UserCollection) Update() error {
@@ -186,6 +200,7 @@ func (u *UserCollection) Update() error {
 			log.Fatalln(err.Error())
 		}
 		request.UserArguments.Login = query.String(user.Login)
+
 		var repositories []interface{}
 		if err := u.FetchRepositories(&request, &repositories); err != nil {
 			return err
@@ -197,16 +212,12 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(r *query.Request, repos *[]interface{}) error {
-	u.Response.Data.RateLimit.Check()
-
 	util.Log("DEBUG", r.UserArguments)
 	util.Log("DEBUG", r.RepositoriesArguments)
 	util.Log("INFO", "Searching repositories...")
 	if err := u.Fetch(r.Join()); err != nil {
 		return err
 	}
-	u.logErrors()
-	util.Log("DEBUG", u.Response.Data.RateLimit)
 	count := len(u.Response.Data.User.Repositories.Edges)
 	if count == 0 {
 		return nil
@@ -225,21 +236,11 @@ func (u *UserCollection) FetchRepositories(r *query.Request, repos *[]interface{
 	return u.FetchRepositories(r, repos)
 }
 
-func (u *UserCollection) StoreUsers() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	var documents []interface{}
-	for _, edge := range u.Response.Data.Search.Edges {
-		documents = append(documents, edge.Node)
+func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
+	if len(repos) == 0 {
+		return
 	}
 
-	_, err := u.GetCollection().InsertMany(ctx, documents)
-
-	return err
-}
-
-func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -247,11 +248,17 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
+	util.Log("INFO", fmt.Sprintf("Stored %d repositories", len(repos)))
 }
 
 func (u *UserCollection) Fetch(q []byte) error {
+	u.Response.Data.RateLimit.Check()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	util.Log("DEBUG", u.Response.Data.RateLimit)
+	u.logErrors()
 
 	return app.Fetch(ctx, q, &u.Response)
 }
