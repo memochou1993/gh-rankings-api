@@ -95,6 +95,7 @@ func (u *UserCollection) Collect() error {
 		return nil
 	}
 
+	date := time.Date(2020, time.November, 1, 0, 0, 0, 0, time.UTC)
 	request := query.Request{
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
@@ -102,34 +103,42 @@ func (u *UserCollection) Collect() error {
 			Type:  "USER",
 		},
 	}
-	layout := "2006-01-02"
-	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	for ; date.Before(time.Now()); date.AddDate(0, 0, 7) {
-		q := query.ArgumentsQuery{
-			Created:   fmt.Sprintf("%s..%s", date.Format(layout), date.AddDate(0, 0, 6).Format(layout)),
-			Followers: ">=10",
-			Repos:     ">=5",
-		}
-		request.SearchArguments.Query = q.Join()
-		if err := u.FetchUsers(&request); err != nil {
-			return err
-		}
-		date = date.AddDate(0, 0, 7)
+	if err := u.Travel(&date, &request); err != nil {
+		return nil
 	}
 
 	return nil
 }
 
-func (u *UserCollection) FetchUsers(request *query.Request) error {
-	after := &request.SearchArguments.After
+func (u *UserCollection) Travel(d *time.Time, r *query.Request) error {
+	layout := "2006-01-02"
+	if d.After(time.Now()) {
+		return nil
+	}
+	q := query.ArgumentsQuery{
+		Created:   fmt.Sprintf("%s..%s", d.Format(layout), d.AddDate(0, 0, 6).Format(layout)),
+		Followers: ">=10",
+		Repos:     ">=5",
+	}
+	r.SearchArguments.Query = q.Join()
+	if err := u.FetchUsers(r); err != nil {
+		return err
+	}
+	*d = d.AddDate(0, 0, 7)
+
+	return u.Travel(d, r)
+}
+
+func (u *UserCollection) FetchUsers(r *query.Request) error {
+	after := &r.SearchArguments.After
 	endCursor := &u.Response.Data.Search.PageInfo.EndCursor
 	u.Response.Data.RateLimit.Check()
 	if *endCursor != "" {
 		*after = fmt.Sprintf("\"%s\"", *endCursor)
 	}
-	util.Log("DEBUG", request.SearchArguments)
+	util.Log("DEBUG", r.SearchArguments)
 	util.Log("INFO", "Searching users...")
-	if err := u.Fetch(request.Join()); err != nil {
+	if err := u.Fetch(r.Join()); err != nil {
 		return err
 	}
 	u.LogErrors()
@@ -148,7 +157,7 @@ func (u *UserCollection) FetchUsers(request *query.Request) error {
 		return nil
 	}
 
-	return u.FetchUsers(request)
+	return u.FetchUsers(r)
 }
 
 func (u *UserCollection) Update() error {
