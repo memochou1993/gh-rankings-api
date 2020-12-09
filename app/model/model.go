@@ -20,10 +20,6 @@ func (c *Collection) SetCollectionName(collectionName string) {
 	c.collectionName = collectionName
 }
 
-func (c *Collection) GetCollectionName() string {
-	return c.collectionName
-}
-
 func (c *Collection) GetCollection() *mongo.Collection {
 	return database.GetCollection(c.collectionName)
 }

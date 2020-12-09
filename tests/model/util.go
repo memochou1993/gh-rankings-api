@@ -13,8 +13,8 @@ func dropDatabase() {
 	}
 }
 
-func dropCollection(collection model.CollectionInterface) {
-	if err := collection.GetCollection().Drop(context.Background()); err != nil {
+func dropCollection(c model.CollectionInterface) {
+	if err := c.GetCollection().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

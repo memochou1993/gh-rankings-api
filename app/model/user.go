@@ -110,13 +110,13 @@ func (u *UserCollection) Collect() error {
 	return nil
 }
 
-func (u *UserCollection) Travel(d *time.Time, r *query.Request) error {
+func (u *UserCollection) Travel(t *time.Time, r *query.Request) error {
 	layout := "2006-01-02"
-	if d.After(time.Now()) {
+	if t.After(time.Now()) {
 		return nil
 	}
 	q := query.ArgumentsQuery{
-		Created:   fmt.Sprintf("%s..%s", d.Format(layout), d.AddDate(0, 0, 6).Format(layout)),
+		Created:   fmt.Sprintf("%s..%s", t.Format(layout), t.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
 		Repos:     ">=5",
 	}
@@ -124,9 +124,9 @@ func (u *UserCollection) Travel(d *time.Time, r *query.Request) error {
 	if err := u.FetchUsers(r); err != nil {
 		return err
 	}
-	*d = d.AddDate(0, 0, 7)
+	*t = t.AddDate(0, 0, 7)
 
-	return u.Travel(d, r)
+	return u.Travel(t, r)
 }
 
 func (u *UserCollection) FetchUsers(r *query.Request) error {
