@@ -22,8 +22,8 @@ func setUp() {
 }
 
 func TestTravel(t *testing.T) {
-	userCollection := model.UserCollection{}
-	userCollection.SetCollectionName("users")
+	u := model.UserCollection{}
+	u.SetCollectionName("users")
 
 	date := time.Now().AddDate(0, -1, 0)
 	request := query.Request{
@@ -33,19 +33,19 @@ func TestTravel(t *testing.T) {
 			Type:  "USER",
 		},
 	}
-	if err := userCollection.Travel(&date, &request); err != nil {
+	if err := u.Travel(&date, &request); err != nil {
 		t.Error(err.Error())
 	}
-	if count := userCollection.Count(); count == 0 {
+	if count := u.Count(); count == 0 {
 		t.Fail()
 	}
 
-	dropCollection(&userCollection)
+	dropCollection(&u)
 }
 
 func TestFetchUsers(t *testing.T) {
-	userCollection := model.UserCollection{}
-	userCollection.SetCollectionName("users")
+	u := model.UserCollection{}
+	u.SetCollectionName("users")
 
 	request := query.Request{
 		Schema: query.Read("users"),
@@ -57,54 +57,43 @@ func TestFetchUsers(t *testing.T) {
 	}
 
 	var users []interface{}
-	if err := userCollection.FetchUsers(&request, &users); err != nil {
+	if err := u.FetchUsers(&request, &users); err != nil {
 		t.Error(err.Error())
 	}
 	if len(users) == 0 {
 		t.Fail()
 	}
 
-	dropCollection(&userCollection)
+	dropCollection(&u)
 }
 
 func TestStoreUsers(t *testing.T) {
-	userCollection := model.UserCollection{}
-	userCollection.SetCollectionName("users")
-
-	request := query.Request{
-		Schema: query.Read("users"),
-		SearchArguments: query.SearchArguments{
-			First: 100,
-			Query: query.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10"),
-			Type:  "USER",
-		},
-	}
+	u := model.UserCollection{}
+	u.SetCollectionName("users")
 
 	var users []interface{}
-	if err := userCollection.FetchUsers(&request, &users); err != nil {
+	users = append(users, bson.D{})
+	if err := u.StoreUsers(users); err != nil {
 		t.Error(err.Error())
 	}
-	if err := userCollection.StoreUsers(users); err != nil {
-		t.Error(err.Error())
-	}
-	if count := userCollection.Count(); count == 0 {
+	if count := u.Count(); count != 1 {
 		t.Fail()
 	}
 
-	dropCollection(&userCollection)
+	dropCollection(&u)
 }
 
 func TestIndexUsers(t *testing.T) {
-	userCollection := model.UserCollection{}
-	userCollection.SetCollectionName("users")
+	u := model.UserCollection{}
+	u.SetCollectionName("users")
 
 	ctx := context.Background()
 
-	if err := userCollection.Index([]string{"login"}); err != nil {
+	if err := u.Index([]string{"login"}); err != nil {
 		t.Error(err.Error())
 	}
 
-	cursor, err := userCollection.GetCollection().Indexes().List(ctx)
+	cursor, err := u.GetCollection().Indexes().List(ctx)
 	if err != nil {
 		t.Fatal()
 	}
@@ -122,7 +111,7 @@ func TestIndexUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(&userCollection)
+	dropCollection(&u)
 }
 
 func tearDown() {
