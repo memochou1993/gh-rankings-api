@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -20,17 +21,59 @@ func setUp() {
 	//
 }
 
-func TestFetchUsers(t *testing.T) {
+func TestTravel(t *testing.T) {
 	userCollection := model.UserCollection{}
-	if err := userCollection.Init(); err != nil {
+	userCollection.SetCollectionName("users")
+
+	date := time.Now().AddDate(0, -1, 0)
+	request := query.Request{
+		Schema: query.Read("users"),
+		SearchArguments: query.SearchArguments{
+			First: 100,
+			Type:  "USER",
+		},
+	}
+	if err := userCollection.Travel(&date, &request); err != nil {
 		t.Error(err.Error())
 	}
+	if count := userCollection.Count(); count == 0 {
+		t.Fail()
+	}
+
+	dropCollection(&userCollection)
+}
+
+func TestFetchUsers(t *testing.T) {
+	userCollection := model.UserCollection{}
+	userCollection.SetCollectionName("users")
+
+	request := query.Request{
+		Schema: query.Read("users"),
+		SearchArguments: query.SearchArguments{
+			First: 100,
+			Query: "\"created:2020-01-01..2020-01-01 followers:>=1 repos:>=5\"",
+			Type:  "USER",
+		},
+	}
+	if err := userCollection.FetchUsers(&request); err != nil {
+		t.Error(err.Error())
+	}
+	if count := userCollection.Count(); count == 0 {
+		t.Fail()
+	}
+
+	dropCollection(&userCollection)
+}
+
+func TestFetch(t *testing.T) {
+	userCollection := model.UserCollection{}
+	userCollection.SetCollectionName("users")
 
 	request := query.Request{
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
-			Query: "\"repos:>=5 followers:>=10\"",
+			Query: "\"repos:>=1 followers:>=1\"",
 			Type:  "USER",
 		},
 	}
@@ -41,19 +84,19 @@ func TestFetchUsers(t *testing.T) {
 	if len(userCollection.Response.Data.Search.Edges) != 1 {
 		t.Fail()
 	}
+
+	dropCollection(&userCollection)
 }
 
 func TestStoreUsers(t *testing.T) {
 	userCollection := model.UserCollection{}
-	if err := userCollection.Init(); err != nil {
-		t.Error(err.Error())
-	}
+	userCollection.SetCollectionName("users")
 
 	request := query.Request{
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
 			First: 1,
-			Query: "\"repos:>=5 followers:>=10\"",
+			Query: "\"repos:>=1 followers:>=1\"",
 			Type:  "USER",
 		},
 	}
@@ -73,9 +116,7 @@ func TestStoreUsers(t *testing.T) {
 
 func TestIndexUsers(t *testing.T) {
 	userCollection := model.UserCollection{}
-	if err := userCollection.Init(); err != nil {
-		t.Error(err.Error())
-	}
+	userCollection.SetCollectionName("users")
 
 	ctx := context.Background()
 

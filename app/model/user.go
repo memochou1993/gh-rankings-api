@@ -95,7 +95,7 @@ func (u *UserCollection) Collect() error {
 		return nil
 	}
 
-	date := time.Date(2020, time.November, 1, 0, 0, 0, 0, time.UTC)
+	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	request := query.Request{
 		Schema: query.Read("users"),
 		SearchArguments: query.SearchArguments{
