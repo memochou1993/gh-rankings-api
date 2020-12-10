@@ -173,7 +173,7 @@ func (u *UserCollection) StoreUsers(users []interface{}) error {
 }
 
 func (u *UserCollection) Update() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	cursor, err := u.GetCollection().Find(ctx, bson.M{})
