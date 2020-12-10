@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,11 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
-
-type Query struct {
-	Query string `json:"query"`
-}
 
 var client *http.Client
 
@@ -27,13 +23,9 @@ func initClient() {
 	client = http.DefaultClient
 }
 
-func Fetch(ctx context.Context, q []byte, v interface{}) error {
-	body := bytes.Buffer{}
-	if err := json.NewEncoder(&body).Encode(Query{Query: string(q)}); err != nil {
-		return err
-	}
-
-	resp, err := post(ctx, &body)
+func Query(ctx context.Context, r *Request, v interface{}) error {
+	body := strings.NewReader(r.Query())
+	resp, err := post(ctx, body)
 	if err != nil {
 		return err
 	}

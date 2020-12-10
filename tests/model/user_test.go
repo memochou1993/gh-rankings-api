@@ -2,8 +2,8 @@ package model
 
 import (
 	"context"
+	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
-	"github.com/memochou1993/github-rankings/app/query"
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
@@ -26,14 +26,14 @@ func TestTravel(t *testing.T) {
 	u.SetCollectionName("users")
 
 	date := time.Now().AddDate(0, -1, 0)
-	request := query.Request{
-		Schema: query.Read("users"),
-		SearchArguments: query.SearchArguments{
+	r := app.Request{
+		Schema: app.Read("users"),
+		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&date, &request); err != nil {
+	if err := u.Travel(&date, &r); err != nil {
 		t.Error(err.Error())
 	}
 	if count := u.Count(); count == 0 {
@@ -47,17 +47,17 @@ func TestFetchUsers(t *testing.T) {
 	u := model.UserCollection{}
 	u.SetCollectionName("users")
 
-	request := query.Request{
-		Schema: query.Read("users"),
-		SearchArguments: query.SearchArguments{
+	r := app.Request{
+		Schema: app.Read("users"),
+		SearchArguments: app.SearchArguments{
 			First: 100,
-			Query: query.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10"),
 			Type:  "USER",
 		},
 	}
+	r.SearchArguments.Query = r.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10")
 
 	var users []interface{}
-	if err := u.FetchUsers(&request, &users); err != nil {
+	if err := u.FetchUsers(&r, &users); err != nil {
 		t.Error(err.Error())
 	}
 	if len(users) == 0 {

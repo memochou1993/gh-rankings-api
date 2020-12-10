@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
-	"github.com/memochou1993/github-rankings/app/query"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
@@ -21,7 +20,7 @@ type UserCollection struct {
 					Cursor string `json:"cursor"`
 					Node   User   `json:"node"`
 				} `json:"edges"`
-				PageInfo query.PageInfo `json:"pageInfo"`
+				PageInfo app.PageInfo `json:"pageInfo"`
 			} `json:"search"`
 			User struct {
 				AvatarURL string    `json:"avatarUrl"`
@@ -47,12 +46,12 @@ type UserCollection struct {
 							} `json:"stargazers"`
 						} `json:"node"`
 					} `json:"edges"`
-					PageInfo query.PageInfo `json:"pageInfo"`
+					PageInfo app.PageInfo `json:"pageInfo"`
 				} `json:"repositories"`
 			} `json:"user"`
-			RateLimit query.RateLimit `json:"rateLimit"`
+			RateLimit app.RateLimit `json:"rateLimit"`
 		} `json:"data"`
-		Errors []query.Error `json:"errors"`
+		Errors []app.Error `json:"errors"`
 	}
 }
 
@@ -96,31 +95,31 @@ func (u *UserCollection) Collect() error {
 	}
 
 	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	request := query.Request{
-		Schema: query.Read("users"),
-		SearchArguments: query.SearchArguments{
+	r := app.Request{
+		Schema: app.Read("users"),
+		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&date, &request); err != nil {
+	if err := u.Travel(&date, &r); err != nil {
 		return nil
 	}
 
 	return nil
 }
 
-func (u *UserCollection) Travel(t *time.Time, r *query.Request) error {
+func (u *UserCollection) Travel(t *time.Time, r *app.Request) error {
 	layout := "2006-01-02"
 	if t.After(time.Now()) {
 		return nil
 	}
-	q := query.ArgumentsQuery{
-		Created:   query.Range(t.Format(layout), t.AddDate(0, 0, 6).Format(layout)),
+	q := app.ArgumentsQuery{
+		Created:   r.Range(t.Format(layout), t.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
 		Repos:     ">=5",
 	}
-	r.SearchArguments.Query = query.String(util.JoinStruct(q, " "))
+	r.SearchArguments.Query = r.String(util.JoinStruct(q, " "))
 
 	var users []interface{}
 	if err := u.FetchUsers(r, &users); err != nil {
@@ -134,10 +133,10 @@ func (u *UserCollection) Travel(t *time.Time, r *query.Request) error {
 	return u.Travel(t, r)
 }
 
-func (u *UserCollection) FetchUsers(r *query.Request, users *[]interface{}) error {
+func (u *UserCollection) FetchUsers(r *app.Request, users *[]interface{}) error {
 	util.Log("DEBUG", r.SearchArguments)
 	util.Log("INFO", "Searching users...")
-	if err := u.Fetch(r.Join()); err != nil {
+	if err := u.Fetch(r); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.Search.Edges)
@@ -153,7 +152,7 @@ func (u *UserCollection) FetchUsers(r *query.Request, users *[]interface{}) erro
 		r.SearchArguments.After = ""
 		return nil
 	}
-	r.SearchArguments.After = query.String(u.Response.Data.Search.PageInfo.EndCursor)
+	r.SearchArguments.After = r.String(u.Response.Data.Search.PageInfo.EndCursor)
 
 	return u.FetchUsers(r, users)
 }
@@ -186,9 +185,9 @@ func (u *UserCollection) Update() error {
 		}
 	}()
 
-	request := query.Request{
-		Schema: query.Read("user_repositories"),
-		RepositoriesArguments: query.RepositoriesArguments{
+	r := app.Request{
+		Schema: app.Read("user_repositories"),
+		RepositoriesArguments: app.RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:STARGAZERS,direction:DESC}",
 			OwnerAffiliations: "OWNER",
@@ -199,10 +198,10 @@ func (u *UserCollection) Update() error {
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
-		request.UserArguments.Login = query.String(user.Login)
+		r.UserArguments.Login = r.String(user.Login)
 
 		var repositories []interface{}
-		if err := u.FetchRepositories(&request, &repositories); err != nil {
+		if err := u.FetchRepositories(&r, &repositories); err != nil {
 			return err
 		}
 		u.StoreRepositories(user, repositories)
@@ -211,11 +210,11 @@ func (u *UserCollection) Update() error {
 	return nil
 }
 
-func (u *UserCollection) FetchRepositories(r *query.Request, repos *[]interface{}) error {
+func (u *UserCollection) FetchRepositories(r *app.Request, repos *[]interface{}) error {
 	util.Log("DEBUG", r.UserArguments)
 	util.Log("DEBUG", r.RepositoriesArguments)
 	util.Log("INFO", "Searching repositories...")
-	if err := u.Fetch(r.Join()); err != nil {
+	if err := u.Fetch(r); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.User.Repositories.Edges)
@@ -231,7 +230,7 @@ func (u *UserCollection) FetchRepositories(r *query.Request, repos *[]interface{
 		r.RepositoriesArguments.After = ""
 		return nil
 	}
-	r.RepositoriesArguments.After = query.String(u.Response.Data.User.Repositories.PageInfo.EndCursor)
+	r.RepositoriesArguments.After = r.String(u.Response.Data.User.Repositories.PageInfo.EndCursor)
 
 	return u.FetchRepositories(r, repos)
 }
@@ -251,13 +250,13 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	util.Log("INFO", fmt.Sprintf("Stored %d repositories", len(repos)))
 }
 
-func (u *UserCollection) Fetch(q []byte) error {
+func (u *UserCollection) Fetch(r *app.Request) error {
 	u.Response.Data.RateLimit.Check()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := app.Fetch(ctx, q, &u.Response)
+	err := app.Query(ctx, r, &u.Response)
 	util.Log("DEBUG", u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
 		util.Log("ERROR", err.Message)

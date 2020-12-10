@@ -1,6 +1,7 @@
-package query
+package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/memochou1993/github-rankings/util"
 	"io/ioutil"
@@ -10,19 +11,41 @@ import (
 )
 
 type Request struct {
-	Schema                []byte
+	Schema                string
 	UserArguments         UserArguments
 	SearchArguments       SearchArguments
 	RepositoriesArguments RepositoriesArguments
 }
 
-func (r *Request) Join() []byte {
-	s := string(r.Schema)
-	s = strings.Replace(s, "UserArguments", util.JoinStruct(r.UserArguments, ","), 1)
-	s = strings.Replace(s, "SearchArguments", util.JoinStruct(r.SearchArguments, ","), 1)
-	s = strings.Replace(s, "RepositoriesArguments", util.JoinStruct(r.RepositoriesArguments, ","), 1)
+func (r *Request) Query() string {
+	q := r.Schema
+	q = strings.Replace(q, "UserArguments", util.JoinStruct(r.UserArguments, ","), 1)
+	q = strings.Replace(q, "SearchArguments", util.JoinStruct(r.SearchArguments, ","), 1)
+	q = strings.Replace(q, "RepositoriesArguments", util.JoinStruct(r.RepositoriesArguments, ","), 1)
 
-	return []byte(s)
+	query := struct {
+		Query string `json:"query"`
+	}{
+		Query: q,
+	}
+
+	b, err := json.Marshal(query)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return string(b)
+}
+
+func (r *Request) Range(from string, to string) string {
+	return fmt.Sprintf("%s..%s", from, to)
+}
+
+func (r *Request) String(v string) string {
+	if v == "" {
+		return v
+	}
+	return fmt.Sprintf("\"%s\"", v)
 }
 
 type UserArguments struct {
@@ -86,22 +109,11 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-func Read(filename string) []byte {
+func Read(filename string) string {
 	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	return data
-}
-
-func Range(from string, to string) string {
-	return fmt.Sprintf("%s..%s", from, to)
-}
-
-func String(v string) string {
-	if v == "" {
-		return v
-	}
-	return fmt.Sprintf("\"%s\"", v)
+	return string(data)
 }
