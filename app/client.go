@@ -14,7 +14,11 @@ import (
 var client *http.Client
 
 func init() {
-	client = http.DefaultClient
+	client = New()
+}
+
+func New() *http.Client {
+	return http.DefaultClient
 }
 
 func Query(ctx context.Context, r *Request, v interface{}) error {
