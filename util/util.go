@@ -54,7 +54,7 @@ func JoinStruct(v interface{}, sep string) string {
 	s = strings.Replace(s, "\n", "", -1)
 	s = strings.TrimPrefix(s, "{")
 	s = strings.TrimSuffix(s, "}")
-	s = strings.Replace(s, "\\\"", "_", -1)
+	s = strings.Replace(s, "\\\"", "#", -1)
 	s = strings.Replace(s, "\"", "", -1)
 	s = strings.Replace(s, "_", "\"", -1)
 	s = strings.Replace(s, "\n", "", -1)
