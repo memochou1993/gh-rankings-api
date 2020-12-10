@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	InfoLogger    *log.Logger
-	SuccessLogger *log.Logger
-	WarningLogger *log.Logger
-	ErrorLogger   *log.Logger
-	DebugLogger   *log.Logger
+	infoLogger    *log.Logger
+	successLogger *log.Logger
+	warningLogger *log.Logger
+	errorLogger   *log.Logger
+	debugLogger   *log.Logger
 )
 
 const (
@@ -27,11 +27,11 @@ const (
 )
 
 var (
-	Blue   = color("\033[1;34m%s\033[0m")
-	Green  = color("\033[1;32m%s\033[0m")
-	Yellow = color("\033[1;33m%s\033[0m")
-	Red    = color("\033[1;31m%s\033[0m")
-	Purple = color("\033[1;35m%s\033[0m")
+	blue   = color("\033[1;34m%s\033[0m")
+	green  = color("\033[1;32m%s\033[0m")
+	yellow = color("\033[1;33m%s\033[0m")
+	red    = color("\033[1;31m%s\033[0m")
+	purple = color("\033[1;35m%s\033[0m")
 )
 
 func Init() {
@@ -41,36 +41,36 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	InfoLogger = log.New(file, prefix(typeInfo), log.Ldate|log.Ltime)
-	SuccessLogger = log.New(file, prefix(typeSuccess), log.Ldate|log.Ltime)
-	WarningLogger = log.New(file, prefix(typeWarning), log.Ldate|log.Ltime)
-	ErrorLogger = log.New(file, prefix(typeError), log.Ldate|log.Ltime)
-	DebugLogger = log.New(file, prefix(typeDebug), log.Ldate|log.Ltime)
+	infoLogger = log.New(file, prefix(typeInfo), log.Ldate|log.Ltime)
+	successLogger = log.New(file, prefix(typeSuccess), log.Ldate|log.Ltime)
+	warningLogger = log.New(file, prefix(typeWarning), log.Ldate|log.Ltime)
+	errorLogger = log.New(file, prefix(typeError), log.Ldate|log.Ltime)
+	debugLogger = log.New(file, prefix(typeDebug), log.Ldate|log.Ltime)
 }
 
 func Info(v interface{}) {
-	InfoLogger.Println(stringify(v))
-	log.Println(Blue(prefix(typeInfo) + stringify(v)))
+	infoLogger.Println(stringify(v))
+	log.Println(blue(prefix(typeInfo) + stringify(v)))
 }
 
 func Success(v interface{}) {
-	SuccessLogger.Println(stringify(v))
-	log.Println(Green(prefix(typeSuccess) + stringify(v)))
+	successLogger.Println(stringify(v))
+	log.Println(green(prefix(typeSuccess) + stringify(v)))
 }
 
 func Warning(v interface{}) {
-	WarningLogger.Println(stringify(v))
-	log.Println(Yellow(prefix(typeWarning) + stringify(v)))
+	warningLogger.Println(stringify(v))
+	log.Println(yellow(prefix(typeWarning) + stringify(v)))
 }
 
 func Error(v interface{}) {
-	ErrorLogger.Println(stringify(v))
-	log.Println(Red(prefix(typeError) + stringify(v)))
+	errorLogger.Println(stringify(v))
+	log.Println(red(prefix(typeError) + stringify(v)))
 }
 
 func Debug(v interface{}) {
-	DebugLogger.Println(stringify(v))
-	log.Println(Purple(prefix(typeDebug) + stringify(v)))
+	debugLogger.Println(stringify(v))
+	log.Println(purple(prefix(typeDebug) + stringify(v)))
 }
 
 func stringify(v interface{}) string {
