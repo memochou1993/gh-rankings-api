@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/memochou1993/github-rankings/app/model"
 	"log"
 )

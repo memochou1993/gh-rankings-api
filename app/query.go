@@ -73,17 +73,17 @@ type ArgumentsQuery struct {
 }
 
 type PageInfo struct {
-	EndCursor   string `json:"endCursor"`
-	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor,omitempty"`
+	HasNextPage bool   `json:"hasNextPage,omitempty"`
 }
 
 type RateLimit struct {
-	Cost      int
-	Limit     int
-	NodeCount int
-	Remaining int
-	ResetAt   string
-	Used      int
+	Cost      int    `json:"cost,omitempty"`
+	Limit     int    `json:"limit,omitempty"`
+	NodeCount int    `json:"nodeCount,omitempty"`
+	Remaining int    `json:"remaining,omitempty"`
+	ResetAt   string `json:"resetAt,omitempty"`
+	Used      int    `json:"used,omitempty"`
 }
 
 func (rl *RateLimit) Check() {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
+	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
@@ -134,8 +135,8 @@ func (u *UserCollection) Travel(t *time.Time, r *app.Request) error {
 }
 
 func (u *UserCollection) FetchUsers(r *app.Request, users *[]interface{}) error {
-	util.Log("DEBUG", r.SearchArguments)
-	util.Log("INFO", "Searching users...")
+	logger.Debug(r.SearchArguments)
+	logger.Info("Searching users...")
 	if err := u.Fetch(r); err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func (u *UserCollection) FetchUsers(r *app.Request, users *[]interface{}) error 
 	for _, edge := range u.Response.Data.Search.Edges {
 		*users = append(*users, edge.Node)
 	}
-	util.Log("INFO", fmt.Sprintf("Discovered %d users", count))
+	logger.Success(fmt.Sprintf("Discovered %d users", count))
 
 	if !u.Response.Data.Search.PageInfo.HasNextPage {
 		r.SearchArguments.After = ""
@@ -166,7 +167,7 @@ func (u *UserCollection) StoreUsers(users []interface{}) error {
 	defer cancel()
 
 	_, err := u.GetCollection().InsertMany(ctx, users)
-	util.Log("INFO", fmt.Sprintf("Stored %d users", len(users)))
+	logger.Success(fmt.Sprintf("Stored %d users", len(users)))
 
 	return err
 }
@@ -211,9 +212,9 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(r *app.Request, repos *[]interface{}) error {
-	util.Log("DEBUG", r.UserArguments)
-	util.Log("DEBUG", r.RepositoriesArguments)
-	util.Log("INFO", "Searching repositories...")
+	logger.Debug(r.UserArguments)
+	logger.Debug(r.RepositoriesArguments)
+	logger.Info("Searching repositories...")
 	if err := u.Fetch(r); err != nil {
 		return err
 	}
@@ -224,7 +225,7 @@ func (u *UserCollection) FetchRepositories(r *app.Request, repos *[]interface{})
 	for _, edge := range u.Response.Data.User.Repositories.Edges {
 		*repos = append(*repos, edge.Node)
 	}
-	util.Log("INFO", fmt.Sprintf("Discovered %d repositories", count))
+	logger.Success(fmt.Sprintf("Discovered %d repositories", count))
 
 	if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
 		r.RepositoriesArguments.After = ""
@@ -247,7 +248,7 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
-	util.Log("INFO", fmt.Sprintf("Stored %d repositories", len(repos)))
+	logger.Success(fmt.Sprintf("Stored %d repositories", len(repos)))
 }
 
 func (u *UserCollection) Fetch(r *app.Request) error {
@@ -257,9 +258,9 @@ func (u *UserCollection) Fetch(r *app.Request) error {
 	defer cancel()
 
 	err := app.Query(ctx, r, &u.Response)
-	util.Log("DEBUG", u.Response.Data.RateLimit)
+	logger.Debug(u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
-		util.Log("ERROR", err.Message)
+		logger.Error(err.Message)
 	}
 
 	return err
