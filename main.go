@@ -4,10 +4,13 @@ import (
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/util"
 	"log"
-
-	_ "github.com/joho/godotenv/autoload"
 )
+
+func init() {
+	util.LoadEnv()
+}
 
 func main() {
 	database.Init()

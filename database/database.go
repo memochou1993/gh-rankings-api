@@ -2,11 +2,11 @@ package database
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 	"time"
 )
 
@@ -17,7 +17,7 @@ func Init() {
 	defer cancel()
 
 	var err error
-	opts := options.Client().ApplyURI(os.Getenv("DB_HOST"))
+	opts := options.Client().ApplyURI(viper.GetString("DB_HOST"))
 	client, err = mongo.Connect(ctx, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -25,7 +25,7 @@ func Init() {
 }
 
 func GetDatabase() *mongo.Database {
-	return client.Database(os.Getenv("DB_DATABASE"))
+	return client.Database(viper.GetString("DB_DATABASE"))
 }
 
 func GetCollection(name string) *mongo.Collection {

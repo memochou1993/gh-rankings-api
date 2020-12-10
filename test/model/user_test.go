@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
@@ -21,6 +22,7 @@ func TestMain(m *testing.M) {
 
 func setUp() {
 	changeDirectory()
+	util.LoadEnv()
 	database.Init()
 	logger.Init()
 }

@@ -3,9 +3,19 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/spf13/viper"
 	"log"
+	"os"
 	"strings"
 )
+
+func LoadEnv() {
+	viper.AddConfigPath("./")
+	viper.SetConfigName(os.Getenv("APP_ENV"))
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalln(err.Error())
+	}
+}
 
 func JoinStruct(v interface{}, sep string) string {
 	b := bytes.Buffer{}

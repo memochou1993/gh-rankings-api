@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -37,12 +37,12 @@ func Query(ctx context.Context, r *Request, v interface{}) error {
 }
 
 func post(ctx context.Context, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodPost, os.Getenv("API_URL"), body)
+	req, err := http.NewRequest(http.MethodPost, viper.GetString("API_URL"), body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("API_TOKEN")))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", viper.GetString("API_TOKEN")))
 
 	return client.Do(req.WithContext(ctx))
 }

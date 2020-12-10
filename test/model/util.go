@@ -11,21 +11,21 @@ import (
 )
 
 func changeDirectory() {
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../..")
+	_, file, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(file), "../..")
 	if err := os.Chdir(dir); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func dropDatabase() {
-	if err := database.GetDatabase().Drop(context.Background()); err != nil {
+func dropCollection(c model.CollectionInterface) {
+	if err := c.GetCollection().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
 
-func dropCollection(c model.CollectionInterface) {
-	if err := c.GetCollection().Drop(context.Background()); err != nil {
+func dropDatabase() {
+	if err := database.GetDatabase().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
