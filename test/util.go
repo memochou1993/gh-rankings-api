@@ -1,4 +1,4 @@
-package model
+package test
 
 import (
 	"context"
@@ -10,21 +10,21 @@ import (
 	"runtime"
 )
 
-func changeDirectory() {
+func ChangeDirectory() {
 	_, file, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(file), "../..")
+	dir := path.Join(path.Dir(file), "..")
 	if err := os.Chdir(dir); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func dropCollection(c model.CollectionInterface) {
+func DropCollection(c model.CollectionInterface) {
 	if err := c.GetCollection().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
 
-func dropDatabase() {
+func DropDatabase() {
 	if err := database.GetDatabase().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}

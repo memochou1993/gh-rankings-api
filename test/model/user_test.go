@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/test"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
@@ -21,7 +22,7 @@ func TestMain(m *testing.M) {
 }
 
 func setUp() {
-	changeDirectory()
+	test.ChangeDirectory()
 	util.LoadEnv()
 	database.Init()
 	logger.Init()
@@ -46,7 +47,7 @@ func TestTravel(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(&u)
+	test.DropCollection(&u)
 }
 
 func TestFetchUsers(t *testing.T) {
@@ -70,7 +71,7 @@ func TestFetchUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(&u)
+	test.DropCollection(&u)
 }
 
 func TestStoreUsers(t *testing.T) {
@@ -86,7 +87,7 @@ func TestStoreUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(&u)
+	test.DropCollection(&u)
 }
 
 func TestIndexUsers(t *testing.T) {
@@ -117,9 +118,9 @@ func TestIndexUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	dropCollection(&u)
+	test.DropCollection(&u)
 }
 
 func tearDown() {
-	dropDatabase()
+	test.DropDatabase()
 }
