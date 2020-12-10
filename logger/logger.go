@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,7 @@ var (
 	Purple = color("\033[1;35m%s\033[0m")
 )
 
-func init() {
+func Init() {
 	name := fmt.Sprintf("./storage/logs/%s.txt", time.Now().Format("2006-01-02"))
 	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -82,7 +83,7 @@ func stringify(v interface{}) string {
 }
 
 func prefix(prefix string) string {
-	return fmt.Sprintf("[%s] ", prefix)
+	return fmt.Sprintf("[%s.%s] ", strings.ToUpper(os.Getenv("APP_ENV")), prefix)
 }
 
 func color(color string) func(...interface{}) string {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
+	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/github-rankings/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
@@ -18,7 +20,9 @@ func TestMain(m *testing.M) {
 }
 
 func setUp() {
-	//
+	changeDirectory()
+	database.Init()
+	logger.Init()
 }
 
 func TestTravel(t *testing.T) {

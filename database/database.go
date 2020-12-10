@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,12 +12,7 @@ import (
 
 var client *mongo.Client
 
-func init() {
-	util.LoadEnv()
-	initClient()
-}
-
-func initClient() {
+func Init() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/memochou1993/github-rankings/util"
 	"io"
 	"log"
 	"net/http"
@@ -15,11 +14,6 @@ import (
 var client *http.Client
 
 func init() {
-	util.LoadEnv()
-	initClient()
-}
-
-func initClient() {
 	client = http.DefaultClient
 }
 
