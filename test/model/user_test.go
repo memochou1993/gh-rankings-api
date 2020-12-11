@@ -32,7 +32,8 @@ func TestTravel(t *testing.T) {
 	u := model.UserCollection{}
 	u.SetCollectionName("users")
 
-	date := time.Now().AddDate(0, -1, 0)
+	from := time.Now().AddDate(0, -1, 0)
+	to := time.Now()
 	r := app.Request{
 		Schema: app.Read("users"),
 		SearchArguments: app.SearchArguments{
@@ -40,7 +41,7 @@ func TestTravel(t *testing.T) {
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&date, &r); err != nil {
+	if err := u.Travel(&from, &to, &r); err != nil {
 		t.Error(err.Error())
 	}
 	if count := u.Count(); count == 0 {
@@ -94,26 +95,11 @@ func TestIndexUsers(t *testing.T) {
 	u := model.UserCollection{}
 	u.SetCollectionName("users")
 
-	ctx := context.Background()
-
-	if err := u.Index([]string{"login"}); err != nil {
+	if err := u.Index(); err != nil {
 		t.Error(err.Error())
 	}
 
-	cursor, err := u.GetCollection().Indexes().List(ctx)
-	if err != nil {
-		t.Fatal()
-	}
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			t.Fatal()
-		}
-	}()
-
-	var indexes []bson.M
-	if err := cursor.All(ctx, &indexes); err != nil {
-		t.Fatal()
-	}
+	indexes := database.GetIndexes(context.Background(), u.GetCollectionName())
 	if len(indexes) == 0 {
 		t.Fail()
 	}
