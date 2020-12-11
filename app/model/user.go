@@ -80,15 +80,19 @@ type User struct {
 	} `json:"repositories" bson:"repositories"`
 }
 
-func (u *UserCollection) Init() error {
-	u.SetCollectionName("users")
-
-	if u.Count() > 0 {
-		return nil
+func NewUserCollection() *UserCollection {
+	return &UserCollection{
+		Collection: Collection{
+			collectionName: "users",
+		},
 	}
+}
+
+func (u *UserCollection) Init(starter chan<- struct{}) error {
 	if err := u.Index(); err != nil {
 		return err
 	}
+	starter <- struct{}{}
 
 	return nil
 }
@@ -114,10 +118,11 @@ func (u *UserCollection) Collect() error {
 }
 
 func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *app.Request) error {
-	layout := "2006-01-02"
 	if from.After(*to) {
 		return nil
 	}
+
+	layout := "2006-01-02"
 	q := app.ArgumentsQuery{
 		Created:   r.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
@@ -295,17 +300,18 @@ func (u *UserCollection) GetLast() (user User) {
 	return user
 }
 
-func (c *Collection) Index() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (u *UserCollection) Index() error {
+	if len(database.GetIndexes(u.collectionName)) > 0 {
+		return nil
+	}
 
 	indexes := []string{"created_at"}
-	if err := database.CreateIndexes(ctx, c.collectionName, indexes); err != nil {
+	if err := database.CreateIndexes(u.collectionName, indexes); err != nil {
 		return err
 	}
 
 	uniqueIndexes := []string{"login"}
-	if err := database.CreateUniqueIndexes(ctx, c.collectionName, uniqueIndexes); err != nil {
+	if err := database.CreateUniqueIndexes(u.collectionName, uniqueIndexes); err != nil {
 		return err
 	}
 

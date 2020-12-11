@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+var (
+	userCollection *model.UserCollection
+)
+
 func init() {
 	util.LoadEnv()
 	database.Init()
@@ -15,27 +19,31 @@ func init() {
 }
 
 func main() {
-	userCollection := model.UserCollection{}
-	if err := userCollection.Init(); err != nil {
+	starter := make(chan struct{}, 1)
+
+	userCollection = model.NewUserCollection()
+	if err := userCollection.Init(starter); err != nil {
 		logger.Error(err.Error())
 	}
+
 	go func() {
-		t := time.NewTicker(10 * time.Second)
+		<-starter
+		close(starter)
+		t := time.NewTicker(7 * 24 * time.Hour)
 		for ; true; <-t.C {
 			if err := userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
 			}
 		}
 	}()
-	// TODO
-	// go func() {
-	// 	time.Sleep(time.Second)
-	// 	for {
-	// 		if err := userCollection.Update(); err != nil {
-	// 			logger.Error(err.Error())
-	// 		}
-	// 	}
-	// }()
+
+	go func() {
+		for range time.Tick(time.Second) {
+			if err := userCollection.Update(); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+	}()
 
 	// FIXME
 	time.Sleep(time.Hour)

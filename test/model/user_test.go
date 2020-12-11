@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
@@ -29,8 +28,7 @@ func setUp() {
 }
 
 func TestTravel(t *testing.T) {
-	u := model.UserCollection{}
-	u.SetCollectionName("users")
+	u := model.NewUserCollection()
 
 	from := time.Now().AddDate(0, -1, 0)
 	to := time.Now()
@@ -48,12 +46,11 @@ func TestTravel(t *testing.T) {
 		t.Fail()
 	}
 
-	test.DropCollection(&u)
+	test.DropCollection(u)
 }
 
 func TestFetchUsers(t *testing.T) {
-	u := model.UserCollection{}
-	u.SetCollectionName("users")
+	u := model.NewUserCollection()
 
 	r := app.Request{
 		Schema: app.Read("users"),
@@ -72,12 +69,11 @@ func TestFetchUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	test.DropCollection(&u)
+	test.DropCollection(u)
 }
 
 func TestStoreUsers(t *testing.T) {
-	u := model.UserCollection{}
-	u.SetCollectionName("users")
+	u := model.NewUserCollection()
 
 	var users []interface{}
 	users = append(users, bson.D{})
@@ -88,23 +84,22 @@ func TestStoreUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	test.DropCollection(&u)
+	test.DropCollection(u)
 }
 
 func TestIndexUsers(t *testing.T) {
-	u := model.UserCollection{}
-	u.SetCollectionName("users")
+	u := model.NewUserCollection()
 
 	if err := u.Index(); err != nil {
 		t.Error(err.Error())
 	}
 
-	indexes := database.GetIndexes(context.Background(), u.GetCollectionName())
+	indexes := database.GetIndexes("users")
 	if len(indexes) == 0 {
 		t.Fail()
 	}
 
-	test.DropCollection(&u)
+	test.DropCollection(u)
 }
 
 func tearDown() {

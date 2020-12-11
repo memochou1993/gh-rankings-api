@@ -40,7 +40,32 @@ func Get(ctx context.Context, collection string, opts *options.FindOneOptions) *
 	return GetCollection(collection).FindOne(ctx, bson.D{}, opts)
 }
 
-func CreateIndexes(ctx context.Context, collection string, keys []string) error {
+func GetIndexes(collection string) []bson.M {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := GetCollection(collection).Indexes().List(ctx)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Fatalln(err.Error())
+		}
+	}()
+
+	var indexes []bson.M
+	if err := cursor.All(ctx, &indexes); err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return indexes
+}
+
+func CreateIndexes(collection string, keys []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
@@ -54,7 +79,10 @@ func CreateIndexes(ctx context.Context, collection string, keys []string) error 
 	return err
 }
 
-func CreateUniqueIndexes(ctx context.Context, collection string, keys []string) error {
+func CreateUniqueIndexes(collection string, keys []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
