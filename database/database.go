@@ -36,12 +36,30 @@ func Count(ctx context.Context, name string) (int64, error) {
 	return GetCollection(name).CountDocuments(ctx, bson.M{})
 }
 
+func Get(ctx context.Context, collection string, opts *options.FindOneOptions) *mongo.SingleResult {
+	return GetCollection(collection).FindOne(ctx, bson.D{}, opts)
+}
+
 func CreateIndexes(ctx context.Context, collection string, keys []string) error {
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
 			Keys:    bson.D{{key, 1}},
 			Options: options.Index().SetName(key),
+		})
+	}
+
+	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
+
+	return err
+}
+
+func CreateUniqueIndexes(ctx context.Context, collection string, keys []string) error {
+	var models []mongo.IndexModel
+	for _, key := range keys {
+		models = append(models, mongo.IndexModel{
+			Keys:    bson.D{{key, 1}},
+			Options: options.Index().SetUnique(true).SetName(key),
 		})
 	}
 

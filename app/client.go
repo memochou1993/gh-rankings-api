@@ -9,16 +9,19 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var client *http.Client
 
 func init() {
-	client = New()
+	client = newClient()
 }
 
-func New() *http.Client {
-	return http.DefaultClient
+func newClient() *http.Client {
+	return &http.Client{
+		Timeout: 10 * time.Second,
+	}
 }
 
 func Query(ctx context.Context, r *Request, v interface{}) error {

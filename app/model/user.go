@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
+	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"time"
 )
@@ -57,24 +60,24 @@ type UserCollection struct {
 }
 
 type User struct {
-	AvatarURL string    `json:"avatarUrl"`
-	CreatedAt time.Time `json:"createdAt"`
-	Email     string    `json:"email"`
+	AvatarURL string    `json:"avatarUrl" bson:"avatar_url"`
+	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
+	Email     string    `json:"email" bson:"email"`
 	Followers struct {
-		TotalCount int `json:"totalCount"`
-	} `json:"followers"`
-	Location     string `json:"location"`
-	Login        string `json:"login"`
-	Name         string `json:"name"`
+		TotalCount int `json:"totalCount" bson:"total_count"`
+	} `json:"followers" bson:"followers"`
+	Location     string `json:"location" bson:"location"`
+	Login        string `json:"login" bson:"login"`
+	Name         string `json:"name" bson:"name"`
 	Repositories []struct {
-		Name            string `json:"name"`
+		Name            string `json:"name" bson:"name"`
 		PrimaryLanguage struct {
-			Name string `json:"name"`
-		} `json:"primaryLanguage"`
+			Name string `json:"name" bson:"name"`
+		} `json:"primaryLanguage" bson:"primary_language"`
 		Stargazers struct {
-			TotalCount int `json:"totalCount"`
-		} `json:"stargazers"`
-	} `json:"repositories"`
+			TotalCount int `json:"totalCount" bson:"total_count"`
+		} `json:"stargazers" bson:"stargazers"`
+	} `json:"repositories" bson:"repositories"`
 }
 
 func (u *UserCollection) Init() error {
@@ -83,7 +86,7 @@ func (u *UserCollection) Init() error {
 	if u.Count() > 0 {
 		return nil
 	}
-	if err := u.Index([]string{"login"}); err != nil {
+	if err := u.Index(); err != nil {
 		return err
 	}
 
@@ -91,11 +94,11 @@ func (u *UserCollection) Init() error {
 }
 
 func (u *UserCollection) Collect() error {
+	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	if u.Count() > 0 {
-		return nil
+		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
 	}
-
-	date := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Now()
 	r := app.Request{
 		Schema: app.Read("users"),
 		SearchArguments: app.SearchArguments{
@@ -103,20 +106,20 @@ func (u *UserCollection) Collect() error {
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&date, &r); err != nil {
-		return nil
+	if err := u.Travel(&from, &to, &r); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (u *UserCollection) Travel(t *time.Time, r *app.Request) error {
+func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *app.Request) error {
 	layout := "2006-01-02"
-	if t.After(time.Now()) {
+	if from.After(*to) {
 		return nil
 	}
 	q := app.ArgumentsQuery{
-		Created:   r.Range(t.Format(layout), t.AddDate(0, 0, 6).Format(layout)),
+		Created:   r.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
 		Repos:     ">=5",
 	}
@@ -129,9 +132,9 @@ func (u *UserCollection) Travel(t *time.Time, r *app.Request) error {
 	if err := u.StoreUsers(users); err != nil {
 		return err
 	}
-	*t = t.AddDate(0, 0, 7)
+	*from = from.AddDate(0, 0, 7)
 
-	return u.Travel(t, r)
+	return u.Travel(from, to, r)
 }
 
 func (u *UserCollection) FetchUsers(r *app.Request, users *[]interface{}) error {
@@ -166,10 +169,23 @@ func (u *UserCollection) StoreUsers(users []interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := u.GetCollection().InsertMany(ctx, users)
-	logger.Success(fmt.Sprintf("Stored %d users", len(users)))
+	opts := options.InsertManyOptions{}
+	opts.SetOrdered(false)
+	_, err := u.GetCollection().InsertMany(ctx, users, &opts)
 
-	return err
+	count := len(users)
+	if err, ok := err.(mongo.BulkWriteException); ok {
+		for _, err := range err.WriteErrors {
+			if err.Code != 11000 {
+				return err
+			}
+			count--
+			logger.Warning(err.Message)
+		}
+	}
+	logger.Success(fmt.Sprintf("Stored %d users", count))
+
+	return nil
 }
 
 func (u *UserCollection) Update() error {
@@ -254,7 +270,7 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 func (u *UserCollection) Fetch(r *app.Request) error {
 	u.Response.Data.RateLimit.Check()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err := app.Query(ctx, r, &u.Response)
@@ -264,4 +280,34 @@ func (u *UserCollection) Fetch(r *app.Request) error {
 	}
 
 	return err
+}
+
+func (u *UserCollection) GetLast() (user User) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	opts := options.FindOneOptions{}
+	opts.SetSort(bson.D{{"created_at", -1}})
+	if err := database.Get(ctx, u.collectionName, &opts).Decode(&user); err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return user
+}
+
+func (c *Collection) Index() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	indexes := []string{"created_at"}
+	if err := database.CreateIndexes(ctx, c.collectionName, indexes); err != nil {
+		return err
+	}
+
+	uniqueIndexes := []string{"login"}
+	if err := database.CreateUniqueIndexes(ctx, c.collectionName, uniqueIndexes); err != nil {
+		return err
+	}
+
+	return nil
 }
