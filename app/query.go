@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"io/ioutil"
 	"log"
@@ -97,6 +98,7 @@ func (rl *RateLimit) Check() {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	logger.Warning("Take a break...")
 	time.Sleep(resetAt.Sub(time.Now().UTC()))
 }
 
