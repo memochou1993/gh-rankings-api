@@ -102,35 +102,35 @@ func (u *UserCollection) Collect() error {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
 	}
 	to := time.Now()
-	r := Request{
+	q := Query{
 		Schema: ReadQuery("users"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&from, &to, &r); err != nil {
+	if err := u.Travel(&from, &to, &q); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *Request) error {
+func (u *UserCollection) Travel(from *time.Time, to *time.Time, q *Query) error {
 	if from.After(*to) {
 		return nil
 	}
 
 	layout := "2006-01-02"
-	q := ArgumentsQuery{
-		Created:   r.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
+	query := SearchQuery{
+		Created:   q.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
 		Repos:     ">=5",
 	}
-	r.SearchArguments.Query = r.String(util.JoinStruct(q, " "))
+	q.SearchArguments.Query = q.String(util.JoinStruct(query, " "))
 
 	var users []interface{}
-	if err := u.FetchUsers(r, &users); err != nil {
+	if err := u.FetchUsers(q, &users); err != nil {
 		return err
 	}
 	if err := u.StoreUsers(users); err != nil {
@@ -138,13 +138,13 @@ func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *Request) erro
 	}
 	*from = from.AddDate(0, 0, 7)
 
-	return u.Travel(from, to, r)
+	return u.Travel(from, to, q)
 }
 
-func (u *UserCollection) FetchUsers(r *Request, users *[]interface{}) error {
-	logger.Debug(r.SearchArguments)
+func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
+	logger.Debug(q.SearchArguments)
 	logger.Info("Searching users...")
-	if err := u.Fetch(r); err != nil {
+	if err := u.Fetch(q); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.Search.Edges)
@@ -157,12 +157,12 @@ func (u *UserCollection) FetchUsers(r *Request, users *[]interface{}) error {
 	logger.Success(fmt.Sprintf("Discovered %d users", count))
 
 	if !u.Response.Data.Search.PageInfo.HasNextPage {
-		r.SearchArguments.After = ""
+		q.SearchArguments.After = ""
 		return nil
 	}
-	r.SearchArguments.After = r.String(u.Response.Data.Search.PageInfo.EndCursor)
+	q.SearchArguments.After = q.String(u.Response.Data.Search.PageInfo.EndCursor)
 
-	return u.FetchUsers(r, users)
+	return u.FetchUsers(q, users)
 }
 
 func (u *UserCollection) StoreUsers(users []interface{}) error {
@@ -206,7 +206,7 @@ func (u *UserCollection) Update() error {
 		}
 	}()
 
-	r := Request{
+	q := Query{
 		Schema: ReadQuery("user_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
@@ -219,10 +219,10 @@ func (u *UserCollection) Update() error {
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
-		r.UserArguments.Login = r.String(user.Login)
+		q.UserArguments.Login = q.String(user.Login)
 
 		var repositories []interface{}
-		if err := u.FetchRepositories(&r, &repositories); err != nil {
+		if err := u.FetchRepositories(&q, &repositories); err != nil {
 			return err
 		}
 		u.StoreRepositories(user, repositories)
@@ -231,11 +231,11 @@ func (u *UserCollection) Update() error {
 	return nil
 }
 
-func (u *UserCollection) FetchRepositories(r *Request, repos *[]interface{}) error {
-	logger.Debug(r.UserArguments)
-	logger.Debug(r.RepositoriesArguments)
+func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error {
+	logger.Debug(q.UserArguments)
+	logger.Debug(q.RepositoriesArguments)
 	logger.Info("Searching repositories...")
-	if err := u.Fetch(r); err != nil {
+	if err := u.Fetch(q); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.User.Repositories.Edges)
@@ -248,12 +248,12 @@ func (u *UserCollection) FetchRepositories(r *Request, repos *[]interface{}) err
 	logger.Success(fmt.Sprintf("Discovered %d repositories", count))
 
 	if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
-		r.RepositoriesArguments.After = ""
+		q.RepositoriesArguments.After = ""
 		return nil
 	}
-	r.RepositoriesArguments.After = r.String(u.Response.Data.User.Repositories.PageInfo.EndCursor)
+	q.RepositoriesArguments.After = q.String(u.Response.Data.User.Repositories.PageInfo.EndCursor)
 
-	return u.FetchRepositories(r, repos)
+	return u.FetchRepositories(q, repos)
 }
 
 func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
@@ -271,13 +271,13 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	logger.Success(fmt.Sprintf("Stored %d repositories", len(repos)))
 }
 
-func (u *UserCollection) Fetch(r *Request) error {
+func (u *UserCollection) Fetch(q *Query) error {
 	u.Response.Data.RateLimit.Check()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err := Query(ctx, r, &u.Response)
+	err := Fetch(ctx, q, &u.Response)
 	logger.Debug(u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
 		logger.Error(err.Message)

@@ -11,26 +11,26 @@ import (
 	"time"
 )
 
-type Request struct {
+type Query struct {
 	Schema                string
 	UserArguments         UserArguments
 	SearchArguments       SearchArguments
 	RepositoriesArguments RepositoriesArguments
 }
 
-func (r *Request) Query() string {
-	q := r.Schema
-	q = strings.Replace(q, "UserArguments", util.JoinStruct(r.UserArguments, ","), 1)
-	q = strings.Replace(q, "SearchArguments", util.JoinStruct(r.SearchArguments, ","), 1)
-	q = strings.Replace(q, "RepositoriesArguments", util.JoinStruct(r.RepositoriesArguments, ","), 1)
+func (q *Query) get() string {
+	query := q.Schema
+	query = strings.Replace(query, "UserArguments", util.JoinStruct(q.UserArguments, ","), 1)
+	query = strings.Replace(query, "SearchArguments", util.JoinStruct(q.SearchArguments, ","), 1)
+	query = strings.Replace(query, "RepositoriesArguments", util.JoinStruct(q.RepositoriesArguments, ","), 1)
 
-	query := struct {
+	payload := struct {
 		Query string `json:"query"`
 	}{
-		Query: q,
+		Query: query,
 	}
 
-	b, err := json.Marshal(query)
+	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -38,11 +38,11 @@ func (r *Request) Query() string {
 	return string(b)
 }
 
-func (r *Request) Range(from string, to string) string {
+func (q *Query) Range(from string, to string) string {
 	return fmt.Sprintf("%s..%s", from, to)
 }
 
-func (r *Request) String(v string) string {
+func (q *Query) String(v string) string {
 	if v == "" {
 		return v
 	}
@@ -60,17 +60,17 @@ type SearchArguments struct {
 	Type  string `json:"type,omitempty"`
 }
 
+type SearchQuery struct {
+	Created   string `json:"created,omitempty"`
+	Followers string `json:"followers,omitempty"`
+	Repos     string `json:"repos,omitempty"`
+}
+
 type RepositoriesArguments struct {
 	After             string `json:"after,omitempty"`
 	First             int    `json:"first,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
 	OwnerAffiliations string `json:"ownerAffiliations,omitempty"`
-}
-
-type ArgumentsQuery struct {
-	Created   string `json:"created,omitempty"`
-	Followers string `json:"followers,omitempty"`
-	Repos     string `json:"repos,omitempty"`
 }
 
 type PageInfo struct {

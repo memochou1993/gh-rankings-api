@@ -30,14 +30,14 @@ func TestTravel(t *testing.T) {
 
 	from := time.Now().AddDate(0, -1, 0)
 	to := time.Now()
-	r := app.Request{
+	q := app.Query{
 		Schema: app.ReadQuery("users"),
 		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&from, &to, &r); err != nil {
+	if err := u.Travel(&from, &to, &q); err != nil {
 		t.Error(err.Error())
 	}
 	if count := database.Count(u.GetName()); count == 0 {
@@ -50,17 +50,17 @@ func TestTravel(t *testing.T) {
 func TestFetchUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
-	r := app.Request{
+	q := app.Query{
 		Schema: app.ReadQuery("users"),
 		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
 	}
-	r.SearchArguments.Query = r.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10")
+	q.SearchArguments.Query = q.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10")
 
 	var users []interface{}
-	if err := u.FetchUsers(&r, &users); err != nil {
+	if err := u.FetchUsers(&q, &users); err != nil {
 		t.Error(err.Error())
 	}
 	if len(users) == 0 {
