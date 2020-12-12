@@ -101,7 +101,6 @@ func (u *UserCollection) Collect() error {
 	if database.Count(u.name) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
 	}
-	to := time.Now()
 	q := Query{
 		Schema: ReadQuery("users"),
 		SearchArguments: SearchArguments{
@@ -109,15 +108,19 @@ func (u *UserCollection) Collect() error {
 			Type:  "USER",
 		},
 	}
-	if err := u.Travel(&from, &to, &q); err != nil {
+	if err := u.Travel(&from, &q); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *UserCollection) Travel(from *time.Time, to *time.Time, q *Query) error {
-	if from.After(*to) {
+func (u *UserCollection) Travel(from *time.Time, q *Query) error {
+	to := time.Now()
+	if from.After(to) {
+		logger.Warning("Take a break...")
+		time.Sleep(7 * 24 * time.Hour)
+
 		return nil
 	}
 
@@ -136,7 +139,7 @@ func (u *UserCollection) Travel(from *time.Time, to *time.Time, q *Query) error 
 	}
 	*from = from.AddDate(0, 0, 7)
 
-	return u.Travel(from, to, q)
+	return u.Travel(from, q)
 }
 
 func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {

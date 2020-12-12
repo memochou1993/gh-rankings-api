@@ -25,11 +25,10 @@ func (w *Worker) CollectUsers() {
 	go func() {
 		<-w.starter
 		close(w.starter)
-		t := time.NewTicker(7 * 24 * time.Hour)
-		for ; true; <-t.C {
+		for range time.Tick(time.Second) {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Hour)
+				time.Sleep(time.Minute)
 			}
 		}
 	}()
@@ -38,7 +37,7 @@ func (w *Worker) CollectUsers() {
 		for range time.Tick(time.Second) {
 			if err := w.userCollection.Update(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Hour)
+				time.Sleep(time.Minute)
 			}
 		}
 	}()
