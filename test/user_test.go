@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
-	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -23,28 +22,6 @@ func setUp() {
 	util.LoadEnv()
 	database.Init()
 	logger.Init()
-}
-
-func TestTravel(t *testing.T) {
-	u := app.NewUserCollection()
-
-	from := time.Now().AddDate(0, -1, 0)
-	to := time.Now()
-	q := app.Query{
-		Schema: app.ReadQuery("users"),
-		SearchArguments: app.SearchArguments{
-			First: 100,
-			Type:  "USER",
-		},
-	}
-	if err := u.Travel(&from, &to, &q); err != nil {
-		t.Error(err.Error())
-	}
-	if count := database.Count(u.GetName()); count == 0 {
-		t.Fail()
-	}
-
-	DropCollection(u)
 }
 
 func TestFetchUsers(t *testing.T) {
