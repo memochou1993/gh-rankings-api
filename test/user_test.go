@@ -5,7 +5,6 @@ import (
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
-	"go.mongodb.org/mongo-driver/bson"
 	"os"
 	"testing"
 )
@@ -50,12 +49,56 @@ func TestFetchUsers(t *testing.T) {
 func TestStoreUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
-	var users []interface{}
-	users = append(users, bson.D{})
+	users := []interface{}{app.User{}}
 	if err := u.StoreUsers(users); err != nil {
 		t.Error(err.Error())
 	}
-	if count := database.Count(u.GetName()); count != 1 {
+	if count := database.Count(u.GetName()); count == 0 {
+		t.Fail()
+	}
+
+	DropCollection(u)
+}
+
+func TestFetchUserRepositories(t *testing.T) {
+	u := app.NewUserCollection()
+
+	q := app.Query{
+		Schema: app.ReadQuery("user_repositories"),
+		RepositoriesArguments: app.RepositoriesArguments{
+			First:             100,
+			OrderBy:           "{field:STARGAZERS,direction:DESC}",
+			OwnerAffiliations: "OWNER",
+		},
+	}
+	q.UserArguments.Login = q.String("memochou1993")
+
+	var repos []interface{}
+	if err := u.FetchRepositories(&q, &repos); err != nil {
+		t.Error(err.Error())
+	}
+	if len(repos) == 0 {
+		t.Fail()
+	}
+
+	DropCollection(u)
+}
+
+func TestStoreRepositories(t *testing.T) {
+	u := app.NewUserCollection()
+
+	user := app.User{
+		Login: "memochou1993",
+	}
+
+	users := []interface{}{user}
+	if err := u.StoreUsers(users); err != nil {
+		t.Error(err.Error())
+	}
+
+	repos := []interface{}{app.Repository{}}
+	u.StoreRepositories(user, repos)
+	if len(u.GetLast().Repositories) == 0 {
 		t.Fail()
 	}
 

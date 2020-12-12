@@ -65,18 +65,20 @@ type User struct {
 	Followers struct {
 		TotalCount int `json:"totalCount" bson:"total_count"`
 	} `json:"followers" bson:"followers"`
-	Location     string `json:"location" bson:"location"`
-	Login        string `json:"login" bson:"login"`
-	Name         string `json:"name" bson:"name"`
-	Repositories []struct {
-		Name            string `json:"name" bson:"name"`
-		PrimaryLanguage struct {
-			Name string `json:"name" bson:"name"`
-		} `json:"primaryLanguage" bson:"primary_language"`
-		Stargazers struct {
-			TotalCount int `json:"totalCount" bson:"total_count"`
-		} `json:"stargazers" bson:"stargazers"`
-	} `json:"repositories" bson:"repositories"`
+	Location     string       `json:"location" bson:"location"`
+	Login        string       `json:"login" bson:"login"`
+	Name         string       `json:"name" bson:"name"`
+	Repositories []Repository `json:"repositories" bson:"repositories"`
+}
+
+type Repository struct {
+	Name            string `json:"name" bson:"name"`
+	PrimaryLanguage struct {
+		Name string `json:"name" bson:"name"`
+	} `json:"primaryLanguage" bson:"primary_language"`
+	Stargazers struct {
+		TotalCount int `json:"totalCount" bson:"total_count"`
+	} `json:"stargazers" bson:"stargazers"`
 }
 
 func NewUserCollection() *UserCollection {
@@ -222,11 +224,11 @@ func (u *UserCollection) Update() error {
 		}
 		q.UserArguments.Login = q.String(user.Login)
 
-		var repositories []interface{}
-		if err := u.FetchRepositories(&q, &repositories); err != nil {
+		var repos []interface{}
+		if err := u.FetchRepositories(&q, &repos); err != nil {
 			return err
 		}
-		u.StoreRepositories(user, repositories)
+		u.StoreRepositories(user, repos)
 	}
 
 	return nil
