@@ -17,18 +17,15 @@ func NewWorker() *Worker {
 	}
 }
 
-func (w *Worker) CollectUsers() {
-	if err := w.userCollection.Init(w.starter); err != nil {
-		logger.Error(err.Error())
-	}
+func (w *Worker) BuildUserCollection() {
+	w.userCollection.Init(w.starter)
+	<-w.starter
 
 	go func() {
-		<-w.starter
-		close(w.starter)
 		for range time.Tick(time.Second) {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Minute)
+				time.Sleep(time.Hour)
 			}
 		}
 	}()
@@ -37,7 +34,7 @@ func (w *Worker) CollectUsers() {
 		for range time.Tick(time.Second) {
 			if err := w.userCollection.Update(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Minute)
+				time.Sleep(time.Hour)
 			}
 		}
 	}()

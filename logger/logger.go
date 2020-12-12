@@ -39,7 +39,7 @@ func Init() {
 	name := fmt.Sprintf("./storage/logs/%s.txt", time.Now().Format("2006-01-02"))
 	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err.Error())
 	}
 
 	infoLogger = log.New(file, prefix(typeInfo), log.Ldate|log.Ltime)

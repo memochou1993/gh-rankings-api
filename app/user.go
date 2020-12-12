@@ -87,13 +87,11 @@ func NewUserCollection() *UserCollection {
 	}
 }
 
-func (u *UserCollection) Init(starter chan<- struct{}) error {
+func (u *UserCollection) Init(starter chan<- struct{}) {
 	if err := u.Index(); err != nil {
-		return err
+		log.Fatalln(err.Error())
 	}
 	starter <- struct{}{}
-
-	return nil
 }
 
 func (u *UserCollection) Collect() error {
@@ -143,7 +141,6 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 }
 
 func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
-	logger.Debug(q.SearchArguments)
 	logger.Info("Searching users...")
 	if err := u.Fetch(q); err != nil {
 		return err
@@ -233,8 +230,6 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error {
-	logger.Debug(q.UserArguments)
-	logger.Debug(q.RepositoriesArguments)
 	logger.Info("Searching repositories...")
 	if err := u.Fetch(q); err != nil {
 		return err
