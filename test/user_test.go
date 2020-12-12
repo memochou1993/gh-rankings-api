@@ -31,7 +31,7 @@ func TestTravel(t *testing.T) {
 	from := time.Now().AddDate(0, -1, 0)
 	to := time.Now()
 	r := app.Request{
-		Schema: app.Read("users"),
+		Schema: app.ReadQuery("users"),
 		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -40,7 +40,7 @@ func TestTravel(t *testing.T) {
 	if err := u.Travel(&from, &to, &r); err != nil {
 		t.Error(err.Error())
 	}
-	if count := database.Count("users"); count == 0 {
+	if count := database.Count(u.GetName()); count == 0 {
 		t.Fail()
 	}
 
@@ -51,7 +51,7 @@ func TestFetchUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
 	r := app.Request{
-		Schema: app.Read("users"),
+		Schema: app.ReadQuery("users"),
 		SearchArguments: app.SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -78,7 +78,7 @@ func TestStoreUsers(t *testing.T) {
 	if err := u.StoreUsers(users); err != nil {
 		t.Error(err.Error())
 	}
-	if count := database.Count("users"); count != 1 {
+	if count := database.Count(u.GetName()); count != 1 {
 		t.Fail()
 	}
 
@@ -92,7 +92,7 @@ func TestIndexUsers(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	indexes := database.GetIndexes("users")
+	indexes := database.GetIndexes(u.GetName())
 	if len(indexes) == 0 {
 		t.Fail()
 	}

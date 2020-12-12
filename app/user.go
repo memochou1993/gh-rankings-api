@@ -82,7 +82,7 @@ type User struct {
 func NewUserCollection() *UserCollection {
 	return &UserCollection{
 		Collection: Collection{
-			collectionName: "users",
+			name: "users",
 		},
 	}
 }
@@ -98,12 +98,12 @@ func (u *UserCollection) Init(starter chan<- struct{}) error {
 
 func (u *UserCollection) Collect() error {
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	if database.Count(u.collectionName) > 0 {
+	if database.Count(u.name) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
 	}
 	to := time.Now()
 	r := Request{
-		Schema: Read("users"),
+		Schema: ReadQuery("users"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -207,7 +207,7 @@ func (u *UserCollection) Update() error {
 	}()
 
 	r := Request{
-		Schema: Read("user_repositories"),
+		Schema: ReadQuery("user_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:STARGAZERS,direction:DESC}",
@@ -289,7 +289,7 @@ func (u *UserCollection) Fetch(r *Request) error {
 func (u *UserCollection) GetLast() (user User) {
 	opts := options.FindOneOptions{}
 	opts.SetSort(bson.D{{"created_at", -1}})
-	if err := database.Get(u.collectionName, &opts).Decode(&user); err != nil {
+	if err := database.Get(u.name, &opts).Decode(&user); err != nil {
 		log.Fatalln(err.Error())
 	}
 
@@ -297,17 +297,17 @@ func (u *UserCollection) GetLast() (user User) {
 }
 
 func (u *UserCollection) Index() error {
-	if len(database.GetIndexes(u.collectionName)) > 0 {
+	if len(database.GetIndexes(u.name)) > 0 {
 		return nil
 	}
 
 	indexes := []string{"created_at"}
-	if err := database.CreateIndexes(u.collectionName, indexes); err != nil {
+	if err := database.CreateIndexes(u.name, indexes); err != nil {
 		return err
 	}
 
 	uniqueIndexes := []string{"login"}
-	if err := database.CreateUniqueIndexes(u.collectionName, uniqueIndexes); err != nil {
+	if err := database.CreateUniqueIndexes(u.name, uniqueIndexes); err != nil {
 		return err
 	}
 

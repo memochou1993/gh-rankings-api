@@ -10,13 +10,17 @@ type CollectionInterface interface {
 }
 
 type Collection struct {
-	collectionName string
+	name string
 }
 
-func (c *Collection) SetCollectionName(collectionName string) {
-	c.collectionName = collectionName
+func (c *Collection) SetName(name string) {
+	c.name = name
+}
+
+func (c *Collection) GetName() string {
+	return c.name
 }
 
 func (c *Collection) GetCollection() *mongo.Collection {
-	return database.GetCollection(c.collectionName)
+	return database.GetCollection(c.name)
 }

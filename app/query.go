@@ -111,7 +111,7 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-func Read(filename string) string {
+func ReadQuery(filename string) string {
 	data, err := ioutil.ReadFile(fmt.Sprintf("./query/%s.graphql", filename))
 	if err != nil {
 		log.Fatalln(err.Error())
