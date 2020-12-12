@@ -11,20 +11,20 @@ import (
 	"time"
 )
 
-var (
-	infoLogger    *log.Logger
-	successLogger *log.Logger
-	warningLogger *log.Logger
-	errorLogger   *log.Logger
-	debugLogger   *log.Logger
-)
-
 const (
 	typeInfo    = "INFO"
 	typeSuccess = "SUCCESS"
 	typeWarning = "WARNING"
 	typeError   = "ERROR"
 	typeDebug   = "DEBUG"
+)
+
+var (
+	infoLogger    *log.Logger
+	successLogger *log.Logger
+	warningLogger *log.Logger
+	errorLogger   *log.Logger
+	debugLogger   *log.Logger
 )
 
 var (

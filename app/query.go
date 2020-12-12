@@ -112,7 +112,7 @@ type Error struct {
 }
 
 func Read(filename string) string {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
+	data, err := ioutil.ReadFile(fmt.Sprintf("./query/%s.graphql", filename))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

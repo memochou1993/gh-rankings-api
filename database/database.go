@@ -32,11 +32,22 @@ func GetCollection(name string) *mongo.Collection {
 	return GetDatabase().Collection(name)
 }
 
-func Count(ctx context.Context, name string) (int64, error) {
-	return GetCollection(name).CountDocuments(ctx, bson.M{})
+func Count(collection string) int64 {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := GetCollection(collection).CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return count
 }
 
-func Get(ctx context.Context, collection string, opts *options.FindOneOptions) *mongo.SingleResult {
+func Get(collection string, opts *options.FindOneOptions) *mongo.SingleResult {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	return GetCollection(collection).FindOne(ctx, bson.D{}, opts)
 }
 

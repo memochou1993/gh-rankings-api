@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	"github.com/memochou1993/github-rankings/app/model"
+	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/database"
 	"log"
 	"os"
@@ -18,7 +18,7 @@ func ChangeDirectory() {
 	}
 }
 
-func DropCollection(c model.CollectionInterface) {
+func DropCollection(c app.CollectionInterface) {
 	if err := c.GetCollection().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}

@@ -1,9 +1,8 @@
-package model
+package app
 
 import (
 	"context"
 	"fmt"
-	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
@@ -24,7 +23,7 @@ type UserCollection struct {
 					Cursor string `json:"cursor"`
 					Node   User   `json:"node"`
 				} `json:"edges"`
-				PageInfo app.PageInfo `json:"pageInfo"`
+				PageInfo PageInfo `json:"pageInfo"`
 			} `json:"search"`
 			User struct {
 				AvatarURL string    `json:"avatarUrl"`
@@ -50,12 +49,12 @@ type UserCollection struct {
 							} `json:"stargazers"`
 						} `json:"node"`
 					} `json:"edges"`
-					PageInfo app.PageInfo `json:"pageInfo"`
+					PageInfo PageInfo `json:"pageInfo"`
 				} `json:"repositories"`
 			} `json:"user"`
-			RateLimit app.RateLimit `json:"rateLimit"`
+			RateLimit RateLimit `json:"rateLimit"`
 		} `json:"data"`
-		Errors []app.Error `json:"errors"`
+		Errors []Error `json:"errors"`
 	}
 }
 
@@ -99,13 +98,13 @@ func (u *UserCollection) Init(starter chan<- struct{}) error {
 
 func (u *UserCollection) Collect() error {
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	if u.Count() > 0 {
+	if database.Count(u.collectionName) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
 	}
 	to := time.Now()
-	r := app.Request{
-		Schema: app.Read("users"),
-		SearchArguments: app.SearchArguments{
+	r := Request{
+		Schema: Read("users"),
+		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
@@ -117,13 +116,13 @@ func (u *UserCollection) Collect() error {
 	return nil
 }
 
-func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *app.Request) error {
+func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *Request) error {
 	if from.After(*to) {
 		return nil
 	}
 
 	layout := "2006-01-02"
-	q := app.ArgumentsQuery{
+	q := ArgumentsQuery{
 		Created:   r.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
 		Followers: ">=10",
 		Repos:     ">=5",
@@ -142,7 +141,7 @@ func (u *UserCollection) Travel(from *time.Time, to *time.Time, r *app.Request) 
 	return u.Travel(from, to, r)
 }
 
-func (u *UserCollection) FetchUsers(r *app.Request, users *[]interface{}) error {
+func (u *UserCollection) FetchUsers(r *Request, users *[]interface{}) error {
 	logger.Debug(r.SearchArguments)
 	logger.Info("Searching users...")
 	if err := u.Fetch(r); err != nil {
@@ -207,9 +206,9 @@ func (u *UserCollection) Update() error {
 		}
 	}()
 
-	r := app.Request{
-		Schema: app.Read("user_repositories"),
-		RepositoriesArguments: app.RepositoriesArguments{
+	r := Request{
+		Schema: Read("user_repositories"),
+		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:STARGAZERS,direction:DESC}",
 			OwnerAffiliations: "OWNER",
@@ -232,7 +231,7 @@ func (u *UserCollection) Update() error {
 	return nil
 }
 
-func (u *UserCollection) FetchRepositories(r *app.Request, repos *[]interface{}) error {
+func (u *UserCollection) FetchRepositories(r *Request, repos *[]interface{}) error {
 	logger.Debug(r.UserArguments)
 	logger.Debug(r.RepositoriesArguments)
 	logger.Info("Searching repositories...")
@@ -272,13 +271,13 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	logger.Success(fmt.Sprintf("Stored %d repositories", len(repos)))
 }
 
-func (u *UserCollection) Fetch(r *app.Request) error {
+func (u *UserCollection) Fetch(r *Request) error {
 	u.Response.Data.RateLimit.Check()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err := app.Query(ctx, r, &u.Response)
+	err := Query(ctx, r, &u.Response)
 	logger.Debug(u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
 		logger.Error(err.Message)
@@ -288,12 +287,9 @@ func (u *UserCollection) Fetch(r *app.Request) error {
 }
 
 func (u *UserCollection) GetLast() (user User) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	opts := options.FindOneOptions{}
 	opts.SetSort(bson.D{{"created_at", -1}})
-	if err := database.Get(ctx, u.collectionName, &opts).Decode(&user); err != nil {
+	if err := database.Get(u.collectionName, &opts).Decode(&user); err != nil {
 		log.Fatalln(err.Error())
 	}
 
