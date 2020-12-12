@@ -22,7 +22,7 @@ func (w *Worker) BuildUserCollection() {
 	<-w.starter
 
 	go func() {
-		t := time.NewTicker(1 * time.Hour)
+		t := time.NewTicker(time.Hour)
 		for ; true; <-t.C {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
@@ -31,7 +31,7 @@ func (w *Worker) BuildUserCollection() {
 	}()
 
 	go func() {
-		t := time.NewTicker(1 * time.Hour)
+		t := time.NewTicker(time.Second)
 		for ; true; <-t.C {
 			if err := w.userCollection.Update(); err != nil {
 				logger.Error(err.Error())
