@@ -22,19 +22,19 @@ func (w *Worker) BuildUserCollection() {
 	<-w.starter
 
 	go func() {
-		for range time.Tick(time.Second) {
+		t := time.NewTicker(1 * time.Hour)
+		for ; true; <-t.C {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Hour)
 			}
 		}
 	}()
 
 	go func() {
-		for range time.Tick(time.Second) {
+		t := time.NewTicker(1 * time.Hour)
+		for ; true; <-t.C {
 			if err := w.userCollection.Update(); err != nil {
 				logger.Error(err.Error())
-				time.Sleep(time.Hour)
 			}
 		}
 	}()
