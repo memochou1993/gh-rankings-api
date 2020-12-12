@@ -88,9 +88,11 @@ func NewUserCollection() *UserCollection {
 }
 
 func (u *UserCollection) Init(starter chan<- struct{}) {
+	logger.Info("Initializing user collection...")
 	if err := u.Index(); err != nil {
 		log.Fatalln(err.Error())
 	}
+	logger.Success("User collection initialized...")
 	starter <- struct{}{}
 }
 
@@ -141,18 +143,19 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 }
 
 func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
+	logger.Debug(q.SearchArguments)
 	logger.Info("Searching users...")
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.Search.Edges)
+	logger.Success(fmt.Sprintf("%d users discovered", count))
 	if count == 0 {
 		return nil
 	}
 	for _, edge := range u.Response.Data.Search.Edges {
 		*users = append(*users, edge.Node)
 	}
-	logger.Success(fmt.Sprintf("Discovered %d users", count))
 
 	if !u.Response.Data.Search.PageInfo.HasNextPage {
 		q.SearchArguments.After = ""
@@ -185,7 +188,7 @@ func (u *UserCollection) StoreUsers(users []interface{}) error {
 			logger.Warning(err.Message)
 		}
 	}
-	logger.Success(fmt.Sprintf("Stored %d users", count))
+	logger.Success(fmt.Sprintf("%d users inserted", count))
 
 	return nil
 }
@@ -194,7 +197,7 @@ func (u *UserCollection) Update() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cursor, err := u.GetCollection().Find(ctx, bson.M{})
+	cursor, err := u.GetCollection().Find(ctx, bson.D{})
 	if err != nil {
 		return err
 	}
@@ -230,18 +233,20 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error {
-	logger.Info("Searching repositories...")
+	logger.Debug(q.UserArguments)
+	logger.Debug(q.RepositoriesArguments)
+	logger.Info("Searching user repositories...")
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
 	count := len(u.Response.Data.User.Repositories.Edges)
+	logger.Success(fmt.Sprintf("%d user repositories discovered", count))
 	if count == 0 {
 		return nil
 	}
 	for _, edge := range u.Response.Data.User.Repositories.Edges {
 		*repos = append(*repos, edge.Node)
 	}
-	logger.Success(fmt.Sprintf("Discovered %d repositories", count))
 
 	if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
 		q.RepositoriesArguments.After = ""
@@ -264,7 +269,7 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
-	logger.Success(fmt.Sprintf("Stored %d repositories", len(repos)))
+	logger.Success(fmt.Sprintf("%d user repositories inserted", len(repos)))
 }
 
 func (u *UserCollection) Fetch(q *Query) error {

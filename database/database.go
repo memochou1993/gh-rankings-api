@@ -36,7 +36,7 @@ func Count(collection string) int64 {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, err := GetCollection(collection).CountDocuments(ctx, bson.M{})
+	count, err := GetCollection(collection).CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -51,7 +51,7 @@ func Get(collection string, opts *options.FindOneOptions) *mongo.SingleResult {
 	return GetCollection(collection).FindOne(ctx, bson.D{}, opts)
 }
 
-func GetIndexes(collection string) []bson.M {
+func GetIndexes(collection string) []bson.D {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -65,7 +65,7 @@ func GetIndexes(collection string) []bson.M {
 		}
 	}()
 
-	var indexes []bson.M
+	var indexes []bson.D
 	if err := cursor.All(ctx, &indexes); err != nil {
 		log.Fatalln(err.Error())
 	}

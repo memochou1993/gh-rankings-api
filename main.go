@@ -18,7 +18,7 @@ func main() {
 	work()
 
 	// FIXME
-	time.Sleep(time.Hour)
+	time.Sleep(6 * time.Hour)
 }
 
 func work() {
