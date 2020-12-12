@@ -38,8 +38,9 @@ func (q *Query) get() string {
 	return string(b)
 }
 
-func (q *Query) Range(from string, to string) string {
-	return fmt.Sprintf("%s..%s", from, to)
+func (q *Query) Range(from time.Time, to time.Time) string {
+	layout := "2006-01-02"
+	return fmt.Sprintf("%s..%s", from.Format(layout), to.Format(layout))
 }
 
 func (q *Query) String(v string) string {

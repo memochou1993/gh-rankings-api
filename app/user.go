@@ -121,9 +121,8 @@ func (u *UserCollection) Travel(from *time.Time, to *time.Time, q *Query) error 
 		return nil
 	}
 
-	layout := "2006-01-02"
 	query := SearchQuery{
-		Created:   q.Range(from.Format(layout), from.AddDate(0, 0, 6).Format(layout)),
+		Created:   q.Range(*from, from.AddDate(0, 0, 6)),
 		Followers: ">=10",
 		Repos:     ">=5",
 	}
