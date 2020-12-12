@@ -38,16 +38,8 @@ type UserCollection struct {
 				Repositories struct {
 					TotalCount int `json:"totalCount"`
 					Edges      []struct {
-						Cursor string `json:"cursor"`
-						Node   struct {
-							Name            string `json:"name"`
-							PrimaryLanguage struct {
-								Name string `json:"name"`
-							} `json:"primaryLanguage"`
-							Stargazers struct {
-								TotalCount int `json:"totalCount"`
-							} `json:"stargazers"`
-						} `json:"node"`
+						Cursor string     `json:"cursor"`
+						Node   Repository `json:"node"`
 					} `json:"edges"`
 					PageInfo PageInfo `json:"pageInfo"`
 				} `json:"repositories"`
