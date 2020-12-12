@@ -278,7 +278,7 @@ func (u *UserCollection) Fetch(q *Query) error {
 	err := Fetch(ctx, q, &u.Response)
 	logger.Debug(u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
-		logger.Error(err.Message)
+		return err
 	}
 
 	return err

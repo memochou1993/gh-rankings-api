@@ -29,6 +29,7 @@ func (w *Worker) CollectUsers() {
 		for ; true; <-t.C {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
+				time.Sleep(time.Hour)
 			}
 		}
 	}()
@@ -37,6 +38,7 @@ func (w *Worker) CollectUsers() {
 		for range time.Tick(time.Second) {
 			if err := w.userCollection.Update(); err != nil {
 				logger.Error(err.Error())
+				time.Sleep(time.Hour)
 			}
 		}
 	}()

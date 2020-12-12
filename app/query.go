@@ -89,7 +89,8 @@ type RateLimit struct {
 }
 
 func (rl *RateLimit) Check() {
-	if rl.Remaining > 0 {
+	buffer := 10
+	if rl.Remaining > buffer {
 		return
 	}
 	if rl.ResetAt == "" {
@@ -110,6 +111,10 @@ type Error struct {
 		Column int `json:"column"`
 	} `json:"locations"`
 	Message string `json:"message"`
+}
+
+func (e Error) Error() string {
+	return e.Message
 }
 
 func ReadQuery(filename string) string {
