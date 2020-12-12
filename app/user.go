@@ -121,12 +121,11 @@ func (u *UserCollection) Travel(from *time.Time, to *time.Time, q *Query) error 
 		return nil
 	}
 
-	query := SearchQuery{
+	q.SearchArguments.Query = q.String(util.JoinStruct(SearchQuery{
 		Created:   q.Range(*from, from.AddDate(0, 0, 6)),
 		Followers: ">=10",
 		Repos:     ">=5",
-	}
-	q.SearchArguments.Query = q.String(util.JoinStruct(query, " "))
+	}, " "))
 
 	var users []interface{}
 	if err := u.FetchUsers(q, &users); err != nil {

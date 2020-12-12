@@ -61,17 +61,17 @@ type SearchArguments struct {
 	Type  string `json:"type,omitempty"`
 }
 
-type SearchQuery struct {
-	Created   string `json:"created,omitempty"`
-	Followers string `json:"followers,omitempty"`
-	Repos     string `json:"repos,omitempty"`
-}
-
 type RepositoriesArguments struct {
 	After             string `json:"after,omitempty"`
 	First             int    `json:"first,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
 	OwnerAffiliations string `json:"ownerAffiliations,omitempty"`
+}
+
+type SearchQuery struct {
+	Created   string `json:"created,omitempty"`
+	Followers string `json:"followers,omitempty"`
+	Repos     string `json:"repos,omitempty"`
 }
 
 type PageInfo struct {
