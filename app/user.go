@@ -204,7 +204,8 @@ func (u *UserCollection) Update() error {
 			OwnerAffiliations: "OWNER",
 		},
 	}
-	for cursor.Next(ctx) {
+	count := 0
+	for ; cursor.Next(ctx); count++ {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
@@ -217,6 +218,7 @@ func (u *UserCollection) Update() error {
 		}
 		u.UpdateRepositories(user, repos)
 	}
+	logger.Success(fmt.Sprintf("%d users updated!", count))
 
 	return nil
 }
