@@ -48,13 +48,6 @@ func Count(collection string) int64 {
 	return count
 }
 
-func Get(collection string, opts *options.FindOneOptions) *mongo.SingleResult {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	return GetCollection(collection).FindOne(ctx, bson.D{}, opts)
-}
-
 func GetIndexes(collection string) []bson.D {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

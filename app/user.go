@@ -334,8 +334,11 @@ func (u *UserCollection) Fetch(q *Query) error {
 }
 
 func (u *UserCollection) GetLast() (user User) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	opts := options.FindOne().SetSort(bson.D{{"created_at", -1}})
-	if err := database.Get(u.name, opts).Decode(&user); err != nil {
+	if err := u.GetCollection().FindOne(ctx, bson.D{}, opts).Decode(&user); err != nil {
 		log.Fatalln(err.Error())
 	}
 
