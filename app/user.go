@@ -73,6 +73,18 @@ type Repository struct {
 	} `json:"stargazers" bson:"stargazers"`
 }
 
+// TODO: add to user struct
+type UserRanking struct {
+	Login             string            `bson:"login"`
+	RepositoryRanking RepositoryRanking `bson:"ranking"`
+}
+
+type RepositoryRanking struct {
+	Rank            int
+	RepositoryStars int       `bson:"repository_stars"`
+	CreatedAt       time.Time `bson:"created_at"`
+}
+
 func NewUserCollection() *UserCollection {
 	return &UserCollection{
 		Collection: Collection{
@@ -168,9 +180,8 @@ func (u *UserCollection) StoreUsers(users []interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := options.InsertManyOptions{}
-	opts.SetOrdered(false)
-	_, err := u.GetCollection().InsertMany(ctx, users, &opts)
+	opts := options.InsertMany().SetOrdered(false)
+	_, err := u.GetCollection().InsertMany(ctx, users, opts)
 
 	count := len(users)
 	if err, ok := err.(mongo.BulkWriteException); ok {
@@ -212,7 +223,7 @@ func (u *UserCollection) Update() error {
 	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
-			log.Fatalln(err.Error())
+			return nil
 		}
 		q.UserArguments.Login = q.String(user.Login)
 
@@ -266,6 +277,59 @@ func (u *UserCollection) StoreRepositories(user User, repos []interface{}) {
 	logger.Success(fmt.Sprintf("%d user repositories inserted", len(repos)))
 }
 
+func (u *UserCollection) RankRepositoryStars() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$project", bson.D{
+				{"login", "$login"},
+				{"ranking", bson.D{
+					{"repository_stars", bson.D{{"$sum", "$repositories.stargazers.total_count"}}},
+				}},
+			}},
+		},
+		bson.D{
+			{"$sort", bson.D{
+				{"ranking.repository_stars", -1},
+			}},
+		},
+	}
+
+	cursor, err := u.GetCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Fatalln(err.Error())
+		}
+	}()
+
+	for i := 1; cursor.Next(ctx); i++ {
+		userRanking := UserRanking{
+			RepositoryRanking: RepositoryRanking{
+				Rank:      i,
+				CreatedAt: time.Now(),
+			},
+		}
+		if err := cursor.Decode(&userRanking); err != nil {
+			return err
+		}
+
+		filter := bson.D{{"login", userRanking.Login}}
+		update := bson.D{{"$push", bson.D{{"rankings.repository_stars", userRanking.RepositoryRanking}}}}
+		opts := options.Update().SetUpsert(true)
+		_, err := database.GetCollection("users").UpdateOne(ctx, filter, update, opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *UserCollection) Fetch(q *Query) error {
 	u.Response.Data.RateLimit.Check()
 
@@ -282,9 +346,8 @@ func (u *UserCollection) Fetch(q *Query) error {
 }
 
 func (u *UserCollection) GetLast() (user User) {
-	opts := options.FindOneOptions{}
-	opts.SetSort(bson.D{{"created_at", -1}})
-	if err := database.Get(u.name, &opts).Decode(&user); err != nil {
+	opts := options.FindOne().SetSort(bson.D{{"created_at", -1}})
+	if err := database.Get(u.name, opts).Decode(&user); err != nil {
 		log.Fatalln(err.Error())
 	}
 

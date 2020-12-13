@@ -17,8 +17,7 @@ func init() {
 func main() {
 	work()
 
-	// FIXME
-	time.Sleep(6 * time.Hour)
+	time.Sleep(6 * time.Hour) // FIXME
 }
 
 func work() {

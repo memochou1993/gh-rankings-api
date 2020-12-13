@@ -22,7 +22,7 @@ func (w *Worker) BuildUserCollection() {
 	<-w.starter
 
 	go func() {
-		t := time.NewTicker(time.Hour)
+		t := time.NewTicker(time.Second) // FIXME
 		for ; true; <-t.C {
 			if err := w.userCollection.Collect(); err != nil {
 				logger.Error(err.Error())
@@ -31,9 +31,18 @@ func (w *Worker) BuildUserCollection() {
 	}()
 
 	go func() {
-		t := time.NewTicker(time.Second)
+		t := time.NewTicker(time.Second) // FIXME
 		for ; true; <-t.C {
 			if err := w.userCollection.Update(); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+	}()
+
+	go func() {
+		t := time.NewTicker(10 * time.Second) // FIXME
+		for ; true; <-t.C {
+			if err := w.userCollection.RankRepositoryStars(); err != nil {
 				logger.Error(err.Error())
 			}
 		}
