@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/util"
 	"time"
 )
 
@@ -20,29 +21,49 @@ func NewWorker() *Worker {
 func (w *Worker) BuildUserCollection() {
 	w.userCollection.Init(w.starter)
 	<-w.starter
+	go w.CollectUsers()
+	time.Sleep(10 * time.Second)
+	go w.UpdateUsers()
+	time.Sleep(10 * time.Second)
+	go w.RankUserRepositoryStars()
+}
 
-	go func() {
-		t := time.NewTicker(time.Second) // FIXME
-		for ; true; <-t.C {
-			if err := w.userCollection.Collect(); err != nil {
-				logger.Error(err.Error())
-			}
-		}
-	}()
+func (w *Worker) CollectUsers() {
+	duration := 7 * 24 * time.Hour
+	if util.IsLocal() {
+		duration = time.Second
+	}
 
-	go func() {
-		t := time.NewTicker(time.Second) // FIXME
-		for ; true; <-t.C {
-			if err := w.userCollection.Update(); err != nil {
-				logger.Error(err.Error())
-			}
+	t := time.NewTicker(duration)
+	for ; true; <-t.C {
+		if err := w.userCollection.Collect(); err != nil {
+			logger.Error(err.Error())
 		}
-	}()
+	}
+}
 
-	go func() {
-		t := time.NewTicker(10 * time.Second) // FIXME
-		for ; true; <-t.C {
-			w.userCollection.RankRepositoryStars()
+func (w *Worker) UpdateUsers() {
+	duration := 7 * 24 * time.Hour
+	if util.IsLocal() {
+		duration = time.Second
+	}
+
+	t := time.NewTicker(duration)
+	for ; true; <-t.C {
+		if err := w.userCollection.Update(); err != nil {
+			logger.Error(err.Error())
 		}
-	}()
+	}
+}
+
+func (w *Worker) RankUserRepositoryStars() {
+	duration := 24 * time.Hour
+	if util.IsLocal() {
+		duration = 10 * time.Second
+	}
+
+	t := time.NewTicker(duration)
+	for ; true; <-t.C {
+		w.userCollection.RankRepositoryStars()
+	}
 }

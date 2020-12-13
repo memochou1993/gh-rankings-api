@@ -93,11 +93,12 @@ func NewUserCollection() *UserCollection {
 func (u *UserCollection) Init(starter chan<- struct{}) {
 	logger.Info("Initializing user collection...")
 	u.CreateIndexes()
-	logger.Success("User collection initialized...")
+	logger.Success("User collection initialized!")
 	starter <- struct{}{}
 }
 
 func (u *UserCollection) Collect() error {
+	logger.Info("Collecting users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	if database.Count(u.name) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
@@ -138,20 +139,15 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 }
 
 func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
-	logger.Debug(q.SearchArguments)
-	logger.Info("Searching users...")
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
-	count := len(u.Response.Data.Search.Edges)
-	logger.Success(fmt.Sprintf("%d users discovered", count))
-	if count == 0 {
+	if len(u.Response.Data.Search.Edges) == 0 {
 		return nil
 	}
 	for _, edge := range u.Response.Data.Search.Edges {
 		*users = append(*users, edge.Node)
 	}
-
 	if !u.Response.Data.Search.PageInfo.HasNextPage {
 		q.SearchArguments.After = ""
 		return nil
@@ -182,10 +178,11 @@ func (u *UserCollection) StoreUsers(users []interface{}) {
 			logger.Warning(err.WriteError.Error())
 		}
 	}
-	logger.Success(fmt.Sprintf("%d users inserted", count))
+	logger.Success(fmt.Sprintf("%d users inserted!", count))
 }
 
 func (u *UserCollection) Update() error {
+	logger.Info("Updating users...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -225,21 +222,15 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error {
-	logger.Debug(q.UserArguments)
-	logger.Debug(q.RepositoriesArguments)
-	logger.Info("Searching user repositories...")
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
-	count := len(u.Response.Data.User.Repositories.Edges)
-	logger.Success(fmt.Sprintf("%d user repositories discovered", count))
-	if count == 0 {
+	if len(u.Response.Data.User.Repositories.Edges) == 0 {
 		return nil
 	}
 	for _, edge := range u.Response.Data.User.Repositories.Edges {
 		*repos = append(*repos, edge.Node)
 	}
-
 	if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
 		q.RepositoriesArguments.After = ""
 		return nil
@@ -259,12 +250,12 @@ func (u *UserCollection) UpdateRepositories(user User, repos []interface{}) {
 
 	filter := bson.D{{"login", user.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
-
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
-	logger.Success(fmt.Sprintf("%d user repositories updated", len(repos)))
+	logger.Success(fmt.Sprintf("%d user repositories updated!", len(repos)))
 }
 
 func (u *UserCollection) RankRepositoryStars() {
+	logger.Info("Ranking user repository stars...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -296,10 +287,11 @@ func (u *UserCollection) RankRepositoryStars() {
 		}
 	}()
 
-	for i := 1; cursor.Next(ctx); i++ {
+	count := 1
+	for ; cursor.Next(ctx); count++ {
 		userRanking := UserRanking{
 			RepositoryRanking: RepositoryRanking{
-				Rank:      i,
+				Rank:      count,
 				CreatedAt: time.Now(),
 			},
 		}
@@ -314,6 +306,7 @@ func (u *UserCollection) RankRepositoryStars() {
 			log.Fatalln(err.Error())
 		}
 	}
+	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count))
 }
 
 func (u *UserCollection) Fetch(q *Query) error {

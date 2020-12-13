@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 	"github.com/memochou1993/github-rankings/util"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"reflect"
@@ -84,7 +83,7 @@ func stringify(v interface{}) string {
 }
 
 func prefix(prefix string) string {
-	return fmt.Sprintf("[%s.%s] ", strings.ToUpper(viper.GetString("APP_ENV")), prefix)
+	return fmt.Sprintf("[%s.%s] ", strings.ToUpper(os.Getenv("APP_ENV")), prefix)
 }
 
 func color(color string) func(...interface{}) string {
