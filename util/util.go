@@ -17,10 +17,6 @@ func LoadEnv() {
 	}
 }
 
-func IsLocal() bool {
-	return os.Getenv("APP_ENV") == "local"
-}
-
 func JoinStruct(v interface{}, sep string) string {
 	b := bytes.Buffer{}
 	encoder := json.NewEncoder(&b)

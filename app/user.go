@@ -306,7 +306,7 @@ func (u *UserCollection) RankRepositoryStars() {
 			log.Fatalln(err.Error())
 		}
 	}
-	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count))
+	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count-1))
 }
 
 func (u *UserCollection) Fetch(q *Query) error {
@@ -318,7 +318,6 @@ func (u *UserCollection) Fetch(q *Query) error {
 	if err := Fetch(ctx, q, &u.Response); err != nil {
 		return err
 	}
-	logger.Debug(u.Response.Data.RateLimit)
 	for _, err := range u.Response.Errors {
 		return err
 	}
