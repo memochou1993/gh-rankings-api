@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+type Payload struct {
+	Query string `json:"query"`
+}
+
 type Query struct {
 	Schema                string
 	UserArguments         UserArguments
@@ -24,13 +28,7 @@ func (q *Query) get() string {
 	query = strings.Replace(query, "SearchArguments", util.JoinStruct(q.SearchArguments, ","), 1)
 	query = strings.Replace(query, "RepositoriesArguments", util.JoinStruct(q.RepositoriesArguments, ","), 1)
 
-	payload := struct {
-		Query string `json:"query"`
-	}{
-		Query: query,
-	}
-
-	b, err := json.Marshal(payload)
+	b, err := json.Marshal(Payload{Query: query})
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -88,7 +86,7 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (rl *RateLimit) Check() {
+func (rl *RateLimit) Break() {
 	buffer := 10
 	if rl.Remaining > buffer {
 		return
@@ -118,10 +116,10 @@ func (e Error) Error() string {
 }
 
 func ReadQuery(filename string) string {
-	data, err := ioutil.ReadFile(fmt.Sprintf("./query/%s.graphql", filename))
+	b, err := ioutil.ReadFile(fmt.Sprintf("./query/%s.graphql", filename))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	return string(data)
+	return string(b)
 }

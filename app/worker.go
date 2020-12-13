@@ -42,9 +42,7 @@ func (w *Worker) BuildUserCollection() {
 	go func() {
 		t := time.NewTicker(10 * time.Second) // FIXME
 		for ; true; <-t.C {
-			if err := w.userCollection.RankRepositoryStars(); err != nil {
-				logger.Error(err.Error())
-			}
+			w.userCollection.RankRepositoryStars()
 		}
 	}()
 }

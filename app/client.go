@@ -44,7 +44,6 @@ func post(ctx context.Context, body io.Reader) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", viper.GetString("API_TOKEN")))
 
 	return client.Do(req.WithContext(ctx))

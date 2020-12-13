@@ -50,9 +50,7 @@ func TestStoreUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
 	users := []interface{}{app.User{}}
-	if err := u.StoreUsers(users); err != nil {
-		t.Error(err.Error())
-	}
+	u.StoreUsers(users)
 	if count := database.Count(u.GetName()); count == 0 {
 		t.Fail()
 	}
@@ -84,7 +82,7 @@ func TestFetchUserRepositories(t *testing.T) {
 	DropCollection(u)
 }
 
-func TestStoreRepositories(t *testing.T) {
+func TestUpdateRepositories(t *testing.T) {
 	u := app.NewUserCollection()
 
 	user := app.User{
@@ -92,12 +90,10 @@ func TestStoreRepositories(t *testing.T) {
 	}
 
 	users := []interface{}{user}
-	if err := u.StoreUsers(users); err != nil {
-		t.Error(err.Error())
-	}
+	u.StoreUsers(users)
 
 	repos := []interface{}{app.Repository{}}
-	u.StoreRepositories(user, repos)
+	u.UpdateRepositories(user, repos)
 	if len(u.GetLast().Repositories) == 0 {
 		t.Fail()
 	}
@@ -108,9 +104,7 @@ func TestStoreRepositories(t *testing.T) {
 func TestIndexUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
-	if err := u.Index(); err != nil {
-		t.Error(err.Error())
-	}
+	u.CreateIndexes()
 
 	indexes := database.GetIndexes(u.GetName())
 	if len(indexes) == 0 {

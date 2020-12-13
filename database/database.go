@@ -12,6 +12,10 @@ import (
 
 var client *mongo.Client
 
+const (
+	ErrorDuplicateKey = 11000
+)
+
 func Init() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -73,7 +77,7 @@ func GetIndexes(collection string) []bson.D {
 	return indexes
 }
 
-func CreateIndexes(collection string, keys []string) error {
+func CreateIndexes(collection string, keys []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -86,11 +90,12 @@ func CreateIndexes(collection string, keys []string) error {
 	}
 
 	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
-
-	return err
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 }
 
-func CreateUniqueIndexes(collection string, keys []string) error {
+func CreateUniqueIndexes(collection string, keys []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -103,6 +108,7 @@ func CreateUniqueIndexes(collection string, keys []string) error {
 	}
 
 	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
-
-	return err
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 }
