@@ -80,6 +80,26 @@ func TestStoreUsers(t *testing.T) {
 	DropCollection(u)
 }
 
+func TestUpdate(t *testing.T) {
+	u := app.NewUserCollection()
+
+	user := app.User{
+		Login: "memochou1993",
+	}
+
+	users := []interface{}{user}
+	u.StoreUsers(users)
+
+	if err := u.Update(); err != nil {
+		t.Error(err.Error())
+	}
+	if len(u.GetLast().Repositories) == 0 {
+		t.Fail()
+	}
+
+	DropCollection(u)
+}
+
 func TestFetchUserRepositories(t *testing.T) {
 	u := app.NewUserCollection()
 
