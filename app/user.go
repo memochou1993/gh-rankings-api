@@ -98,7 +98,7 @@ func (u *UserCollection) Init(starter chan<- struct{}) {
 }
 
 func (u *UserCollection) Collect() error {
-	logger.Info("Collecting users...")
+	logger.Info("Starting to collect users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	if database.Count(u.name) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
@@ -181,7 +181,7 @@ func (u *UserCollection) StoreUsers(users []interface{}) {
 }
 
 func (u *UserCollection) Update() error {
-	logger.Info("Updating users...")
+	logger.Info("Starting to update users...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -256,7 +256,7 @@ func (u *UserCollection) UpdateRepositories(user User, repos []interface{}) {
 }
 
 func (u *UserCollection) RankRepositoryStars() {
-	logger.Info("Ranking user repository stars...")
+	logger.Info("Starting to rank user repository stars...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -273,7 +273,7 @@ func (u *UserCollection) RankRepositoryStars() {
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"ranking.repository_stars", -1},
+				{"ranking.repository_stars", 1},
 			}},
 		},
 	}
@@ -288,11 +288,12 @@ func (u *UserCollection) RankRepositoryStars() {
 		}
 	}()
 
-	count := 1
-	for ; cursor.Next(ctx); count++ {
+	var models []mongo.WriteModel
+	count := 0
+	for cursor.Next(ctx) {
 		userRanking := UserRanking{
 			RepositoryRanking: RepositoryRanking{
-				Rank:      count,
+				Rank:      cursor.RemainingBatchLength() + 1,
 				CreatedAt: time.Now(),
 			},
 		}
@@ -302,12 +303,17 @@ func (u *UserCollection) RankRepositoryStars() {
 
 		filter := bson.D{{"login", userRanking.Login}}
 		update := bson.D{{"$push", bson.D{{"rankings.repository_stars", userRanking.RepositoryRanking}}}}
-		_, err := database.GetCollection("users").UpdateOne(ctx, filter, update)
-		if err != nil {
-			log.Fatalln(err.Error())
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
+		if cursor.RemainingBatchLength()%1000 == 0 {
+			_, err := database.GetCollection("users").BulkWrite(ctx, models)
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			count += len(models)
+			models = []mongo.WriteModel{}
 		}
 	}
-	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count-1))
+	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count))
 }
 
 func (u *UserCollection) Fetch(q *Query) error {
