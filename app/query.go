@@ -99,7 +99,7 @@ func (rl *RateLimit) Break() {
 		log.Fatalln(err.Error())
 	}
 	logger.Warning("Take a break...")
-	time.Sleep(resetAt.Sub(time.Now().UTC()))
+	time.Sleep(resetAt.Add(time.Second).Sub(time.Now().UTC()))
 }
 
 type Error struct {
