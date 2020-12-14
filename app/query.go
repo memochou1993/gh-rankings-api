@@ -70,6 +70,7 @@ type SearchQuery struct {
 	Created   string `json:"created,omitempty"`
 	Followers string `json:"followers,omitempty"`
 	Repos     string `json:"repos,omitempty"`
+	Sort      string `json:"sort,omitempty"`
 }
 
 type PageInfo struct {

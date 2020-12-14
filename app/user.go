@@ -125,6 +125,7 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 		Created:   q.Range(*from, from.AddDate(0, 0, 6)),
 		Followers: ">=10",
 		Repos:     ">=5",
+		Sort:      "joined",
 	}, " "))
 
 	var users []interface{}

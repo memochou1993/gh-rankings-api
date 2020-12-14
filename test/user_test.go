@@ -55,7 +55,7 @@ func TestFetchUsers(t *testing.T) {
 			Type:  "USER",
 		},
 	}
-	q.SearchArguments.Query = q.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10")
+	q.SearchArguments.Query = q.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10 sort:joined")
 
 	var users []interface{}
 	if err := u.FetchUsers(&q, &users); err != nil {
