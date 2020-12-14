@@ -118,7 +118,6 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	to := time.Now()
 	if from.After(to) {
 		logger.Warning("Take a break...")
-		time.Sleep(7 * 24 * time.Hour)
 		return nil
 	}
 
