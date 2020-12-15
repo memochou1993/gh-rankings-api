@@ -28,7 +28,6 @@ type UserCollection struct {
 			User struct {
 				AvatarURL    string    `json:"avatarUrl"`
 				CreatedAt    time.Time `json:"createdAt"`
-				Email        string    `json:"email"`
 				Followers    List      `json:"followers"`
 				Location     string    `json:"location"`
 				Login        string    `json:"login"`
@@ -51,7 +50,6 @@ type UserCollection struct {
 type User struct {
 	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
 	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
-	Email        string       `json:"email" bson:"email"`
 	Followers    List         `json:"followers" bson:"followers"`
 	Location     string       `json:"location" bson:"location"`
 	Login        string       `json:"login" bson:"login"`

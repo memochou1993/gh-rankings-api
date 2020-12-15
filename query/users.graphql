@@ -7,7 +7,6 @@ query Users {
         ... on User {
           avatarUrl
           createdAt
-          email
           followers {
             totalCount
           }
