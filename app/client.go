@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/memochou1993/github-rankings/logger"
 	"github.com/spf13/viper"
 	"io"
 	"log"
@@ -35,6 +36,10 @@ func Fetch(ctx context.Context, q *Query, v interface{}) error {
 			log.Fatalln(err.Error())
 		}
 	}()
+	if resp.StatusCode != http.StatusOK {
+		logger.Error(fmt.Sprintf("Unexpected response code: %d", resp.StatusCode))
+		return nil
+	}
 
 	return json.NewDecoder(resp.Body).Decode(v)
 }
