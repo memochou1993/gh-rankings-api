@@ -113,7 +113,7 @@ func (u *UserCollection) Collect() error {
 func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	to := time.Now()
 	if from.After(to) {
-		logger.Warning("Taking a vacation...")
+		logger.Warning("Take a vacation...")
 		return nil
 	}
 

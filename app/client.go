@@ -37,7 +37,7 @@ func Fetch(ctx context.Context, q *Query, v interface{}) error {
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
-		logger.Error(fmt.Sprintf("Unexpected response code: %d", resp.StatusCode))
+		logger.Error("Something went wrong...")
 		return nil
 	}
 
