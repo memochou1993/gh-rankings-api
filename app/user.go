@@ -57,6 +57,13 @@ type User struct {
 	Login        string       `json:"login" bson:"login"`
 	Name         string       `json:"name" bson:"name"`
 	Repositories []Repository `json:"repositories" bson:"repositories"`
+	Ranks        struct {
+		RepositoryStars struct {
+			Rank       int       `bson:"rank"`
+			TotalCount int       `bson:"total_count"`
+			CreatedAt  time.Time `bson:"created_at"`
+		} `bson:"repository_stars"`
+	}
 }
 
 type Repository struct {
@@ -69,17 +76,6 @@ type Repository struct {
 
 type List struct {
 	TotalCount int `json:"totalCount" bson:"total_count"`
-}
-
-type UserRanking struct {
-	Login             string            `bson:"login"`
-	RepositoryRanking RepositoryRanking `bson:"ranking"`
-}
-
-type RepositoryRanking struct {
-	Rank            int       `bson:"rank"`
-	RepositoryStars int       `bson:"repository_stars"`
-	CreatedAt       time.Time `bson:"created_at"`
 }
 
 func NewUserCollection() *UserCollection {
@@ -265,16 +261,18 @@ func (u *UserCollection) RankRepositoryStars() {
 		bson.D{
 			{"$project", bson.D{
 				{"login", "$login"},
-				{"ranking", bson.D{
+				{"ranks", bson.D{
 					{"repository_stars", bson.D{
-						{"$sum", "$repositories.stargazers.total_count"},
+						{"total_count", bson.D{
+							{"$sum", "$repositories.stargazers.total_count"},
+						}},
 					}},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"ranking.repository_stars", -1},
+				{"ranks.repository_stars.total_count", -1},
 			}},
 		},
 	}
@@ -292,19 +290,16 @@ func (u *UserCollection) RankRepositoryStars() {
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		userRanking := UserRanking{
-			RepositoryRanking: RepositoryRanking{
-				Rank:      count + 1,
-				CreatedAt: time.Now(),
-			},
-		}
-		if err := cursor.Decode(&userRanking); err != nil {
+		user := User{}
+		user.Ranks.RepositoryStars.Rank = count + 1
+		user.Ranks.RepositoryStars.CreatedAt = time.Now()
+		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"login", userRanking.Login}}
-		update := bson.D{{"$push", bson.D{{"rankings.repository_stars", userRanking.RepositoryRanking}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
+		filter := bson.D{{"login", user.Login}}
+		model := bson.D{{"$set", bson.D{{"ranks.repository_stars", user.Ranks.RepositoryStars}}}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
 		if cursor.RemainingBatchLength() == 0 {
 			_, err := database.GetCollection("users").BulkWrite(ctx, models)
 			if err != nil {
@@ -349,9 +344,11 @@ func (u *UserCollection) CreateIndexes() {
 		return
 	}
 
-	indexes := []string{"created_at"}
-	database.CreateIndexes(u.name, indexes)
-
-	uniqueIndexes := []string{"login"}
-	database.CreateUniqueIndexes(u.name, uniqueIndexes)
+	database.CreateIndexes(u.name, []string{
+		"created_at",
+		"ranks.repository_stars.rank",
+	})
+	database.CreateUniqueIndexes(u.name, []string{
+		"login",
+	})
 }
