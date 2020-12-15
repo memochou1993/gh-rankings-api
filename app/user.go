@@ -274,12 +274,12 @@ func (u *UserCollection) RankRepositoryStars() {
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"ranking.repository_stars", 1},
+				{"ranking.repository_stars", -1},
 			}},
 		},
 	}
-
-	cursor, err := u.GetCollection().Aggregate(ctx, pipeline)
+	opts := options.Aggregate().SetBatchSize(1000)
+	cursor, err := u.GetCollection().Aggregate(ctx, pipeline, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -291,10 +291,10 @@ func (u *UserCollection) RankRepositoryStars() {
 
 	var models []mongo.WriteModel
 	count := 0
-	for cursor.Next(ctx) {
+	for ; cursor.Next(ctx); count++ {
 		userRanking := UserRanking{
 			RepositoryRanking: RepositoryRanking{
-				Rank:      cursor.RemainingBatchLength() + 1,
+				Rank:      count + 1,
 				CreatedAt: time.Now(),
 			},
 		}
@@ -305,13 +305,12 @@ func (u *UserCollection) RankRepositoryStars() {
 		filter := bson.D{{"login", userRanking.Login}}
 		update := bson.D{{"$push", bson.D{{"rankings.repository_stars", userRanking.RepositoryRanking}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
-		if cursor.RemainingBatchLength()%1000 == 0 {
+		if cursor.RemainingBatchLength() == 0 {
 			_, err := database.GetCollection("users").BulkWrite(ctx, models)
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
-			count += len(models)
-			models = []mongo.WriteModel{}
+			models = models[:0]
 		}
 	}
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
