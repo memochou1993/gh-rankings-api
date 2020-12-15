@@ -35,7 +35,7 @@ func (w *Worker) collectUsers() {
 }
 
 func (w *Worker) updateUsers() {
-	t := time.NewTicker(7 * 24 * time.Hour)
+	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		if err := w.userCollection.Update(); err != nil {
 			logger.Error(err.Error())
@@ -44,7 +44,7 @@ func (w *Worker) updateUsers() {
 }
 
 func (w *Worker) rankUserRepositoryStars() {
-	t := time.NewTicker(7 * 24 * time.Hour)
+	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		w.userCollection.RankRepositoryStars()
 	}
