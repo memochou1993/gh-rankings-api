@@ -15,53 +15,49 @@ import (
 
 type UserCollection struct {
 	Collection
-	Response struct {
-		Data struct {
-			Search struct {
-				UserCount int `json:"userCount"`
-				Edges     []struct {
-					Cursor string `json:"cursor"`
-					Node   User   `json:"node"`
+	Response *UserResponse
+}
+
+type UserResponse struct {
+	Data struct {
+		Search struct {
+			UserCount int `json:"userCount"`
+			Edges     []struct {
+				Cursor string `json:"cursor"`
+				Node   User   `json:"node"`
+			} `json:"edges"`
+			PageInfo PageInfo `json:"pageInfo"`
+		} `json:"search"`
+		User struct {
+			AvatarURL    string    `json:"avatarUrl"`
+			CreatedAt    time.Time `json:"createdAt"`
+			Followers    Directory `json:"followers"`
+			Location     string    `json:"location"`
+			Login        string    `json:"login"`
+			Name         string    `json:"name"`
+			Repositories struct {
+				TotalCount int `json:"totalCount"`
+				Edges      []struct {
+					Cursor string     `json:"cursor"`
+					Node   Repository `json:"node"`
 				} `json:"edges"`
 				PageInfo PageInfo `json:"pageInfo"`
-			} `json:"search"`
-			User struct {
-				AvatarURL    string    `json:"avatarUrl"`
-				CreatedAt    time.Time `json:"createdAt"`
-				Followers    List      `json:"followers"`
-				Location     string    `json:"location"`
-				Login        string    `json:"login"`
-				Name         string    `json:"name"`
-				Repositories struct {
-					TotalCount int `json:"totalCount"`
-					Edges      []struct {
-						Cursor string     `json:"cursor"`
-						Node   Repository `json:"node"`
-					} `json:"edges"`
-					PageInfo PageInfo `json:"pageInfo"`
-				} `json:"repositories"`
-			} `json:"user"`
-			RateLimit RateLimit `json:"rateLimit"`
-		} `json:"data"`
-		Errors []Error `json:"errors"`
-	}
+			} `json:"repositories"`
+		} `json:"user"`
+		RateLimit RateLimit `json:"rateLimit"`
+	} `json:"data"`
+	Errors []Error `json:"errors"`
 }
 
 type User struct {
 	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
 	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
-	Followers    List         `json:"followers" bson:"followers"`
+	Followers    Directory    `json:"followers" bson:"followers"`
 	Location     string       `json:"location" bson:"location"`
-	Login        string       `json:"login" bson:"login"`
+	Login        string       `json:"login" bson:"_id"`
 	Name         string       `json:"name" bson:"name"`
-	Repositories []Repository `json:"repositories" bson:"repositories"`
-	Ranks        struct {
-		RepositoryStars struct {
-			Rank       int       `bson:"rank"`
-			TotalCount int       `bson:"total_count"`
-			CreatedAt  time.Time `bson:"created_at"`
-		} `bson:"repository_stars"`
-	}
+	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
+	Ranks        *Ranks       `json:"ranks" bson:"ranks,omitempty"`
 }
 
 type Repository struct {
@@ -69,15 +65,21 @@ type Repository struct {
 	PrimaryLanguage struct {
 		Name string `json:"name" bson:"name"`
 	} `json:"primaryLanguage" bson:"primary_language"`
-	Stargazers List `json:"stargazers" bson:"stargazers"`
+	Stargazers Directory `json:"stargazers" bson:"stargazers"`
 }
 
-type List struct {
-	TotalCount int `json:"totalCount" bson:"total_count"`
+type Ranks struct {
+	RepositoryStars *RepositoryStars `bson:"repository_stars,omitempty"`
 }
 
-func NewUserCollection() *UserCollection {
-	return &UserCollection{
+type RepositoryStars struct {
+	Rank       int       `bson:"rank"`
+	TotalCount int       `bson:"total_count"`
+	CreatedAt  time.Time `bson:"created_at"`
+}
+
+func NewUserCollection() UserCollection {
+	return UserCollection{
 		Collection: Collection{
 			name: "users",
 		},
@@ -94,9 +96,6 @@ func (u *UserCollection) Init(starter chan<- struct{}) {
 func (u *UserCollection) Collect() error {
 	logger.Info("Collecting users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	if database.Count(u.name) > 0 {
-		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
-	}
 	q := Query{
 		Schema: ReadQuery("users"),
 		SearchArguments: SearchArguments{
@@ -111,7 +110,6 @@ func (u *UserCollection) Collect() error {
 func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	to := time.Now()
 	if from.After(to) {
-		logger.Warning("Take a vacation...")
 		return nil
 	}
 
@@ -122,7 +120,7 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 		Sort:      "joined",
 	}, " "))
 
-	var users []interface{}
+	var users []User
 	if err := u.FetchUsers(q, &users); err != nil {
 		return err
 	}
@@ -132,7 +130,7 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	return u.Travel(from, q)
 }
 
-func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
+func (u *UserCollection) FetchUsers(q *Query, users *[]User) error {
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
@@ -151,7 +149,7 @@ func (u *UserCollection) FetchUsers(q *Query, users *[]interface{}) error {
 	return u.FetchUsers(q, users)
 }
 
-func (u *UserCollection) StoreUsers(users []interface{}) {
+func (u *UserCollection) StoreUsers(users []User) {
 	if len(users) == 0 {
 		return
 	}
@@ -159,28 +157,30 @@ func (u *UserCollection) StoreUsers(users []interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	opts := options.InsertMany().SetOrdered(false)
-	_, err := u.GetCollection().InsertMany(ctx, users, opts)
-
-	count := len(users)
-	if err, ok := err.(mongo.BulkWriteException); ok {
-		for _, err := range err.WriteErrors {
-			if err.Code != database.ErrorDuplicateKey {
-				log.Fatalln(err.Error())
-			}
-			count--
-			logger.Warning(err.WriteError.Error())
-		}
+	var models []mongo.WriteModel
+	for _, user := range users {
+		filter := bson.D{{"_id", user.Login}}
+		model := bson.D{{"$set", user}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model).SetUpsert(true))
 	}
-	logger.Success(fmt.Sprintf("Inserted %d users!", count))
+	res, err := database.GetCollection("users").BulkWrite(ctx, models)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	if res.ModifiedCount > 0 {
+		logger.Success(fmt.Sprintf("Updated %d users!", res.ModifiedCount))
+	}
+	if res.UpsertedCount > 0 {
+		logger.Success(fmt.Sprintf("Inserted %d users!", res.UpsertedCount))
+	}
 }
 
 func (u *UserCollection) Update() error {
-	logger.Info("Updating users...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cursor, err := u.GetCollection().Find(ctx, bson.D{})
+	opts := options.Find().SetBatchSize(1000)
+	cursor, err := u.GetCollection().Find(ctx, bson.D{}, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -190,6 +190,11 @@ func (u *UserCollection) Update() error {
 		}
 	}()
 
+	if cursor.RemainingBatchLength() == 0 {
+		return nil
+	}
+	logger.Info("Updating user repositories...")
+
 	q := Query{
 		Schema: ReadQuery("user_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
@@ -198,26 +203,24 @@ func (u *UserCollection) Update() error {
 			OwnerAffiliations: "OWNER",
 		},
 	}
-	count := 0
-	for ; cursor.Next(ctx); count++ {
+	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
 		q.UserArguments.Login = q.String(user.Login)
 
-		var repos []interface{}
+		var repos []Repository
 		if err := u.FetchRepositories(&q, &repos); err != nil {
 			return err
 		}
 		u.UpdateRepositories(user, repos)
 	}
-	logger.Success(fmt.Sprintf("Updated %d users!", count))
 
 	return nil
 }
 
-func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error {
+func (u *UserCollection) FetchRepositories(q *Query, repos *[]Repository) error {
 	if err := u.Fetch(q); err != nil {
 		return err
 	}
@@ -236,7 +239,7 @@ func (u *UserCollection) FetchRepositories(q *Query, repos *[]interface{}) error
 	return u.FetchRepositories(q, repos)
 }
 
-func (u *UserCollection) UpdateRepositories(user User, repos []interface{}) {
+func (u *UserCollection) UpdateRepositories(user User, repos []Repository) {
 	if len(repos) == 0 {
 		return
 	}
@@ -244,14 +247,13 @@ func (u *UserCollection) UpdateRepositories(user User, repos []interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"login", user.Login}}
+	filter := bson.D{{"_id", user.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
 	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
 }
 
 func (u *UserCollection) RankRepositoryStars() {
-	logger.Info("Ranking user repository stars...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -285,17 +287,27 @@ func (u *UserCollection) RankRepositoryStars() {
 		}
 	}()
 
+	if cursor.RemainingBatchLength() == 0 {
+		return
+	}
+	logger.Info("Ranking user repository stars...")
+
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		user := User{}
-		user.Ranks.RepositoryStars.Rank = count + 1
-		user.Ranks.RepositoryStars.CreatedAt = time.Now()
+		user := User{
+			Ranks: &Ranks{
+				RepositoryStars: &RepositoryStars{
+					Rank:      count + 1,
+					CreatedAt: time.Now(),
+				},
+			},
+		}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"login", user.Login}}
+		filter := bson.D{{"_id", user.Login}}
 		model := bson.D{{"$set", bson.D{{"ranks.repository_stars", user.Ranks.RepositoryStars}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
 		if cursor.RemainingBatchLength() == 0 {
@@ -310,7 +322,10 @@ func (u *UserCollection) RankRepositoryStars() {
 }
 
 func (u *UserCollection) Fetch(q *Query) error {
-	u.Response.Data.RateLimit.Break()
+	if u.Response != nil {
+		u.Response.Data.RateLimit.Break()
+		u.ResetResponse()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -323,6 +338,10 @@ func (u *UserCollection) Fetch(q *Query) error {
 	}
 
 	return nil
+}
+
+func (u *UserCollection) ResetResponse() {
+	u.Response = &UserResponse{}
 }
 
 func (u *UserCollection) GetLast() (user User) {
@@ -345,8 +364,5 @@ func (u *UserCollection) CreateIndexes() {
 	database.CreateIndexes(u.name, []string{
 		"created_at",
 		"ranks.repository_stars.rank",
-	})
-	database.CreateUniqueIndexes(u.name, []string{
-		"login",
 	})
 }

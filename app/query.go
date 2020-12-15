@@ -73,6 +73,10 @@ type SearchQuery struct {
 	Sort      string `json:"sort,omitempty"`
 }
 
+type Directory struct {
+	TotalCount int `json:"totalCount" bson:"total_count"`
+}
+
 type PageInfo struct {
 	EndCursor   string `json:"endCursor,omitempty"`
 	HasNextPage bool   `json:"hasNextPage,omitempty"`
@@ -90,9 +94,6 @@ type RateLimit struct {
 func (rl *RateLimit) Break() {
 	buffer := 10
 	if rl.Remaining > buffer {
-		return
-	}
-	if rl.ResetAt == "" {
 		return
 	}
 	resetAt, err := time.Parse(time.RFC3339, rl.ResetAt)

@@ -1,6 +1,5 @@
 query Users {
   search(SearchArguments) {
-    userCount
     edges {
       cursor
       node {

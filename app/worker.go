@@ -6,19 +6,18 @@ import (
 )
 
 type Worker struct {
-	starter        chan struct{}
-	userCollection *UserCollection
+	starter chan struct{}
 }
 
 func NewWorker() *Worker {
 	return &Worker{
-		starter:        make(chan struct{}, 1),
-		userCollection: NewUserCollection(),
+		starter: make(chan struct{}, 1),
 	}
 }
 
 func (w *Worker) BuildUserCollection() {
-	w.userCollection.Init(w.starter)
+	u := NewUserCollection()
+	u.Init(w.starter)
 	<-w.starter
 	go w.collectUsers()
 	go w.updateUsers()
@@ -26,26 +25,29 @@ func (w *Worker) BuildUserCollection() {
 }
 
 func (w *Worker) collectUsers() {
-	t := time.NewTicker(7 * 24 * time.Hour)
+	u := NewUserCollection()
+	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		if err := w.userCollection.Collect(); err != nil {
+		if err := u.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
 func (w *Worker) updateUsers() {
+	u := NewUserCollection()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		if err := w.userCollection.Update(); err != nil {
+		if err := u.Update(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
 func (w *Worker) rankUserRepositoryStars() {
+	u := NewUserCollection()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		w.userCollection.RankRepositoryStars()
+		u.RankRepositoryStars()
 	}
 }
