@@ -98,7 +98,7 @@ func (u *UserCollection) Init(starter chan<- struct{}) {
 }
 
 func (u *UserCollection) Collect() error {
-	logger.Info("Starting to collect users...")
+	logger.Info("Collecting users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	if database.Count(u.name) > 0 {
 		from = u.GetLast().CreatedAt.Truncate(24 * time.Hour)
@@ -117,7 +117,7 @@ func (u *UserCollection) Collect() error {
 func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	to := time.Now()
 	if from.After(to) {
-		logger.Warning("Take a break...")
+		logger.Warning("Taking a vacation...")
 		return nil
 	}
 
@@ -178,11 +178,11 @@ func (u *UserCollection) StoreUsers(users []interface{}) {
 			logger.Warning(err.WriteError.Error())
 		}
 	}
-	logger.Success(fmt.Sprintf("%d users inserted!", count))
+	logger.Success(fmt.Sprintf("Inserted %d users!", count))
 }
 
 func (u *UserCollection) Update() error {
-	logger.Info("Starting to update users...")
+	logger.Info("Updating users...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -218,7 +218,7 @@ func (u *UserCollection) Update() error {
 		}
 		u.UpdateRepositories(user, repos)
 	}
-	logger.Success(fmt.Sprintf("%d users updated!", count))
+	logger.Success(fmt.Sprintf("Updated %d users!", count))
 
 	return nil
 }
@@ -253,11 +253,11 @@ func (u *UserCollection) UpdateRepositories(user User, repos []interface{}) {
 	filter := bson.D{{"login", user.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
-	logger.Success(fmt.Sprintf("%d user repositories updated!", len(repos)))
+	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
 }
 
 func (u *UserCollection) RankRepositoryStars() {
-	logger.Info("Starting to rank user repository stars...")
+	logger.Info("Ranking user repository stars...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -314,7 +314,7 @@ func (u *UserCollection) RankRepositoryStars() {
 			models = []mongo.WriteModel{}
 		}
 	}
-	logger.Success(fmt.Sprintf("%d user repository stars ranked!", count))
+	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
 }
 
 func (u *UserCollection) Fetch(q *Query) error {
