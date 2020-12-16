@@ -15,8 +15,8 @@ func NewWorker() *Worker {
 	}
 }
 
-func (w *Worker) BuildUserCollection() {
-	u := NewUserCollection()
+func (w *Worker) BuildUserModel() {
+	u := NewUserModel()
 	u.Init(w.starter)
 	<-w.starter
 	go w.collectUsers()
@@ -25,7 +25,7 @@ func (w *Worker) BuildUserCollection() {
 }
 
 func (w *Worker) collectUsers() {
-	u := NewUserCollection()
+	u := NewUserModel()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		if err := u.Collect(); err != nil {
@@ -35,7 +35,7 @@ func (w *Worker) collectUsers() {
 }
 
 func (w *Worker) updateUsers() {
-	u := NewUserCollection()
+	u := NewUserModel()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		if err := u.Update(); err != nil {
@@ -45,7 +45,7 @@ func (w *Worker) updateUsers() {
 }
 
 func (w *Worker) rankUserRepositoryStars() {
-	u := NewUserCollection()
+	u := NewUserModel()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		u.RankRepositoryStars()

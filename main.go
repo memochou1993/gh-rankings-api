@@ -22,5 +22,5 @@ func main() {
 
 func work() {
 	worker := app.NewWorker()
-	worker.BuildUserCollection()
+	worker.BuildUserModel()
 }

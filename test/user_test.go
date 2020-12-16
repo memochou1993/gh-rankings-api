@@ -26,7 +26,7 @@ func setUp() {
 }
 
 func TestTravel(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	from := time.Now().AddDate(0, -1, 0)
 	q := app.Query{
@@ -39,7 +39,7 @@ func TestTravel(t *testing.T) {
 	if err := u.Travel(&from, &q); err != nil {
 		t.Error(err.Error())
 	}
-	if count := database.Count(u.GetName()); count == 0 {
+	if count := database.Count(u.Name()); count == 0 {
 		t.Fail()
 	}
 
@@ -47,7 +47,7 @@ func TestTravel(t *testing.T) {
 }
 
 func TestFetchUsers(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	q := app.Query{
 		Schema: app.ReadQuery("users"),
@@ -70,12 +70,12 @@ func TestFetchUsers(t *testing.T) {
 }
 
 func TestStoreUsers(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	user := app.User{Login: "memochou1993"}
 	users := []app.User{user}
 	u.StoreUsers(users)
-	if count := database.Count(u.GetName()); count == 0 {
+	if count := database.Count(u.Name()); count == 0 {
 		t.Fail()
 	}
 
@@ -83,7 +83,7 @@ func TestStoreUsers(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	user := app.User{Login: "memochou1993"}
 	users := []app.User{user}
@@ -100,7 +100,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestFetchUserRepositories(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	q := app.Query{
 		Schema: app.ReadQuery("user_repositories"),
@@ -126,7 +126,7 @@ func TestFetchUserRepositories(t *testing.T) {
 }
 
 func TestUpdateRepositories(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	user := app.User{Login: "memochou1993"}
 	users := []app.User{user}
@@ -142,11 +142,11 @@ func TestUpdateRepositories(t *testing.T) {
 }
 
 func TestIndexUsers(t *testing.T) {
-	u := app.NewUserCollection()
+	u := app.NewUserModel()
 
 	u.CreateIndexes()
 
-	indexes := database.GetIndexes(u.GetName())
+	indexes := database.Indexes(u.Name())
 	if len(indexes) == 0 {
 		t.Fail()
 	}

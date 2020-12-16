@@ -18,14 +18,14 @@ func ChangeDirectory() {
 	}
 }
 
-func DropCollection(c app.CollectionInterface) {
-	if err := c.GetCollection().Drop(context.Background()); err != nil {
+func DropCollection(c app.ModelInterface) {
+	if err := c.Collection().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
 
 func DropDatabase() {
-	if err := database.GetDatabase().Drop(context.Background()); err != nil {
+	if err := database.Database().Drop(context.Background()); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

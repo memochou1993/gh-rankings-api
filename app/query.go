@@ -22,7 +22,7 @@ type Query struct {
 	RepositoriesArguments RepositoriesArguments
 }
 
-func (q *Query) get() string {
+func (q Query) get() string {
 	query := q.Schema
 	query = strings.Replace(query, "UserArguments", util.JoinStruct(q.UserArguments, ","), 1)
 	query = strings.Replace(query, "SearchArguments", util.JoinStruct(q.SearchArguments, ","), 1)
@@ -79,7 +79,7 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (r *RateLimit) Break() {
+func (r RateLimit) Break() {
 	buffer := 10
 	if r.Remaining > buffer {
 		return

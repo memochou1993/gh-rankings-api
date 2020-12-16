@@ -12,10 +12,6 @@ import (
 
 var client *mongo.Client
 
-const (
-	ErrorDuplicateKey = 11000
-)
-
 func Init() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -28,19 +24,19 @@ func Init() {
 	}
 }
 
-func GetDatabase() *mongo.Database {
+func Database() *mongo.Database {
 	return client.Database(viper.GetString("DB_DATABASE"))
 }
 
-func GetCollection(name string) *mongo.Collection {
-	return GetDatabase().Collection(name)
+func Collection(name string) *mongo.Collection {
+	return Database().Collection(name)
 }
 
 func Count(collection string) int64 {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	count, err := GetCollection(collection).CountDocuments(ctx, bson.D{})
+	count, err := Collection(collection).CountDocuments(ctx, bson.D{})
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -48,11 +44,11 @@ func Count(collection string) int64 {
 	return count
 }
 
-func GetIndexes(collection string) []bson.D {
+func Indexes(collection string) []bson.D {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := GetCollection(collection).Indexes().List(ctx)
+	cursor, err := Collection(collection).Indexes().List(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -82,7 +78,7 @@ func CreateIndexes(collection string, keys []string) {
 		})
 	}
 
-	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
+	_, err := Collection(collection).Indexes().CreateMany(ctx, models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -100,7 +96,7 @@ func CreateUniqueIndexes(collection string, keys []string) {
 		})
 	}
 
-	_, err := GetCollection(collection).Indexes().CreateMany(ctx, models)
+	_, err := Collection(collection).Indexes().CreateMany(ctx, models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

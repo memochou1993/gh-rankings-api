@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-type UserCollection struct {
-	Collection
+type UserModel struct {
+	Model
 }
 
 type UserResponse struct {
@@ -77,22 +77,22 @@ type RepositoryStars struct {
 	CreatedAt  time.Time `bson:"created_at"`
 }
 
-func NewUserCollection() *UserCollection {
-	return &UserCollection{
-		Collection: Collection{
+func NewUserModel() *UserModel {
+	return &UserModel{
+		Model{
 			name: "users",
 		},
 	}
 }
 
-func (u *UserCollection) Init(starter chan<- struct{}) {
+func (u *UserModel) Init(starter chan<- struct{}) {
 	logger.Info("Initializing user collection...")
 	u.CreateIndexes()
 	logger.Success("User collection initialized!")
 	starter <- struct{}{}
 }
 
-func (u *UserCollection) Collect() error {
+func (u *UserModel) Collect() error {
 	logger.Info("Collecting users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	q := Query{
@@ -106,7 +106,7 @@ func (u *UserCollection) Collect() error {
 	return u.Travel(&from, &q)
 }
 
-func (u *UserCollection) Travel(from *time.Time, q *Query) error {
+func (u *UserModel) Travel(from *time.Time, q *Query) error {
 	to := time.Now()
 	if from.After(to) {
 		return nil
@@ -129,7 +129,7 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 	return u.Travel(from, q)
 }
 
-func (u *UserCollection) FetchUsers(q *Query, users *[]User) error {
+func (u *UserModel) FetchUsers(q *Query, users *[]User) error {
 	res := UserResponse{}
 	if err := u.Fetch(q, &res); err != nil {
 		return err
@@ -147,7 +147,7 @@ func (u *UserCollection) FetchUsers(q *Query, users *[]User) error {
 	return u.FetchUsers(q, users)
 }
 
-func (u *UserCollection) StoreUsers(users []User) {
+func (u *UserModel) StoreUsers(users []User) {
 	if len(users) == 0 {
 		return
 	}
@@ -161,7 +161,7 @@ func (u *UserCollection) StoreUsers(users []User) {
 		model := bson.D{{"$set", user}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model).SetUpsert(true))
 	}
-	res, err := database.GetCollection("users").BulkWrite(ctx, models)
+	res, err := database.Collection("users").BulkWrite(ctx, models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -173,12 +173,12 @@ func (u *UserCollection) StoreUsers(users []User) {
 	}
 }
 
-func (u *UserCollection) Update() error {
+func (u *UserModel) Update() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	opts := options.Find().SetBatchSize(1000)
-	cursor, err := u.GetCollection().Find(ctx, bson.D{}, opts)
+	cursor, err := u.Collection().Find(ctx, bson.D{}, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -218,7 +218,7 @@ func (u *UserCollection) Update() error {
 	return nil
 }
 
-func (u *UserCollection) FetchRepositories(q *Query, repos *[]Repository) error {
+func (u *UserModel) FetchRepositories(q *Query, repos *[]Repository) error {
 	res := UserResponse{}
 	if err := u.Fetch(q, &res); err != nil {
 		return err
@@ -236,7 +236,7 @@ func (u *UserCollection) FetchRepositories(q *Query, repos *[]Repository) error 
 	return u.FetchRepositories(q, repos)
 }
 
-func (u *UserCollection) UpdateRepositories(user User, repos []Repository) {
+func (u *UserModel) UpdateRepositories(user User, repos []Repository) {
 	if len(repos) == 0 {
 		return
 	}
@@ -246,11 +246,11 @@ func (u *UserCollection) UpdateRepositories(user User, repos []Repository) {
 
 	filter := bson.D{{"_id", user.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
-	u.GetCollection().FindOneAndUpdate(ctx, filter, update)
+	u.Collection().FindOneAndUpdate(ctx, filter, update)
 	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
 }
 
-func (u *UserCollection) RankRepositoryStars() {
+func (u *UserModel) RankRepositoryStars() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -274,7 +274,7 @@ func (u *UserCollection) RankRepositoryStars() {
 		},
 	}
 	opts := options.Aggregate().SetBatchSize(1000)
-	cursor, err := u.GetCollection().Aggregate(ctx, pipeline, opts)
+	cursor, err := u.Collection().Aggregate(ctx, pipeline, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -308,7 +308,7 @@ func (u *UserCollection) RankRepositoryStars() {
 		model := bson.D{{"$set", bson.D{{"ranks.repository_stars", user.Ranks.RepositoryStars}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
 		if cursor.RemainingBatchLength() == 0 {
-			_, err := database.GetCollection("users").BulkWrite(ctx, models)
+			_, err := database.Collection("users").BulkWrite(ctx, models)
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
@@ -318,7 +318,7 @@ func (u *UserCollection) RankRepositoryStars() {
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
 }
 
-func (u *UserCollection) Fetch(q *Query, res *UserResponse) (err error) {
+func (u *UserModel) Fetch(q *Query, res *UserResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -332,19 +332,19 @@ func (u *UserCollection) Fetch(q *Query, res *UserResponse) (err error) {
 	return nil
 }
 
-func (u *UserCollection) GetByLogin(login string) (user User) {
+func (u *UserModel) GetByLogin(login string) (user User) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := u.GetCollection().FindOne(ctx, bson.D{{"_id", login}}).Decode(&user); err != nil {
+	if err := u.Collection().FindOne(ctx, bson.D{{"_id", login}}).Decode(&user); err != nil {
 		log.Fatalln(err.Error())
 	}
 
 	return user
 }
 
-func (u *UserCollection) CreateIndexes() {
-	if len(database.GetIndexes(u.name)) > 0 {
+func (u *UserModel) CreateIndexes() {
+	if len(database.Indexes(u.name)) > 0 {
 		return
 	}
 
