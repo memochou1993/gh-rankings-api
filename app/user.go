@@ -131,7 +131,7 @@ func (u *UserModel) Travel(from *time.Time, q *Query) error {
 
 func (u *UserModel) FetchUsers(q *Query, users *[]User) error {
 	res := UserResponse{}
-	if err := u.Fetch(q, &res); err != nil {
+	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
@@ -220,7 +220,7 @@ func (u *UserModel) Update() error {
 
 func (u *UserModel) FetchRepositories(q *Query, repos *[]Repository) error {
 	res := UserResponse{}
-	if err := u.Fetch(q, &res); err != nil {
+	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.User.Repositories.Edges {
@@ -318,7 +318,7 @@ func (u *UserModel) RankRepositoryStars() {
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
 }
 
-func (u *UserModel) Fetch(q *Query, res *UserResponse) (err error) {
+func (u *UserModel) Fetch(q Query, res *UserResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

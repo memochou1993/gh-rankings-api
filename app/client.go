@@ -25,8 +25,8 @@ func newClient() *http.Client {
 	}
 }
 
-func Fetch(ctx context.Context, q *Query, v interface{}) error {
-	body := strings.NewReader(q.get())
+func Fetch(ctx context.Context, q Query, v interface{}) error {
+	body := strings.NewReader(fmt.Sprint(q))
 	resp, err := post(ctx, body)
 	if err != nil {
 		return err

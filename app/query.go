@@ -22,7 +22,7 @@ type Query struct {
 	RepositoriesArguments RepositoriesArguments
 }
 
-func (q Query) get() string {
+func (q Query) String() string {
 	query := q.Schema
 	query = strings.Replace(query, "UserArguments", util.JoinStruct(q.UserArguments, ","), 1)
 	query = strings.Replace(query, "SearchArguments", util.JoinStruct(q.SearchArguments, ","), 1)
