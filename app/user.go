@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -111,8 +112,8 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 		return nil
 	}
 
-	q.SearchArguments.Query = q.String(util.JoinStruct(SearchQuery{
-		Created:   q.Range(*from, from.AddDate(0, 0, 6)),
+	q.SearchArguments.Query = strconv.Quote(util.JoinStruct(SearchQuery{
+		Created:   fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Followers: ">=10",
 		Repos:     ">=5",
 		Sort:      "joined",
@@ -141,7 +142,7 @@ func (u *UserCollection) FetchUsers(q *Query, users *[]User) error {
 		q.SearchArguments.After = ""
 		return nil
 	}
-	q.SearchArguments.After = q.String(res.Data.Search.PageInfo.EndCursor)
+	q.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
 	return u.FetchUsers(q, users)
 }
@@ -205,7 +206,7 @@ func (u *UserCollection) Update() error {
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
-		q.UserArguments.Login = q.String(user.Login)
+		q.UserArguments.Login = strconv.Quote(user.Login)
 
 		var repos []Repository
 		if err := u.FetchRepositories(&q, &repos); err != nil {
@@ -230,7 +231,7 @@ func (u *UserCollection) FetchRepositories(q *Query, repos *[]Repository) error 
 		q.RepositoriesArguments.After = ""
 		return nil
 	}
-	q.RepositoriesArguments.After = q.String(res.Data.User.Repositories.PageInfo.EndCursor)
+	q.RepositoriesArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
 
 	return u.FetchRepositories(q, repos)
 }

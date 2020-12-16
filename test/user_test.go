@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -52,10 +53,10 @@ func TestFetchUsers(t *testing.T) {
 		Schema: app.ReadQuery("users"),
 		SearchArguments: app.SearchArguments{
 			First: 100,
+			Query: strconv.Quote("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10 sort:joined"),
 			Type:  "USER",
 		},
 	}
-	q.SearchArguments.Query = q.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10 sort:joined")
 
 	var users []app.User
 	if err := u.FetchUsers(&q, &users); err != nil {
@@ -103,13 +104,15 @@ func TestFetchUserRepositories(t *testing.T) {
 
 	q := app.Query{
 		Schema: app.ReadQuery("user_repositories"),
+		UserArguments: app.UserArguments{
+			Login: strconv.Quote("memochou1993"),
+		},
 		RepositoriesArguments: app.RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:STARGAZERS,direction:DESC}",
 			OwnerAffiliations: "OWNER",
 		},
 	}
-	q.UserArguments.Login = q.String("memochou1993")
 
 	var repos []app.Repository
 	if err := u.FetchRepositories(&q, &repos); err != nil {

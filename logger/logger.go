@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -76,7 +77,7 @@ func Debug(v interface{}) {
 func stringify(v interface{}) string {
 	switch reflect.TypeOf(v).Kind() {
 	case reflect.Struct:
-		return fmt.Sprintf("%s: \"%s\"", reflect.TypeOf(v).Name(), util.JoinStruct(v, ", "))
+		return fmt.Sprintf("%s: %s", reflect.TypeOf(v).Name(), strconv.Quote(util.JoinStruct(v, ", ")))
 	default:
 		return fmt.Sprintf("%v", v)
 	}
