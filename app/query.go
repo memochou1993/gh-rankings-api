@@ -24,9 +24,9 @@ type Query struct {
 
 func (q Query) String() string {
 	query := q.Schema
-	query = strings.Replace(query, "UserArguments", util.JoinStruct(q.UserArguments, ","), 1)
-	query = strings.Replace(query, "SearchArguments", util.JoinStruct(q.SearchArguments, ","), 1)
-	query = strings.Replace(query, "RepositoriesArguments", util.JoinStruct(q.RepositoriesArguments, ","), 1)
+	query = strings.Replace(query, "UserArguments", util.ParseStruct(q.UserArguments, ","), 1)
+	query = strings.Replace(query, "SearchArguments", util.ParseStruct(q.SearchArguments, ","), 1)
+	query = strings.Replace(query, "RepositoriesArguments", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 
 	b, err := json.Marshal(Payload{Query: query})
 	if err != nil {

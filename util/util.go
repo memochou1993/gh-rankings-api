@@ -17,7 +17,7 @@ func LoadEnv() {
 	}
 }
 
-func JoinStruct(v interface{}, sep string) string {
+func ParseStruct(v interface{}, sep string) string {
 	b := bytes.Buffer{}
 	encoder := json.NewEncoder(&b)
 	encoder.SetEscapeHTML(false)

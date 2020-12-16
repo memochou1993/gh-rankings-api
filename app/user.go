@@ -112,7 +112,7 @@ func (u *UserModel) Travel(from *time.Time, q *Query) error {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.JoinStruct(SearchQuery{
+	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(SearchQuery{
 		Created:   fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Followers: ">=10",
 		Repos:     ">=5",
