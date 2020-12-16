@@ -92,7 +92,7 @@ func TestUpdate(t *testing.T) {
 	if err := u.Update(); err != nil {
 		t.Error(err.Error())
 	}
-	if len(u.GetLast().Repositories) == 0 {
+	if len(u.GetByLogin(user.Login).Repositories) == 0 {
 		t.Fail()
 	}
 
@@ -134,7 +134,7 @@ func TestUpdateRepositories(t *testing.T) {
 
 	repos := []app.Repository{{Name: "github-rankings"}}
 	u.UpdateRepositories(user, repos)
-	if len(u.GetLast().Repositories) == 0 {
+	if len(u.GetByLogin(user.Login).Repositories) == 0 {
 		t.Fail()
 	}
 
