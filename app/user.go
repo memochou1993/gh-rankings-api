@@ -81,17 +81,11 @@ type Repository struct {
 }
 
 type Ranks struct {
-	GistStars       *GistStars       `bson:"gist_stars,omitempty"`
-	RepositoryStars *RepositoryStars `bson:"repository_stars,omitempty"`
+	GistStars       *Rank `bson:"gist_stars,omitempty"`
+	RepositoryStars *Rank `bson:"repository_stars,omitempty"`
 }
 
-type GistStars struct {
-	Rank       int       `bson:"rank"`
-	TotalCount int       `bson:"total_count"`
-	CreatedAt  time.Time `bson:"created_at"`
-}
-
-type RepositoryStars struct {
+type Rank struct {
 	Rank       int       `bson:"rank"`
 	TotalCount int       `bson:"total_count"`
 	CreatedAt  time.Time `bson:"created_at"`
@@ -339,7 +333,7 @@ func (u *UserModel) RankGistStars() {
 	for ; cursor.Next(ctx); count++ {
 		user := User{
 			Ranks: &Ranks{
-				GistStars: &GistStars{
+				GistStars: &Rank{
 					Rank:      count + 1,
 					CreatedAt: time.Now(),
 				},
@@ -407,7 +401,7 @@ func (u *UserModel) RankRepositoryStars() {
 	for ; cursor.Next(ctx); count++ {
 		user := User{
 			Ranks: &Ranks{
-				RepositoryStars: &RepositoryStars{
+				RepositoryStars: &Rank{
 					Rank:      count + 1,
 					CreatedAt: time.Now(),
 				},
