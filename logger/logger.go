@@ -88,7 +88,7 @@ func prefix(prefix string) string {
 }
 
 func color(color string) func(...interface{}) string {
-	return func(args ...interface{}) string {
-		return fmt.Sprintf(color, fmt.Sprint(args...))
+	return func(a ...interface{}) string {
+		return fmt.Sprintf(color, fmt.Sprint(a...))
 	}
 }
