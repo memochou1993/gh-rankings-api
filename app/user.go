@@ -350,6 +350,7 @@ func (u *UserModel) CreateIndexes() {
 
 	database.CreateIndexes(u.name, []string{
 		"created_at",
+		"name",
 		"ranks.repository_stars.rank",
 	})
 }
