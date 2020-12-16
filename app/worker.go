@@ -21,7 +21,7 @@ func (w *Worker) BuildUserModel() {
 	<-w.starter
 	go w.collectUsers()
 	go w.updateUsers()
-	go w.rankUserRepositoryStars()
+	go w.rankUsers()
 }
 
 func (w *Worker) collectUsers() {
@@ -44,10 +44,11 @@ func (w *Worker) updateUsers() {
 	}
 }
 
-func (w *Worker) rankUserRepositoryStars() {
+func (w *Worker) rankUsers() {
 	u := NewUserModel()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
+		u.RankGistStars()
 		u.RankRepositoryStars()
 	}
 }

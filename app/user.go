@@ -81,7 +81,14 @@ type Repository struct {
 }
 
 type Ranks struct {
+	GistStars       *GistStars       `bson:"gist_stars,omitempty"`
 	RepositoryStars *RepositoryStars `bson:"repository_stars,omitempty"`
+}
+
+type GistStars struct {
+	Rank       int       `bson:"rank"`
+	TotalCount int       `bson:"total_count"`
+	CreatedAt  time.Time `bson:"created_at"`
 }
 
 type RepositoryStars struct {
@@ -286,6 +293,74 @@ func (u *UserModel) UpdateRepositories(user User, repos []Repository) {
 	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
 	u.Collection().FindOneAndUpdate(ctx, filter, update)
 	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
+}
+
+func (u *UserModel) RankGistStars() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$project", bson.D{
+				{"login", "$login"},
+				{"ranks", bson.D{
+					{"gist_stars", bson.D{
+						{"total_count", bson.D{
+							{"$sum", "$gists.stargazers.total_count"},
+						}},
+					}},
+				}},
+			}},
+		},
+		bson.D{
+			{"$sort", bson.D{
+				{"ranks.gist_stars.total_count", -1},
+			}},
+		},
+	}
+	opts := options.Aggregate().SetBatchSize(1000)
+	cursor, err := u.Collection().Aggregate(ctx, pipeline, opts)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Fatalln(err.Error())
+		}
+	}()
+
+	if cursor.RemainingBatchLength() == 0 {
+		return
+	}
+	logger.Info("Ranking user gist stars...")
+
+	var models []mongo.WriteModel
+	count := 0
+	for ; cursor.Next(ctx); count++ {
+		user := User{
+			Ranks: &Ranks{
+				GistStars: &GistStars{
+					Rank:      count + 1,
+					CreatedAt: time.Now(),
+				},
+			},
+		}
+		if err := cursor.Decode(&user); err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		filter := bson.D{{"_id", user.Login}}
+		model := bson.D{{"$set", bson.D{{"ranks.gist_stars", user.Ranks.GistStars}}}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
+		if cursor.RemainingBatchLength() == 0 {
+			_, err := database.Collection("users").BulkWrite(ctx, models)
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
+			models = models[:0]
+		}
+	}
+	logger.Success(fmt.Sprintf("Ranked %d user gist stars!", count))
 }
 
 func (u *UserModel) RankRepositoryStars() {
