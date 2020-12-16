@@ -78,8 +78,8 @@ type RepositoryStars struct {
 	CreatedAt  time.Time `bson:"created_at"`
 }
 
-func NewUserCollection() UserCollection {
-	return UserCollection{
+func NewUserCollection() *UserCollection {
+	return &UserCollection{
 		Collection: Collection{
 			name: "users",
 		},
