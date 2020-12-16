@@ -15,14 +15,12 @@ import (
 
 type UserCollection struct {
 	Collection
-	Response *UserResponse
 }
 
 type UserResponse struct {
 	Data struct {
 		Search struct {
-			UserCount int `json:"userCount"`
-			Edges     []struct {
+			Edges []struct {
 				Cursor string `json:"cursor"`
 				Node   User   `json:"node"`
 			} `json:"edges"`
@@ -131,20 +129,19 @@ func (u *UserCollection) Travel(from *time.Time, q *Query) error {
 }
 
 func (u *UserCollection) FetchUsers(q *Query, users *[]User) error {
-	if err := u.Fetch(q); err != nil {
+	res := UserResponse{}
+	if err := u.Fetch(q, &res); err != nil {
 		return err
 	}
-	if len(u.Response.Data.Search.Edges) == 0 {
-		return nil
-	}
-	for _, edge := range u.Response.Data.Search.Edges {
+	for _, edge := range res.Data.Search.Edges {
 		*users = append(*users, edge.Node)
 	}
-	if !u.Response.Data.Search.PageInfo.HasNextPage {
+	res.Data.RateLimit.Break()
+	if !res.Data.Search.PageInfo.HasNextPage {
 		q.SearchArguments.After = ""
 		return nil
 	}
-	q.SearchArguments.After = q.String(u.Response.Data.Search.PageInfo.EndCursor)
+	q.SearchArguments.After = q.String(res.Data.Search.PageInfo.EndCursor)
 
 	return u.FetchUsers(q, users)
 }
@@ -221,20 +218,19 @@ func (u *UserCollection) Update() error {
 }
 
 func (u *UserCollection) FetchRepositories(q *Query, repos *[]Repository) error {
-	if err := u.Fetch(q); err != nil {
+	res := UserResponse{}
+	if err := u.Fetch(q, &res); err != nil {
 		return err
 	}
-	if len(u.Response.Data.User.Repositories.Edges) == 0 {
-		return nil
-	}
-	for _, edge := range u.Response.Data.User.Repositories.Edges {
+	for _, edge := range res.Data.User.Repositories.Edges {
 		*repos = append(*repos, edge.Node)
 	}
-	if !u.Response.Data.User.Repositories.PageInfo.HasNextPage {
+	res.Data.RateLimit.Break()
+	if !res.Data.User.Repositories.PageInfo.HasNextPage {
 		q.RepositoriesArguments.After = ""
 		return nil
 	}
-	q.RepositoriesArguments.After = q.String(u.Response.Data.User.Repositories.PageInfo.EndCursor)
+	q.RepositoriesArguments.After = q.String(res.Data.User.Repositories.PageInfo.EndCursor)
 
 	return u.FetchRepositories(q, repos)
 }
@@ -321,27 +317,18 @@ func (u *UserCollection) RankRepositoryStars() {
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
 }
 
-func (u *UserCollection) Fetch(q *Query) error {
-	if u.Response != nil {
-		u.Response.Data.RateLimit.Break()
-		u.ResetResponse()
-	}
-
+func (u *UserCollection) Fetch(q *Query, res *UserResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := Fetch(ctx, q, &u.Response); err != nil {
+	if err := Fetch(ctx, q, res); err != nil {
 		return err
 	}
-	for _, err := range u.Response.Errors {
+	for _, err := range res.Errors {
 		return err
 	}
 
 	return nil
-}
-
-func (u *UserCollection) ResetResponse() {
-	u.Response = &UserResponse{}
 }
 
 func (u *UserCollection) GetLast() (user User) {

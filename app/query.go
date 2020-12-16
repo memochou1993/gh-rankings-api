@@ -91,12 +91,12 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (rl *RateLimit) Break() {
+func (r *RateLimit) Break() {
 	buffer := 10
-	if rl.Remaining > buffer {
+	if r.Remaining > buffer {
 		return
 	}
-	resetAt, err := time.Parse(time.RFC3339, rl.ResetAt)
+	resetAt, err := time.Parse(time.RFC3339, r.ResetAt)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

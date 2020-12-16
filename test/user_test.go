@@ -57,7 +57,7 @@ func TestFetchUsers(t *testing.T) {
 	}
 	q.SearchArguments.Query = q.String("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10 sort:joined")
 
-	var users []interface{}
+	var users []app.User
 	if err := u.FetchUsers(&q, &users); err != nil {
 		t.Error(err.Error())
 	}
@@ -71,7 +71,8 @@ func TestFetchUsers(t *testing.T) {
 func TestStoreUsers(t *testing.T) {
 	u := app.NewUserCollection()
 
-	users := []interface{}{app.User{}}
+	user := app.User{Login: "memochou1993"}
+	users := []app.User{user}
 	u.StoreUsers(users)
 	if count := database.Count(u.GetName()); count == 0 {
 		t.Fail()
@@ -83,11 +84,8 @@ func TestStoreUsers(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	u := app.NewUserCollection()
 
-	user := app.User{
-		Login: "memochou1993",
-	}
-
-	users := []interface{}{user}
+	user := app.User{Login: "memochou1993"}
+	users := []app.User{user}
 	u.StoreUsers(users)
 
 	if err := u.Update(); err != nil {
@@ -113,7 +111,7 @@ func TestFetchUserRepositories(t *testing.T) {
 	}
 	q.UserArguments.Login = q.String("memochou1993")
 
-	var repos []interface{}
+	var repos []app.Repository
 	if err := u.FetchRepositories(&q, &repos); err != nil {
 		t.Error(err.Error())
 	}
@@ -127,14 +125,11 @@ func TestFetchUserRepositories(t *testing.T) {
 func TestUpdateRepositories(t *testing.T) {
 	u := app.NewUserCollection()
 
-	user := app.User{
-		Login: "memochou1993",
-	}
-
-	users := []interface{}{user}
+	user := app.User{Login: "memochou1993"}
+	users := []app.User{user}
 	u.StoreUsers(users)
 
-	repos := []interface{}{app.Repository{}}
+	repos := []app.Repository{{Name: "github-rankings"}}
 	u.UpdateRepositories(user, repos)
 	if len(u.GetLast().Repositories) == 0 {
 		t.Fail()
