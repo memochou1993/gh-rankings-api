@@ -28,19 +28,27 @@ type UserResponse struct {
 			PageInfo PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		User struct {
-			AvatarURL    string    `json:"avatarUrl"`
-			CreatedAt    time.Time `json:"createdAt"`
-			Followers    Directory `json:"followers"`
-			Location     string    `json:"location"`
-			Login        string    `json:"login"`
-			Name         string    `json:"name"`
+			AvatarURL string    `json:"avatarUrl"`
+			CreatedAt time.Time `json:"createdAt"`
+			Followers Directory `json:"followers"`
+			Gists     struct {
+				Edges []struct {
+					Cursor string `json:"cursor"`
+					Node   Gist   `json:"node"`
+				} `json:"edges"`
+				PageInfo   PageInfo `json:"pageInfo"`
+				TotalCount int      `json:"totalCount"`
+			} `json:"gists"`
+			Location     string `json:"location"`
+			Login        string `json:"login"`
+			Name         string `json:"name"`
 			Repositories struct {
-				TotalCount int `json:"totalCount"`
-				Edges      []struct {
+				Edges []struct {
 					Cursor string     `json:"cursor"`
 					Node   Repository `json:"node"`
 				} `json:"edges"`
-				PageInfo PageInfo `json:"pageInfo"`
+				PageInfo   PageInfo `json:"pageInfo"`
+				TotalCount int      `json:"totalCount"`
 			} `json:"repositories"`
 		} `json:"user"`
 		RateLimit RateLimit `json:"rateLimit"`
@@ -57,6 +65,11 @@ type User struct {
 	Name         string       `json:"name" bson:"name"`
 	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
 	Ranks        *Ranks       `json:"ranks" bson:"ranks,omitempty"`
+}
+
+type Gist struct {
+	Name       string    `json:"name" bson:"name"`
+	Stargazers Directory `json:"stargazers" bson:"stargazers"`
 }
 
 type Repository struct {
@@ -191,31 +204,60 @@ func (u *UserModel) Update() error {
 	if cursor.RemainingBatchLength() == 0 {
 		return nil
 	}
+	logger.Info("Updating user gists...")
+	gistQuery := NewGistsQuery()
 	logger.Info("Updating user repositories...")
-
-	q := Query{
-		Schema: ReadQuery("user_repositories"),
-		RepositoriesArguments: RepositoriesArguments{
-			First:             100,
-			OrderBy:           "{field:STARGAZERS,direction:DESC}",
-			OwnerAffiliations: "OWNER",
-		},
-	}
+	repoQuery := NewReposQuery()
 	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
 			log.Fatalln(err.Error())
 		}
-		q.UserArguments.Login = strconv.Quote(user.Login)
+
+		var gists []Gist
+		gistQuery.UserArguments.Login = strconv.Quote(user.Login)
+		if err := u.FetchGists(gistQuery, &gists); err != nil {
+			return err
+		}
+		u.UpdateGists(user, gists)
 
 		var repos []Repository
-		if err := u.FetchRepositories(&q, &repos); err != nil {
+		repoQuery.UserArguments.Login = strconv.Quote(user.Login)
+		if err := u.FetchRepositories(repoQuery, &repos); err != nil {
 			return err
 		}
 		u.UpdateRepositories(user, repos)
 	}
 
 	return nil
+}
+
+func (u *UserModel) FetchGists(q *Query, gists *[]Gist) error {
+	res := UserResponse{}
+	if err := u.Fetch(*q, &res); err != nil {
+		return err
+	}
+	for _, edge := range res.Data.User.Gists.Edges {
+		*gists = append(*gists, edge.Node)
+	}
+	res.Data.RateLimit.Break()
+	if !res.Data.User.Gists.PageInfo.HasNextPage {
+		q.GistsArguments.After = ""
+		return nil
+	}
+	q.GistsArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
+
+	return u.FetchGists(q, gists)
+}
+
+func (u *UserModel) UpdateGists(user User, gists []Gist) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.D{{"_id", user.Login}}
+	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
+	u.Collection().FindOneAndUpdate(ctx, filter, update)
+	logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
 }
 
 func (u *UserModel) FetchRepositories(q *Query, repos *[]Repository) error {
@@ -237,10 +279,6 @@ func (u *UserModel) FetchRepositories(q *Query, repos *[]Repository) error {
 }
 
 func (u *UserModel) UpdateRepositories(user User, repos []Repository) {
-	if len(repos) == 0 {
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

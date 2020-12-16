@@ -19,6 +19,7 @@ type Query struct {
 	Schema                string
 	UserArguments         UserArguments
 	SearchArguments       SearchArguments
+	GistsArguments        GistsArguments
 	RepositoriesArguments RepositoriesArguments
 }
 
@@ -26,6 +27,7 @@ func (q Query) String() string {
 	query := q.Schema
 	query = strings.Replace(query, "UserArguments", util.ParseStruct(q.UserArguments, ","), 1)
 	query = strings.Replace(query, "SearchArguments", util.ParseStruct(q.SearchArguments, ","), 1)
+	query = strings.Replace(query, "GistsArguments", util.ParseStruct(q.GistsArguments, ","), 1)
 	query = strings.Replace(query, "RepositoriesArguments", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 
 	b, err := json.Marshal(Payload{Query: query})
@@ -34,6 +36,27 @@ func (q Query) String() string {
 	}
 
 	return string(b)
+}
+
+func NewGistsQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("user_gists"),
+		GistsArguments: GistsArguments{
+			First:   100,
+			OrderBy: "{field:CREATED_AT,direction:DESC}",
+		},
+	}
+}
+
+func NewReposQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("user_repositories"),
+		RepositoriesArguments: RepositoriesArguments{
+			First:             100,
+			OrderBy:           "{field:STARGAZERS,direction:DESC}",
+			OwnerAffiliations: "OWNER",
+		},
+	}
 }
 
 type UserArguments struct {
@@ -45,6 +68,12 @@ type SearchArguments struct {
 	First int    `json:"first,omitempty"`
 	Query string `json:"query,omitempty"`
 	Type  string `json:"type,omitempty"`
+}
+
+type GistsArguments struct {
+	After   string `json:"after,omitempty"`
+	First   int    `json:"first,omitempty"`
+	OrderBy string `json:"orderBy,omitempty"`
 }
 
 type RepositoriesArguments struct {

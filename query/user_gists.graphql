@@ -1,13 +1,10 @@
 query UserRepositories {
   user(UserArguments) {
-    repositories(RepositoriesArguments) {
+    gists(GistsArguments) {
       edges {
         cursor
         node {
           name
-          primaryLanguage {
-            name
-          }
           stargazers {
             totalCount
           }
