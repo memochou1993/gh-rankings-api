@@ -16,11 +16,11 @@ type Payload struct {
 }
 
 type Query struct {
-	Schema                string
-	UserArguments         UserArguments
-	SearchArguments       SearchArguments
-	GistsArguments        GistsArguments
-	RepositoriesArguments RepositoriesArguments
+	Schema string
+	UserArguments
+	SearchArguments
+	GistsArguments
+	RepositoriesArguments
 }
 
 func (q Query) String() string {

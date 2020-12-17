@@ -13,10 +13,6 @@ type Model struct {
 	name string
 }
 
-func (m *Model) SetName(name string) {
-	m.name = name
-}
-
 func (m Model) Name() string {
 	return m.name
 }

@@ -15,7 +15,7 @@ import (
 )
 
 type UserModel struct {
-	*Model
+	Model
 }
 
 type UserResponse struct {
@@ -25,7 +25,7 @@ type UserResponse struct {
 				Cursor string `json:"cursor"`
 				Node   User   `json:"node"`
 			} `json:"edges"`
-			PageInfo PageInfo `json:"pageInfo"`
+			PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		User struct {
 			AvatarURL string    `json:"avatarUrl"`
@@ -51,14 +51,14 @@ type UserResponse struct {
 				TotalCount int      `json:"totalCount"`
 			} `json:"repositories"`
 		} `json:"user"`
-		RateLimit RateLimit `json:"rateLimit"`
+		RateLimit `json:"rateLimit"`
 	} `json:"data"`
 	Errors []Error `json:"errors"`
 }
 
 type UserRank struct {
 	Login string `bson:"_id"`
-	*Rank
+	Rank
 }
 
 type User struct {
@@ -82,7 +82,7 @@ type Gist struct {
 
 func NewUserModel() *UserModel {
 	return &UserModel{
-		&Model{
+		Model{
 			name: "users",
 		},
 	}
@@ -196,9 +196,9 @@ func (u *UserModel) Update() error {
 		return nil
 	}
 	logger.Info("Updating user gists...")
-	gistQuery := NewGistsQuery()
+	gistsQuery := NewGistsQuery()
 	logger.Info("Updating user repositories...")
-	repoQuery := NewReposQuery()
+	reposQuery := NewReposQuery()
 	for cursor.Next(ctx) {
 		user := User{}
 		if err := cursor.Decode(&user); err != nil {
@@ -206,15 +206,15 @@ func (u *UserModel) Update() error {
 		}
 
 		var gists []Gist
-		gistQuery.UserArguments.Login = strconv.Quote(user.Login)
-		if err := u.FetchGists(gistQuery, &gists); err != nil {
+		gistsQuery.UserArguments.Login = strconv.Quote(user.Login)
+		if err := u.FetchGists(gistsQuery, &gists); err != nil {
 			return err
 		}
 		u.UpdateGists(user, gists)
 
 		var repos []Repository
-		repoQuery.UserArguments.Login = strconv.Quote(user.Login)
-		if err := u.FetchRepositories(repoQuery, &repos); err != nil {
+		reposQuery.UserArguments.Login = strconv.Quote(user.Login)
+		if err := u.FetchRepositories(reposQuery, &repos); err != nil {
 			return err
 		}
 		u.UpdateRepositories(user, repos)
@@ -346,7 +346,7 @@ func (u *UserModel) Rank(pipeline []bson.D, field string) int {
 	count := 0
 	for ; cursor.Next(ctx); count++ {
 		rank := UserRank{
-			Rank: &Rank{
+			Rank: Rank{
 				Rank:      count + 1,
 				CreatedAt: time.Now(),
 			},
@@ -389,7 +389,8 @@ func (u *UserModel) GetByLogin(login string) (user User) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := u.Collection().FindOne(ctx, bson.D{{"_id", login}}).Decode(&user); err != nil {
+	filter := bson.D{{"_id", login}}
+	if err := u.Collection().FindOne(ctx, filter).Decode(&user); err != nil {
 		logger.Warning(err.Error())
 	}
 
@@ -404,6 +405,7 @@ func (u *UserModel) CreateIndexes() {
 	database.CreateIndexes(u.name, []string{
 		"created_at",
 		"name",
+		"ranks.gist_stars.rank",
 		"ranks.repository_stars.rank",
 	})
 }
