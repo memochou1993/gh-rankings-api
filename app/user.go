@@ -57,8 +57,8 @@ type UserResponse struct {
 }
 
 type UserRank struct {
-	Login string `bson:"_id"`
-	Rank
+	Login      string `bson:"_id"`
+	TotalCount int    `bson:"total_count"`
 }
 
 type User struct {
@@ -284,17 +284,15 @@ func (u *UserModel) RankFollowers() {
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$project", bson.D{
-				{"login", "$login"},
-				{"rank", bson.D{
-					{"total_count", bson.D{
-						{"$sum", "$followers.total_count"},
-					}},
+				{"_id", "$_id"},
+				{"total_count", bson.D{
+					{"$sum", "$followers.total_count"},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"rank.total_count", -1},
+				{"total_count", -1},
 			}},
 		},
 	}
@@ -308,17 +306,15 @@ func (u *UserModel) RankGistStars() {
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$project", bson.D{
-				{"login", "$login"},
-				{"rank", bson.D{
-					{"total_count", bson.D{
-						{"$sum", "$gists.stargazers.total_count"},
-					}},
+				{"_id", "$_id"},
+				{"total_count", bson.D{
+					{"$sum", "$gists.stargazers.total_count"},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"rank.total_count", -1},
+				{"total_count", -1},
 			}},
 		},
 	}
@@ -332,23 +328,54 @@ func (u *UserModel) RankRepositoryStars() {
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$project", bson.D{
-				{"login", "$login"},
-				{"rank", bson.D{
-					{"total_count", bson.D{
-						{"$sum", "$repositories.stargazers.total_count"},
-					}},
+				{"_id", "$_id"},
+				{"total_count", bson.D{
+					{"$sum", "$repositories.stargazers.total_count"},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"rank.total_count", -1},
+				{"total_count", -1},
 			}},
 		},
 	}
 	field := "ranks.repository_stars"
 	count := u.Rank(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
+}
+
+func (u *UserModel) RankRepositoryStarsByLanguage() {
+	logger.Info("Ranking user repository stars by language...")
+	count := 0
+	for _, language := range Languages() {
+		pipeline := mongo.Pipeline{
+			bson.D{
+				{"$unwind", "$repositories"},
+			},
+			bson.D{
+				{"$match", bson.D{
+					{"repositories.primary_language.name", language},
+				}},
+			},
+			bson.D{
+				{"$group", bson.D{
+					{"_id", "$_id"},
+					{"total_count", bson.D{
+						{"$sum", "$repositories.stargazers.total_count"},
+					}},
+				}},
+			},
+			bson.D{
+				{"$sort", bson.D{
+					{"total_count", -1},
+				}},
+			},
+		}
+		field := fmt.Sprintf("ranks.repository_stars_%s", language)
+		count += u.Rank(pipeline, field)
+	}
+	logger.Success(fmt.Sprintf("Ranked %d user repository stars by language!", count))
 }
 
 func (u *UserModel) Rank(pipeline []bson.D, field string) int {
@@ -369,18 +396,18 @@ func (u *UserModel) Rank(pipeline []bson.D, field string) int {
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		rank := UserRank{
-			Rank: Rank{
-				Rank:      count + 1,
-				CreatedAt: time.Now(),
-			},
-		}
-		if err := cursor.Decode(&rank); err != nil {
+		userRank := UserRank{}
+		if err := cursor.Decode(&userRank); err != nil {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"_id", rank.Login}}
-		update := bson.D{{"$set", bson.D{{field, rank.Rank}}}}
+		rank := Rank{
+			Rank:       count + 1,
+			TotalCount: userRank.TotalCount,
+			CreatedAt:  time.Now(),
+		}
+		filter := bson.D{{"_id", userRank.Login}}
+		update := bson.D{{"$set", bson.D{{field, rank}}}}
 		model := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update)
 		models = append(models, model)
 		if cursor.RemainingBatchLength() == 0 {

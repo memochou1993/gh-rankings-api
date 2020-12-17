@@ -51,5 +51,6 @@ func (w *Worker) rankUsers() {
 		u.RankFollowers()
 		u.RankGistStars()
 		u.RankRepositoryStars()
+		u.RankRepositoryStarsByLanguage()
 	}
 }
