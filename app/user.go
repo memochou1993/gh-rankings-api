@@ -15,7 +15,7 @@ import (
 )
 
 type UserModel struct {
-	Model
+	*Model
 }
 
 type UserResponse struct {
@@ -56,6 +56,11 @@ type UserResponse struct {
 	Errors []Error `json:"errors"`
 }
 
+type UserRank struct {
+	Login string `bson:"_id"`
+	*Rank
+}
+
 type User struct {
 	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
 	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
@@ -64,7 +69,10 @@ type User struct {
 	Login        string       `json:"login" bson:"_id"`
 	Name         string       `json:"name" bson:"name"`
 	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
-	Ranks        *Ranks       `json:"ranks" bson:"ranks,omitempty"`
+	Ranks        *struct {
+		GistStars       *Rank `bson:"gist_stars,omitempty"`
+		RepositoryStars *Rank `bson:"repository_stars,omitempty"`
+	} `bson:"ranks,omitempty"`
 }
 
 type Gist struct {
@@ -72,28 +80,9 @@ type Gist struct {
 	Stargazers Directory `json:"stargazers" bson:"stargazers"`
 }
 
-type Repository struct {
-	Name            string `json:"name" bson:"name"`
-	PrimaryLanguage struct {
-		Name string `json:"name" bson:"name"`
-	} `json:"primaryLanguage" bson:"primary_language"`
-	Stargazers Directory `json:"stargazers" bson:"stargazers"`
-}
-
-type Ranks struct {
-	GistStars       *Rank `bson:"gist_stars,omitempty"`
-	RepositoryStars *Rank `bson:"repository_stars,omitempty"`
-}
-
-type Rank struct {
-	Rank       int       `bson:"rank"`
-	TotalCount int       `bson:"total_count"`
-	CreatedAt  time.Time `bson:"created_at"`
-}
-
 func NewUserModel() *UserModel {
 	return &UserModel{
-		Model{
+		&Model{
 			name: "users",
 		},
 	}
@@ -172,10 +161,11 @@ func (u *UserModel) StoreUsers(users []User) {
 	var models []mongo.WriteModel
 	for _, user := range users {
 		filter := bson.D{{"_id", user.Login}}
-		model := bson.D{{"$set", user}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model).SetUpsert(true))
+		update := bson.D{{"$set", user}}
+		model := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true)
+		models = append(models, model)
 	}
-	res, err := database.Collection("users").BulkWrite(ctx, models)
+	res, err := u.Collection().BulkWrite(ctx, models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -290,96 +280,57 @@ func (u *UserModel) UpdateRepositories(user User, repos []Repository) {
 }
 
 func (u *UserModel) RankGistStars() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	logger.Info("Ranking user gist stars...")
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$project", bson.D{
 				{"login", "$login"},
-				{"ranks", bson.D{
-					{"gist_stars", bson.D{
-						{"total_count", bson.D{
-							{"$sum", "$gists.stargazers.total_count"},
-						}},
+				{"rank", bson.D{
+					{"total_count", bson.D{
+						{"$sum", "$gists.stargazers.total_count"},
 					}},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"ranks.gist_stars.total_count", -1},
+				{"rank.total_count", -1},
 			}},
 		},
 	}
-	opts := options.Aggregate().SetBatchSize(1000)
-	cursor, err := u.Collection().Aggregate(ctx, pipeline, opts)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			log.Fatalln(err.Error())
-		}
-	}()
-
-	if cursor.RemainingBatchLength() == 0 {
-		return
-	}
-	logger.Info("Ranking user gist stars...")
-
-	var models []mongo.WriteModel
-	count := 0
-	for ; cursor.Next(ctx); count++ {
-		user := User{
-			Ranks: &Ranks{
-				GistStars: &Rank{
-					Rank:      count + 1,
-					CreatedAt: time.Now(),
-				},
-			},
-		}
-		if err := cursor.Decode(&user); err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		filter := bson.D{{"_id", user.Login}}
-		model := bson.D{{"$set", bson.D{{"ranks.gist_stars", user.Ranks.GistStars}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
-		if cursor.RemainingBatchLength() == 0 {
-			_, err := database.Collection("users").BulkWrite(ctx, models)
-			if err != nil {
-				log.Fatalln(err.Error())
-			}
-			models = models[:0]
-		}
-	}
+	field := "ranks.gist_stars"
+	count := u.Rank(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user gist stars!", count))
 }
 
 func (u *UserModel) RankRepositoryStars() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	logger.Info("Ranking user repository stars...")
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$project", bson.D{
 				{"login", "$login"},
-				{"ranks", bson.D{
-					{"repository_stars", bson.D{
-						{"total_count", bson.D{
-							{"$sum", "$repositories.stargazers.total_count"},
-						}},
+				{"rank", bson.D{
+					{"total_count", bson.D{
+						{"$sum", "$repositories.stargazers.total_count"},
 					}},
 				}},
 			}},
 		},
 		bson.D{
 			{"$sort", bson.D{
-				{"ranks.repository_stars.total_count", -1},
+				{"rank.total_count", -1},
 			}},
 		},
 	}
+	field := "ranks.repository_stars"
+	count := u.Rank(pipeline, field)
+	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
+}
+
+func (u *UserModel) Rank(pipeline []bson.D, field string) int {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	opts := options.Aggregate().SetBatchSize(1000)
 	cursor, err := u.Collection().Aggregate(ctx, pipeline, opts)
 	if err != nil {
@@ -391,38 +342,33 @@ func (u *UserModel) RankRepositoryStars() {
 		}
 	}()
 
-	if cursor.RemainingBatchLength() == 0 {
-		return
-	}
-	logger.Info("Ranking user repository stars...")
-
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		user := User{
-			Ranks: &Ranks{
-				RepositoryStars: &Rank{
-					Rank:      count + 1,
-					CreatedAt: time.Now(),
-				},
+		rank := UserRank{
+			Rank: &Rank{
+				Rank:      count + 1,
+				CreatedAt: time.Now(),
 			},
 		}
-		if err := cursor.Decode(&user); err != nil {
+		if err := cursor.Decode(&rank); err != nil {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"_id", user.Login}}
-		model := bson.D{{"$set", bson.D{{"ranks.repository_stars", user.Ranks.RepositoryStars}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(model))
+		filter := bson.D{{"_id", rank.Login}}
+		update := bson.D{{"$set", bson.D{{field, rank.Rank}}}}
+		model := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update)
+		models = append(models, model)
 		if cursor.RemainingBatchLength() == 0 {
-			_, err := database.Collection("users").BulkWrite(ctx, models)
+			_, err := u.Collection().BulkWrite(ctx, models)
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
 			models = models[:0]
 		}
 	}
-	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
+
+	return count
 }
 
 func (u *UserModel) Fetch(q Query, res *UserResponse) (err error) {
@@ -444,7 +390,7 @@ func (u *UserModel) GetByLogin(login string) (user User) {
 	defer cancel()
 
 	if err := u.Collection().FindOne(ctx, bson.D{{"_id", login}}).Decode(&user); err != nil {
-		log.Fatalln(err.Error())
+		logger.Warning(err.Error())
 	}
 
 	return user
