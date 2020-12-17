@@ -48,6 +48,7 @@ func (w *Worker) rankUsers() {
 	u := NewUserModel()
 	t := time.NewTicker(10 * time.Minute)
 	for ; true; <-t.C {
+		u.RankFollowers()
 		u.RankGistStars()
 		u.RankRepositoryStars()
 	}

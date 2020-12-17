@@ -279,6 +279,30 @@ func (u *UserModel) UpdateRepositories(user User, repos []Repository) {
 	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
 }
 
+func (u *UserModel) RankFollowers() {
+	logger.Info("Ranking user followers...")
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$project", bson.D{
+				{"login", "$login"},
+				{"rank", bson.D{
+					{"total_count", bson.D{
+						{"$sum", "$followers.total_count"},
+					}},
+				}},
+			}},
+		},
+		bson.D{
+			{"$sort", bson.D{
+				{"rank.total_count", -1},
+			}},
+		},
+	}
+	field := "ranks.followers"
+	count := u.Rank(pipeline, field)
+	logger.Success(fmt.Sprintf("Ranked %d user followers!", count))
+}
+
 func (u *UserModel) RankGistStars() {
 	logger.Info("Ranking user gist stars...")
 	pipeline := mongo.Pipeline{
