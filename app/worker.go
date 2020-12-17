@@ -26,7 +26,7 @@ func (w *Worker) BuildUserModel() {
 
 func (w *Worker) collectUsers() {
 	u := NewUserModel()
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		if err := u.Collect(); err != nil {
 			logger.Error(err.Error())
@@ -36,7 +36,7 @@ func (w *Worker) collectUsers() {
 
 func (w *Worker) updateUsers() {
 	u := NewUserModel()
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		if err := u.Update(); err != nil {
 			logger.Error(err.Error())
@@ -46,7 +46,7 @@ func (w *Worker) updateUsers() {
 
 func (w *Worker) rankUsers() {
 	u := NewUserModel()
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		u.RankFollowers()
 		u.RankGistStars()
