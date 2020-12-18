@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/memochou1993/github-rankings/app"
+	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
@@ -26,12 +26,12 @@ func setUp() {
 }
 
 func TestTravel(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
 	from := time.Now().AddDate(0, -1, 0)
-	q := app.Query{
-		Schema: app.ReadQuery("users"),
-		SearchArguments: app.SearchArguments{
+	q := model.Query{
+		Schema: model.ReadQuery("users"),
+		SearchArguments: model.SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
@@ -47,18 +47,18 @@ func TestTravel(t *testing.T) {
 }
 
 func TestFetchUsers(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
-	q := app.Query{
-		Schema: app.ReadQuery("users"),
-		SearchArguments: app.SearchArguments{
+	q := model.Query{
+		Schema: model.ReadQuery("users"),
+		SearchArguments: model.SearchArguments{
 			First: 100,
 			Query: strconv.Quote("created:2020-01-01..2020-01-01 followers:>=1 repos:>=10 sort:joined"),
 			Type:  "USER",
 		},
 	}
 
-	var users []app.User
+	var users []model.User
 	if err := u.FetchUsers(&q, &users); err != nil {
 		t.Error(err.Error())
 	}
@@ -70,10 +70,10 @@ func TestFetchUsers(t *testing.T) {
 }
 
 func TestStoreUsers(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
-	user := app.User{Login: "memochou1993"}
-	users := []app.User{user}
+	user := model.User{Login: "memochou1993"}
+	users := []model.User{user}
 	u.StoreUsers(users)
 	if count := database.Count(u.Name()); count == 0 {
 		t.Fail()
@@ -83,10 +83,10 @@ func TestStoreUsers(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
-	user := app.User{Login: "memochou1993"}
-	users := []app.User{user}
+	user := model.User{Login: "memochou1993"}
+	users := []model.User{user}
 	u.StoreUsers(users)
 
 	if err := u.Update(); err != nil {
@@ -100,21 +100,21 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestFetchUserRepositories(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
-	q := app.Query{
-		Schema: app.ReadQuery("user_repositories"),
-		UserArguments: app.UserArguments{
+	q := model.Query{
+		Schema: model.ReadQuery("user_repositories"),
+		UserArguments: model.UserArguments{
 			Login: strconv.Quote("memochou1993"),
 		},
-		RepositoriesArguments: app.RepositoriesArguments{
+		RepositoriesArguments: model.RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:STARGAZERS,direction:DESC}",
 			OwnerAffiliations: "OWNER",
 		},
 	}
 
-	var repos []app.Repository
+	var repos []model.Repository
 	if err := u.FetchRepositories(&q, &repos); err != nil {
 		t.Error(err.Error())
 	}
@@ -126,13 +126,13 @@ func TestFetchUserRepositories(t *testing.T) {
 }
 
 func TestUpdateRepositories(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
-	user := app.User{Login: "memochou1993"}
-	users := []app.User{user}
+	user := model.User{Login: "memochou1993"}
+	users := []model.User{user}
 	u.StoreUsers(users)
 
-	repos := []app.Repository{{Name: "github-rankings"}}
+	repos := []model.Repository{{Name: "github-rankings"}}
 	u.UpdateRepositories(user, repos)
 	if len(u.GetByLogin(user.Login).Repositories) == 0 {
 		t.Fail()
@@ -142,7 +142,7 @@ func TestUpdateRepositories(t *testing.T) {
 }
 
 func TestIndexUsers(t *testing.T) {
-	u := app.NewUserModel()
+	u := model.NewUserModel()
 
 	u.CreateIndexes()
 

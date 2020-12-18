@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/memochou1993/github-rankings/app"
+	"github.com/memochou1993/github-rankings/app/handler"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
@@ -21,6 +21,6 @@ func main() {
 }
 
 func work() {
-	worker := app.NewWorker()
+	worker := handler.NewWorker()
 	worker.BuildUserModel()
 }

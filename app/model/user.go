@@ -1,8 +1,9 @@
-package app
+package model
 
 import (
 	"context"
 	"fmt"
+	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
@@ -426,7 +427,7 @@ func (u *UserModel) Fetch(q Query, res *UserResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := Fetch(ctx, q, res); err != nil {
+	if err := app.Fetch(ctx, fmt.Sprint(q), res); err != nil {
 		return err
 	}
 	for _, err := range res.Errors {

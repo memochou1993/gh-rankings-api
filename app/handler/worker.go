@@ -1,6 +1,7 @@
-package app
+package handler
 
 import (
+	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/logger"
 	"time"
 )
@@ -16,7 +17,7 @@ func NewWorker() *Worker {
 }
 
 func (w *Worker) BuildUserModel() {
-	u := NewUserModel()
+	u := model.NewUserModel()
 	u.Init(w.starter)
 	<-w.starter
 	go w.collectUsers()
@@ -25,7 +26,7 @@ func (w *Worker) BuildUserModel() {
 }
 
 func (w *Worker) collectUsers() {
-	u := NewUserModel()
+	u := model.NewUserModel()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		if err := u.Collect(); err != nil {
@@ -35,7 +36,7 @@ func (w *Worker) collectUsers() {
 }
 
 func (w *Worker) updateUsers() {
-	u := NewUserModel()
+	u := model.NewUserModel()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		if err := u.Update(); err != nil {
@@ -45,7 +46,7 @@ func (w *Worker) updateUsers() {
 }
 
 func (w *Worker) rankUsers() {
-	u := NewUserModel()
+	u := model.NewUserModel()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		u.RankFollowers()

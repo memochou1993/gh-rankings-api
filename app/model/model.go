@@ -1,11 +1,11 @@
-package app
+package model
 
 import (
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type ModelInterface interface {
+type Interface interface {
 	Collection() *mongo.Collection
 }
 
