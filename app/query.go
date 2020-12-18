@@ -53,7 +53,7 @@ func NewReposQuery() *Query {
 		Schema: ReadQuery("user_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
-			OrderBy:           "{field:STARGAZERS,direction:DESC}",
+			OrderBy:           "{field:CREATED_AT,direction:DESC}",
 			OwnerAffiliations: "OWNER",
 		},
 	}
