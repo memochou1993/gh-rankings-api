@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/memochou1993/github-rankings/app/handler"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
@@ -26,7 +27,7 @@ func setUp() {
 }
 
 func TestTravel(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	from := time.Now().AddDate(0, -1, 0)
 	q := model.Query{
@@ -39,15 +40,15 @@ func TestTravel(t *testing.T) {
 	if err := u.Travel(&from, &q); err != nil {
 		t.Error(err.Error())
 	}
-	if count := database.Count(u.Name()); count == 0 {
+	if count := database.Count(u.Model.Name()); count == 0 {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestFetchUsers(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	q := model.Query{
 		Schema: model.ReadQuery("users"),
@@ -66,24 +67,24 @@ func TestFetchUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestStoreUsers(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	user := model.User{Login: "memochou1993"}
 	users := []model.User{user}
 	u.StoreUsers(users)
-	if count := database.Count(u.Name()); count == 0 {
+	if count := database.Count(u.Model.Name()); count == 0 {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestUpdate(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	user := model.User{Login: "memochou1993"}
 	users := []model.User{user}
@@ -96,11 +97,11 @@ func TestUpdate(t *testing.T) {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestFetchUserRepositories(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	q := model.Query{
 		Schema: model.ReadQuery("user_repositories"),
@@ -122,11 +123,11 @@ func TestFetchUserRepositories(t *testing.T) {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestUpdateRepositories(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	user := model.User{Login: "memochou1993"}
 	users := []model.User{user}
@@ -138,20 +139,20 @@ func TestUpdateRepositories(t *testing.T) {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func TestIndexUsers(t *testing.T) {
-	u := model.NewUserModel()
+	u := handler.NewUserHandler()
 
 	u.CreateIndexes()
 
-	indexes := database.Indexes(u.Name())
+	indexes := database.Indexes(u.Model.Name())
 	if len(indexes) == 0 {
 		t.Fail()
 	}
 
-	DropCollection(u)
+	DropCollection(u.Model)
 }
 
 func tearDown() {
