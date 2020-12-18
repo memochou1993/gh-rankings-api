@@ -15,12 +15,7 @@ func init() {
 }
 
 func main() {
-	work()
+	handler.NewHandler().BuildUserModel()
 
 	time.Sleep(6 * time.Hour) // FIXME
-}
-
-func work() {
-	worker := handler.NewWorker()
-	worker.BuildUserModel()
 }

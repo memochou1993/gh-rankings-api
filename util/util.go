@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/spf13/viper"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -35,4 +36,15 @@ func ParseStruct(v interface{}, sep string) string {
 	s = strings.TrimSuffix(s, "}")
 
 	return s
+}
+
+func Languages() (languages []string) {
+	b, err := ioutil.ReadFile("./assets/languages.json")
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	if err = json.Unmarshal(b, &languages); err != nil {
+		log.Fatalln(err.Error())
+	}
+	return languages
 }

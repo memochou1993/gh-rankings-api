@@ -20,54 +20,6 @@ type UserHandler struct {
 	*model.UserModel
 }
 
-type UserResponse struct {
-	Data struct {
-		Search struct {
-			Edges []struct {
-				Cursor string     `json:"cursor"`
-				Node   model.User `json:"node"`
-			} `json:"edges"`
-			model.PageInfo `json:"pageInfo"`
-		} `json:"search"`
-		User struct {
-			AvatarURL string          `json:"avatarUrl"`
-			CreatedAt time.Time       `json:"createdAt"`
-			Followers model.Directory `json:"followers"`
-			Gists     struct {
-				Edges []struct {
-					Cursor string `json:"cursor"`
-					Node   Gist   `json:"node"`
-				} `json:"edges"`
-				PageInfo   model.PageInfo `json:"pageInfo"`
-				TotalCount int            `json:"totalCount"`
-			} `json:"gists"`
-			Location     string `json:"location"`
-			Login        string `json:"login"`
-			Name         string `json:"name"`
-			Repositories struct {
-				Edges []struct {
-					Cursor string           `json:"cursor"`
-					Node   model.Repository `json:"node"`
-				} `json:"edges"`
-				PageInfo   model.PageInfo `json:"pageInfo"`
-				TotalCount int            `json:"totalCount"`
-			} `json:"repositories"`
-		} `json:"user"`
-		model.RateLimit `json:"rateLimit"`
-	} `json:"data"`
-	Errors []model.Error `json:"errors"`
-}
-
-type UserRank struct {
-	Login      string `bson:"_id"`
-	TotalCount int    `bson:"total_count"`
-}
-
-type Gist struct {
-	Name       string          `json:"name" bson:"name"`
-	Stargazers model.Directory `json:"stargazers" bson:"stargazers"`
-}
-
 func NewUserHandler() *UserHandler {
 	return &UserHandler{
 		model.NewUserModel(),
@@ -119,7 +71,7 @@ func (u *UserHandler) Travel(from *time.Time, q *model.Query) error {
 }
 
 func (u *UserHandler) FetchUsers(q *model.Query, users *[]model.User) error {
-	res := UserResponse{}
+	res := model.UserResponse{}
 	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
@@ -190,7 +142,7 @@ func (u *UserHandler) Update() error {
 			log.Fatalln(err.Error())
 		}
 
-		var gists []Gist
+		var gists []model.Gist
 		gistsQuery.UserArguments.Login = strconv.Quote(user.Login)
 		if err := u.FetchGists(gistsQuery, &gists); err != nil {
 			return err
@@ -208,8 +160,8 @@ func (u *UserHandler) Update() error {
 	return nil
 }
 
-func (u *UserHandler) FetchGists(q *model.Query, gists *[]Gist) error {
-	res := UserResponse{}
+func (u *UserHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
+	res := model.UserResponse{}
 	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
@@ -226,7 +178,7 @@ func (u *UserHandler) FetchGists(q *model.Query, gists *[]Gist) error {
 	return u.FetchGists(q, gists)
 }
 
-func (u *UserHandler) UpdateGists(user model.User, gists []Gist) {
+func (u *UserHandler) UpdateGists(user model.User, gists []model.Gist) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -237,7 +189,7 @@ func (u *UserHandler) UpdateGists(user model.User, gists []Gist) {
 }
 
 func (u *UserHandler) FetchRepositories(q *model.Query, repos *[]model.Repository) error {
-	res := UserResponse{}
+	res := model.UserResponse{}
 	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
@@ -333,7 +285,7 @@ func (u *UserHandler) RankRepositoryStars() {
 func (u *UserHandler) RankRepositoryStarsByLanguage() {
 	logger.Info("Ranking user repository stars by language...")
 	count := 0
-	for _, language := range model.Languages() {
+	for _, language := range util.Languages() {
 		pipeline := mongo.Pipeline{
 			bson.D{
 				{"$unwind", "$repositories"},
@@ -381,7 +333,7 @@ func (u *UserHandler) Rank(pipeline []bson.D, field string) int {
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		userRank := UserRank{}
+		userRank := model.UserRank{}
 		if err := cursor.Decode(&userRank); err != nil {
 			log.Fatalln(err.Error())
 		}
@@ -406,7 +358,7 @@ func (u *UserHandler) Rank(pipeline []bson.D, field string) int {
 	return count
 }
 
-func (u *UserHandler) Fetch(q model.Query, res *UserResponse) (err error) {
+func (u *UserHandler) Fetch(q model.Query, res *model.UserResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

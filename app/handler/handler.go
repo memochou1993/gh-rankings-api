@@ -5,26 +5,26 @@ import (
 	"time"
 )
 
-type Worker struct {
+type Handler struct {
 	starter chan struct{}
 }
 
-func NewWorker() *Worker {
-	return &Worker{
+func NewHandler() *Handler {
+	return &Handler{
 		starter: make(chan struct{}, 1),
 	}
 }
 
-func (w *Worker) BuildUserModel() {
+func (h *Handler) BuildUserModel() {
 	u := NewUserHandler()
-	u.Init(w.starter)
-	<-w.starter
-	go w.collectUsers()
-	go w.updateUsers()
-	go w.rankUsers()
+	u.Init(h.starter)
+	<-h.starter
+	go h.collectUsers()
+	go h.updateUsers()
+	go h.rankUsers()
 }
 
-func (w *Worker) collectUsers() {
+func (h *Handler) collectUsers() {
 	u := NewUserHandler()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
@@ -34,7 +34,7 @@ func (w *Worker) collectUsers() {
 	}
 }
 
-func (w *Worker) updateUsers() {
+func (h *Handler) updateUsers() {
 	u := NewUserHandler()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
@@ -44,7 +44,7 @@ func (w *Worker) updateUsers() {
 	}
 }
 
-func (w *Worker) rankUsers() {
+func (h *Handler) rankUsers() {
 	u := NewUserHandler()
 	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
