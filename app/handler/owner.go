@@ -374,7 +374,7 @@ func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string) int {
 			CreatedAt:  time.Now(),
 		}
 		filter := bson.D{{"_id", ownerRank.Login}}
-		update := bson.D{{"$push", bson.D{{field, rank}}}}
+		update := bson.D{{"$set", bson.D{{field, rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {
 			_, err := o.Model.Collection().BulkWrite(ctx, models)
