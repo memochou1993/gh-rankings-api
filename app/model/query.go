@@ -17,7 +17,8 @@ type Payload struct {
 
 type Query struct {
 	Schema string
-	UserArguments
+	Field  string
+	OwnerArguments
 	SearchArguments
 	GistsArguments
 	RepositoriesArguments
@@ -25,7 +26,8 @@ type Query struct {
 
 func (q Query) String() string {
 	query := q.Schema
-	query = strings.Replace(query, "<UserArguments>", util.ParseStruct(q.UserArguments, ","), 1)
+	query = strings.Replace(query, "<Field>", q.Field, 1)
+	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
 	query = strings.Replace(query, "<SearchArguments>", util.ParseStruct(q.SearchArguments, ","), 1)
 	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
 	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
@@ -48,9 +50,9 @@ func NewGistsQuery() *Query {
 	}
 }
 
-func NewUserRepositoriesQuery() *Query {
+func NewOwnerRepositoriesQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("user_repositories"),
+		Schema: ReadQuery("owner_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:DESC}",
@@ -59,18 +61,7 @@ func NewUserRepositoriesQuery() *Query {
 	}
 }
 
-func NewOrganizationRepositoriesQuery() *Query {
-	return &Query{
-		Schema: ReadQuery("organization_repositories"),
-		RepositoriesArguments: RepositoriesArguments{
-			First:             100,
-			OrderBy:           "{field:CREATED_AT,direction:DESC}",
-			OwnerAffiliations: "OWNER",
-		},
-	}
-}
-
-type UserArguments struct {
+type OwnerArguments struct {
 	Login string `json:"login,omitempty"`
 }
 

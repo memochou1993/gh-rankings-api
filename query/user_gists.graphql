@@ -1,5 +1,5 @@
 query UserRepositories {
-  user(<UserArguments>) {
+  user(<OwnerArguments>) {
     gists(<GistsArguments>) {
       edges {
         cursor
