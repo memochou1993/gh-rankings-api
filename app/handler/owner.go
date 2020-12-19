@@ -422,10 +422,10 @@ func (o *OwnerHandler) CreateIndexes() {
 	database.CreateIndexes(o.Model.Name(), []string{
 		"created_at",
 		"name",
-		"user_followers",
-		"user_gist_stars",
-		"user_repository_stars",
-		"organization_repository_stars",
+		"ranks.user_followers",
+		"ranks.user_gist_stars",
+		"ranks.user_repository_stars",
+		"ranks.organization_repository_stars",
 	})
 }
 
