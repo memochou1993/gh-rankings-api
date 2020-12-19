@@ -13,10 +13,11 @@ type Owner struct {
 	Name         string       `json:"name" bson:"name"`
 	Gists        []Gist       `json:"gists" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
-	Ranks        *struct {
-		GistStars       *Rank `json:"gistStars" bson:"gist_stars,omitempty"`
-		RepositoryStars *Rank `json:"repositoryStars" bson:"repository_stars,omitempty"`
-	} `json:"ranks" bson:"ranks,omitempty"`
+	// Ranks        *struct {
+	// 	GistStars       *Rank `json:"gistStars" bson:"gist_stars,omitempty"`
+	// 	RepositoryStars *Rank `json:"repositoryStars" bson:"repository_stars,omitempty"`
+	// } `json:"ranks" bson:"ranks,omitempty"`
+	Type string `json:"type" bson:"type"`
 }
 
 type OwnerResponse struct {
@@ -49,7 +50,7 @@ type OwnerResponse struct {
 				} `json:"edges"`
 				PageInfo `json:"pageInfo"`
 			} `json:"repositories"`
-		} `json:"user"`
+		} `json:"owner"`
 		RateLimit `json:"rateLimit"`
 	} `json:"data"`
 	Errors []Error `json:"errors"`

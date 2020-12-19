@@ -1,5 +1,5 @@
 query OwnerRepositories {
-  <Field>(<OwnerArguments>) {
+  owner: <Field>(<OwnerArguments>) {
     repositories(<RepositoriesArguments>) {
       edges {
         cursor
