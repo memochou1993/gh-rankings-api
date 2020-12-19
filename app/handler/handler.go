@@ -25,9 +25,9 @@ func NewHandler() *Handler {
 func (h *Handler) Build(handler Interface) {
 	handler.Init(h.starter)
 	<-h.starter
-	go h.collect(handler)
+	// go h.collect(handler)
 	// go h.update(handler)
-	// go h.rank(handler)
+	go h.rank(handler)
 }
 
 func (h *Handler) collect(handler Interface) {

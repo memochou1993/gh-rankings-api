@@ -212,7 +212,7 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 	filter := bson.D{{"_id", owner.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	o.Model.Collection().FindOneAndUpdate(ctx, filter, update)
-	logger.Success(fmt.Sprintf("Updated %d owner repositories!", len(repositories)))
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type))
 }
 
 func (o *OwnerHandler) Rank() {
@@ -248,8 +248,8 @@ func (o *OwnerHandler) RankFollowers(t string) {
 			}},
 		},
 	}
-	field := "ranks"
-	count := o.Aggregate(pipeline, field, []string{t, "followers"})
+	field := fmt.Sprintf("ranks.%s_followers", t)
+	count := o.Aggregate(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user followers!", count))
 }
 
@@ -275,13 +275,13 @@ func (o *OwnerHandler) RankGistStars(t string) {
 			}},
 		},
 	}
-	field := "ranks"
-	count := o.Aggregate(pipeline, field, []string{t, "gist_stars"})
+	field := fmt.Sprintf("ranks.%s_gist_stars", t)
+	count := o.Aggregate(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user gist stars!", count))
 }
 
 func (o *OwnerHandler) RankRepositoryStars(t string) {
-	logger.Info("Ranking user repository stars...")
+	logger.Info(fmt.Sprintf("Ranking %s repository stars...", t))
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{
@@ -302,13 +302,13 @@ func (o *OwnerHandler) RankRepositoryStars(t string) {
 			}},
 		},
 	}
-	field := "ranks"
-	count := o.Aggregate(pipeline, field, []string{t, "repository_stars"})
-	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
+	field := fmt.Sprintf("ranks.%s_repository_stars", t)
+	count := o.Aggregate(pipeline, field)
+	logger.Success(fmt.Sprintf("Ranked %d %s repository stars!", count, t))
 }
 
 func (o *OwnerHandler) RankRepositoryStarsByLanguage(t string) {
-	logger.Info("Ranking user repository stars by language...")
+	logger.Info(fmt.Sprintf("Ranking %s repository stars by language...", t))
 	count := 0
 	for _, language := range util.Languages() {
 		pipeline := mongo.Pipeline{
@@ -339,13 +339,13 @@ func (o *OwnerHandler) RankRepositoryStarsByLanguage(t string) {
 				}},
 			},
 		}
-		field := fmt.Sprintf("ranks.repository_stars_%s", language)
-		count += o.Aggregate(pipeline, field, []string{t, "repository_stars", language})
+		field := fmt.Sprintf("ranks.%s_repository_stars_%s", t, language)
+		count += o.Aggregate(pipeline, field)
 	}
-	logger.Success(fmt.Sprintf("Ranked %d user repository stars by language!", count))
+	logger.Success(fmt.Sprintf("Ranked %d %s repository stars by language!", count, t))
 }
 
-func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string, tags []string) int {
+func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -371,7 +371,6 @@ func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string, tags []string)
 		rank := model.Rank{
 			Rank:       count + 1,
 			TotalCount: ownerRank.TotalCount,
-			Tags:       tags,
 			CreatedAt:  time.Now(),
 		}
 		filter := bson.D{{"_id", ownerRank.Login}}
@@ -423,7 +422,10 @@ func (o *OwnerHandler) CreateIndexes() {
 	database.CreateIndexes(o.Model.Name(), []string{
 		"created_at",
 		"name",
-		"ranks.tags",
+		"user_followers",
+		"user_gist_stars",
+		"user_repository_stars",
+		"organization_repository_stars",
 	})
 }
 
