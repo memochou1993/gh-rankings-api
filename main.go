@@ -15,7 +15,9 @@ func init() {
 }
 
 func main() {
-	handler.NewHandler().BuildUserModel()
+	h := handler.NewHandler()
+	h.Build(handler.NewUserHandler())
+	h.Build(handler.NewOrganizationHandler())
 
 	time.Sleep(6 * time.Hour) // FIXME
 }

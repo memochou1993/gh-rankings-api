@@ -25,10 +25,10 @@ type Query struct {
 
 func (q Query) String() string {
 	query := q.Schema
-	query = strings.Replace(query, "UserArguments", util.ParseStruct(q.UserArguments, ","), 1)
-	query = strings.Replace(query, "SearchArguments", util.ParseStruct(q.SearchArguments, ","), 1)
-	query = strings.Replace(query, "GistsArguments", util.ParseStruct(q.GistsArguments, ","), 1)
-	query = strings.Replace(query, "RepositoriesArguments", util.ParseStruct(q.RepositoriesArguments, ","), 1)
+	query = strings.Replace(query, "<UserArguments>", util.ParseStruct(q.UserArguments, ","), 1)
+	query = strings.Replace(query, "<SearchArguments>", util.ParseStruct(q.SearchArguments, ","), 1)
+	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
+	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 
 	b, err := json.Marshal(Payload{Query: query})
 	if err != nil {
@@ -48,9 +48,20 @@ func NewGistsQuery() *Query {
 	}
 }
 
-func NewReposQuery() *Query {
+func NewUserRepositoriesQuery() *Query {
 	return &Query{
 		Schema: ReadQuery("user_repositories"),
+		RepositoriesArguments: RepositoriesArguments{
+			First:             100,
+			OrderBy:           "{field:CREATED_AT,direction:DESC}",
+			OwnerAffiliations: "OWNER",
+		},
+	}
+}
+
+func NewOrganizationRepositoriesQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("organization_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:DESC}",
@@ -88,6 +99,7 @@ type SearchQuery struct {
 	Followers string `json:"followers,omitempty"`
 	Repos     string `json:"repos,omitempty"`
 	Sort      string `json:"sort,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 type Directory struct {

@@ -37,7 +37,7 @@ func (u *UserHandler) Collect() error {
 	logger.Info("Collecting users...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	q := model.Query{
-		Schema: model.ReadQuery("users"),
+		Schema: model.ReadQuery("owners"),
 		SearchArguments: model.SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -58,6 +58,7 @@ func (u *UserHandler) Travel(from *time.Time, q *model.Query) error {
 		Followers: ">=10",
 		Repos:     ">=5",
 		Sort:      "joined",
+		Type:      "user",
 	}, " "))
 
 	var users []model.User
@@ -135,7 +136,7 @@ func (u *UserHandler) Update() error {
 	logger.Info("Updating user gists...")
 	gistsQuery := model.NewGistsQuery()
 	logger.Info("Updating user repositories...")
-	reposQuery := model.NewReposQuery()
+	repositoriesQuery := model.NewUserRepositoriesQuery()
 	for cursor.Next(ctx) {
 		user := model.User{}
 		if err := cursor.Decode(&user); err != nil {
@@ -149,12 +150,12 @@ func (u *UserHandler) Update() error {
 		}
 		u.UpdateGists(user, gists)
 
-		var repos []model.Repository
-		reposQuery.UserArguments.Login = strconv.Quote(user.Login)
-		if err := u.FetchRepositories(reposQuery, &repos); err != nil {
+		var repositories []model.Repository
+		repositoriesQuery.UserArguments.Login = strconv.Quote(user.Login)
+		if err := u.FetchRepositories(repositoriesQuery, &repositories); err != nil {
 			return err
 		}
-		u.UpdateRepositories(user, repos)
+		u.UpdateRepositories(user, repositories)
 	}
 
 	return nil
@@ -188,13 +189,13 @@ func (u *UserHandler) UpdateGists(user model.User, gists []model.Gist) {
 	logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
 }
 
-func (u *UserHandler) FetchRepositories(q *model.Query, repos *[]model.Repository) error {
+func (u *UserHandler) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
 	res := model.UserResponse{}
 	if err := u.Fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.User.Repositories.Edges {
-		*repos = append(*repos, edge.Node)
+		*repositories = append(*repositories, edge.Node)
 	}
 	res.Data.RateLimit.Break()
 	if !res.Data.User.Repositories.PageInfo.HasNextPage {
@@ -203,17 +204,24 @@ func (u *UserHandler) FetchRepositories(q *model.Query, repos *[]model.Repositor
 	}
 	q.RepositoriesArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
 
-	return u.FetchRepositories(q, repos)
+	return u.FetchRepositories(q, repositories)
 }
 
-func (u *UserHandler) UpdateRepositories(user model.User, repos []model.Repository) {
+func (u *UserHandler) UpdateRepositories(user model.User, repositories []model.Repository) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	filter := bson.D{{"_id", user.Login}}
-	update := bson.D{{"$set", bson.D{{"repositories", repos}}}}
+	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	u.Model.Collection().FindOneAndUpdate(ctx, filter, update)
-	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repos)))
+	logger.Success(fmt.Sprintf("Updated %d user repositories!", len(repositories)))
+}
+
+func (u *UserHandler) Rank() {
+	u.RankFollowers()
+	u.RankGistStars()
+	u.RankRepositoryStars()
+	u.RankRepositoryStarsByLanguage()
 }
 
 func (u *UserHandler) RankFollowers() {
@@ -234,7 +242,7 @@ func (u *UserHandler) RankFollowers() {
 		},
 	}
 	field := "ranks.followers"
-	count := u.Rank(pipeline, field)
+	count := u.Aggregate(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user followers!", count))
 }
 
@@ -256,7 +264,7 @@ func (u *UserHandler) RankGistStars() {
 		},
 	}
 	field := "ranks.gist_stars"
-	count := u.Rank(pipeline, field)
+	count := u.Aggregate(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user gist stars!", count))
 }
 
@@ -278,7 +286,7 @@ func (u *UserHandler) RankRepositoryStars() {
 		},
 	}
 	field := "ranks.repository_stars"
-	count := u.Rank(pipeline, field)
+	count := u.Aggregate(pipeline, field)
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars!", count))
 }
 
@@ -310,12 +318,12 @@ func (u *UserHandler) RankRepositoryStarsByLanguage() {
 			},
 		}
 		field := fmt.Sprintf("ranks.repository_stars_%s", language)
-		count += u.Rank(pipeline, field)
+		count += u.Aggregate(pipeline, field)
 	}
 	logger.Success(fmt.Sprintf("Ranked %d user repository stars by language!", count))
 }
 
-func (u *UserHandler) Rank(pipeline []bson.D, field string) int {
+func (u *UserHandler) Aggregate(pipeline []bson.D, field string) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

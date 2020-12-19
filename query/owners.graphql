@@ -1,5 +1,5 @@
 query Users {
-  search(SearchArguments) {
+  search(<SearchArguments>) {
     edges {
       cursor
       node {
@@ -12,7 +12,13 @@ query Users {
           location
           login
           name
-          url
+        }
+        ... on Organization {
+          avatarUrl
+          createdAt
+          location
+          login
+          name
         }
       }
     }

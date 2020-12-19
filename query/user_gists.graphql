@@ -1,6 +1,6 @@
 query UserRepositories {
-  user(UserArguments) {
-    gists(GistsArguments) {
+  user(<UserArguments>) {
+    gists(<GistsArguments>) {
       edges {
         cursor
         node {
@@ -14,7 +14,6 @@ query UserRepositories {
         endCursor
         hasNextPage
       }
-      totalCount
     }
   }
   rateLimit {

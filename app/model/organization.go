@@ -4,44 +4,33 @@ import (
 	"time"
 )
 
-type User struct {
+type Organization struct {
 	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
 	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
-	Followers    Directory    `json:"followers" bson:"followers"`
 	Location     string       `json:"location" bson:"location"`
 	Login        string       `json:"login" bson:"_id"`
 	Name         string       `json:"name" bson:"name"`
-	Gists        []Gist       `json:"gists" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
 	Ranks        *struct {
-		GistStars       *Rank `json:"gistStars" bson:"gist_stars,omitempty"`
 		RepositoryStars *Rank `json:"repositoryStars" bson:"repository_stars,omitempty"`
 	} `json:"ranks" bson:"ranks,omitempty"`
 }
 
-type UserResponse struct {
+type OrganizationResponse struct {
 	Data struct {
 		Search struct {
 			Edges []struct {
-				Cursor string `json:"cursor"`
-				Node   User   `json:"node"`
+				Cursor string       `json:"cursor"`
+				Node   Organization `json:"node"`
 			} `json:"edges"`
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
-		User struct {
-			AvatarURL string    `json:"avatarUrl"`
-			CreatedAt time.Time `json:"createdAt"`
-			Followers Directory `json:"followers"`
-			Gists     struct {
-				Edges []struct {
-					Cursor string `json:"cursor"`
-					Node   Gist   `json:"node"`
-				} `json:"edges"`
-				PageInfo `json:"pageInfo"`
-			} `json:"gists"`
-			Location     string `json:"location"`
-			Login        string `json:"login"`
-			Name         string `json:"name"`
+		Organization struct {
+			AvatarURL    string    `json:"avatarUrl"`
+			CreatedAt    time.Time `json:"createdAt"`
+			Location     string    `json:"location"`
+			Login        string    `json:"login"`
+			Name         string    `json:"name"`
 			Repositories struct {
 				Edges []struct {
 					Cursor string     `json:"cursor"`
@@ -49,25 +38,25 @@ type UserResponse struct {
 				} `json:"edges"`
 				PageInfo `json:"pageInfo"`
 			} `json:"repositories"`
-		} `json:"user"`
+		} `json:"organization"`
 		RateLimit `json:"rateLimit"`
 	} `json:"data"`
 	Errors []Error `json:"errors"`
 }
 
-type UserRank struct {
+type OrganizationRank struct {
 	Login      string `bson:"_id"`
 	TotalCount int    `bson:"total_count"`
 }
 
-type UserModel struct {
+type OrganizationModel struct {
 	*Model
 }
 
-func NewUserModel() *UserModel {
-	return &UserModel{
+func NewOrganizationModel() *OrganizationModel {
+	return &OrganizationModel{
 		&Model{
-			name: "users",
+			name: "organizations",
 		},
 	}
 }

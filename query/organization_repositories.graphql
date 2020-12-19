@@ -1,5 +1,5 @@
-query UserRepositories {
-  user(<UserArguments>) {
+query OrganizationRepositories {
+  organization(<UserArguments>) {
     repositories(<RepositoriesArguments>) {
       edges {
         cursor
