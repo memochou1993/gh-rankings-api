@@ -16,20 +16,27 @@ import (
 	"time"
 )
 
+const (
+	typeUser         = "user"
+	typeOrganization = "organization"
+)
+
 type OwnerHandler struct {
-	*model.OwnerModel
+	BatchModel *model.BatchModel
+	OwnerModel *model.OwnerModel
 }
 
 func NewOwnerHandler() *OwnerHandler {
 	return &OwnerHandler{
-		model.NewOwnerModel(),
+		BatchModel: model.NewBatchModel(),
+		OwnerModel: model.NewOwnerModel(),
 	}
 }
 
 func (o *OwnerHandler) Init(starter chan<- struct{}) {
-	logger.Info("Initializing owner collection...")
+	logger.Info("Initializing owners collection...")
 	o.CreateIndexes()
-	logger.Success("Owner collection initialized!")
+	logger.Success("Owners collection initialized!")
 	starter <- struct{}{}
 }
 
@@ -98,7 +105,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	res, err := o.Model.Collection().BulkWrite(ctx, models)
+	res, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -114,11 +121,7 @@ func (o *OwnerHandler) Update() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	opts := options.Find().SetBatchSize(1000)
-	cursor, err := o.Model.Collection().Find(ctx, bson.D{}, opts)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	cursor := o.OwnerModel.All(ctx)
 	defer func() {
 		if err := cursor.Close(ctx); err != nil {
 			log.Fatalln(err.Error())
@@ -138,7 +141,7 @@ func (o *OwnerHandler) Update() error {
 			log.Fatalln(err.Error())
 		}
 
-		if o.Type(owner) == "user" {
+		if o.Type(owner) == typeUser {
 			var gists []model.Gist
 			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.Login)
 			if err := o.FetchGists(gistsQuery, &gists); err != nil {
@@ -183,7 +186,7 @@ func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
 
 	filter := bson.D{{"_id", owner.Login}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
-	o.Model.Collection().FindOneAndUpdate(ctx, filter, update)
+	o.OwnerModel.Model.Collection().FindOneAndUpdate(ctx, filter, update)
 	logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
 }
 
@@ -211,22 +214,24 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 
 	filter := bson.D{{"_id", owner.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
-	o.Model.Collection().FindOneAndUpdate(ctx, filter, update)
+	o.OwnerModel.Model.Collection().FindOneAndUpdate(ctx, filter, update)
 	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type))
 }
 
 func (o *OwnerHandler) Rank() {
-	for _, t := range []string{"user"} {
-		o.RankFollowers(t)
-		o.RankGistStars(t)
-	}
-	for _, t := range []string{"user", "organization"} {
-		o.RankRepositoryStars(t)
-		o.RankRepositoryStarsByLanguage(t)
-	}
+	// TODO: use goroutine and waiting group
+	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch + 1
+	o.RankFollowers(batch, typeUser)
+	o.RankGistStars(batch, typeUser)
+	o.RankRepositoryStars(batch, typeUser)
+	o.RankRepositoryStarsByLanguage(batch, typeUser)
+	o.RankRepositoryStars(batch, typeOrganization)
+	o.RankRepositoryStarsByLanguage(batch, typeOrganization)
+	o.BatchModel.Update(o.OwnerModel.Name())
+	o.ClearRanks(batch - 1)
 }
 
-func (o *OwnerHandler) RankFollowers(t string) {
+func (o *OwnerHandler) RankFollowers(batch int, t string) {
 	logger.Info("Ranking user followers...")
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -248,12 +253,12 @@ func (o *OwnerHandler) RankFollowers(t string) {
 			}},
 		},
 	}
-	field := fmt.Sprintf("ranks.%s_followers", t)
-	count := o.Aggregate(pipeline, field)
-	logger.Success(fmt.Sprintf("Ranked %d user followers!", count))
+	tags := []string{t, "followers"}
+	count := o.UpdateRanks(pipeline, batch, tags)
+	logger.Success(fmt.Sprintf("Ranked %d %s followers!", count, t))
 }
 
-func (o *OwnerHandler) RankGistStars(t string) {
+func (o *OwnerHandler) RankGistStars(batch int, t string) {
 	logger.Info("Ranking user gist stars...")
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -275,12 +280,12 @@ func (o *OwnerHandler) RankGistStars(t string) {
 			}},
 		},
 	}
-	field := fmt.Sprintf("ranks.%s_gist_stars", t)
-	count := o.Aggregate(pipeline, field)
-	logger.Success(fmt.Sprintf("Ranked %d user gist stars!", count))
+	tags := []string{t, "gist_stars"}
+	count := o.UpdateRanks(pipeline, batch, tags)
+	logger.Success(fmt.Sprintf("Ranked %d %s gist stars!", count, t))
 }
 
-func (o *OwnerHandler) RankRepositoryStars(t string) {
+func (o *OwnerHandler) RankRepositoryStars(batch int, t string) {
 	logger.Info(fmt.Sprintf("Ranking %s repository stars...", t))
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -302,12 +307,12 @@ func (o *OwnerHandler) RankRepositoryStars(t string) {
 			}},
 		},
 	}
-	field := fmt.Sprintf("ranks.%s_repository_stars", t)
-	count := o.Aggregate(pipeline, field)
+	tags := []string{t, "repository_stars"}
+	count := o.UpdateRanks(pipeline, batch, tags)
 	logger.Success(fmt.Sprintf("Ranked %d %s repository stars!", count, t))
 }
 
-func (o *OwnerHandler) RankRepositoryStarsByLanguage(t string) {
+func (o *OwnerHandler) RankRepositoryStarsByLanguage(batch int, t string) {
 	logger.Info(fmt.Sprintf("Ranking %s repository stars by language...", t))
 	count := 0
 	for _, language := range util.Languages() {
@@ -339,18 +344,18 @@ func (o *OwnerHandler) RankRepositoryStarsByLanguage(t string) {
 				}},
 			},
 		}
-		field := fmt.Sprintf("ranks.%s_repository_stars_%s", t, language)
-		count += o.Aggregate(pipeline, field)
+		tags := []string{t, "repository_stars", language}
+		count += o.UpdateRanks(pipeline, batch, tags)
 	}
 	logger.Success(fmt.Sprintf("Ranked %d %s repository stars by language!", count, t))
 }
 
-func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string) int {
+func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	opts := options.Aggregate().SetBatchSize(1000)
-	cursor, err := o.Model.Collection().Aggregate(ctx, pipeline, opts)
+	cursor, err := o.OwnerModel.Model.Collection().Aggregate(ctx, pipeline, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -371,14 +376,15 @@ func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string) int {
 		rank := model.Rank{
 			Rank:       count + 1,
 			TotalCount: ownerRank.TotalCount,
+			Tags:       tags,
+			Batch:      batch,
 			CreatedAt:  time.Now(),
 		}
 		filter := bson.D{{"_id", ownerRank.Login}}
-		update := bson.D{{"$set", bson.D{{field, rank}}}}
+		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {
-			_, err := o.Model.Collection().BulkWrite(ctx, models)
-			if err != nil {
+			if _, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models); err != nil {
 				log.Fatalln(err.Error())
 			}
 			models = models[:0]
@@ -386,6 +392,36 @@ func (o *OwnerHandler) Aggregate(pipeline []bson.D, field string) int {
 	}
 
 	return count
+}
+
+func (o *OwnerHandler) ClearRanks(batch int) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cursor := o.OwnerModel.All(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Fatalln(err.Error())
+		}
+	}()
+
+	var models []mongo.WriteModel
+	for cursor.Next(ctx) {
+		owner := model.Owner{}
+		if err := cursor.Decode(&owner); err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		filter := bson.D{{"_id", owner.Login}}
+		update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
+		if cursor.RemainingBatchLength() == 0 {
+			if _, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models); err != nil {
+				log.Fatalln(err.Error())
+			}
+			models = models[:0]
+		}
+	}
 }
 
 func (o *OwnerHandler) Fetch(q model.Query, res *model.OwnerResponse) (err error) {
@@ -402,30 +438,15 @@ func (o *OwnerHandler) Fetch(q model.Query, res *model.OwnerResponse) (err error
 	return nil
 }
 
-func (o *OwnerHandler) GetByLogin(login string) (owner model.Owner) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	filter := bson.D{{"_id", login}}
-	if err := o.Model.Collection().FindOne(ctx, filter).Decode(&owner); err != nil {
-		logger.Warning(err.Error())
-	}
-
-	return owner
-}
-
 func (o *OwnerHandler) CreateIndexes() {
-	if len(database.Indexes(o.Model.Name())) > 0 {
+	if len(database.Indexes(o.OwnerModel.Model.Name())) > 0 {
 		return
 	}
 
-	database.CreateIndexes(o.Model.Name(), []string{
+	database.CreateIndexes(o.OwnerModel.Model.Name(), []string{
 		"created_at",
 		"name",
-		"ranks.user_followers",
-		"ranks.user_gist_stars",
-		"ranks.user_repository_stars",
-		"ranks.organization_repository_stars",
+		"ranks.tags",
 	})
 }
 
@@ -438,9 +459,9 @@ func (o *OwnerHandler) SearchQuery(from time.Time) model.SearchQuery {
 }
 
 func (o *OwnerHandler) Type(owner model.Owner) (t string) {
-	t = "user"
+	t = typeUser
 	if owner.Followers == nil {
-		t = "organization"
+		t = typeOrganization
 	}
 	return t
 }
