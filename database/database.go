@@ -44,6 +44,32 @@ func Count(collection string) int64 {
 	return count
 }
 
+func All(ctx context.Context, collection string) *mongo.Cursor {
+	opts := options.Find().SetBatchSize(1000)
+	cursor, err := Collection(collection).Find(ctx, bson.D{}, opts)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return cursor
+}
+
+func Aggregate(ctx context.Context, collection string, pipeline []bson.D) *mongo.Cursor {
+	opts := options.Aggregate().SetBatchSize(1000)
+	cursor, err := Collection(collection).Aggregate(ctx, pipeline, opts)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	return cursor
+}
+
+func CloseCursor(ctx context.Context, cursor *mongo.Cursor) {
+	if err := cursor.Close(ctx); err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func Indexes(collection string) []bson.D {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -78,8 +104,7 @@ func CreateIndexes(collection string, keys []string) {
 		})
 	}
 
-	_, err := Collection(collection).Indexes().CreateMany(ctx, models)
-	if err != nil {
+	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
@@ -96,8 +121,7 @@ func CreateUniqueIndexes(collection string, keys []string) {
 		})
 	}
 
-	_, err := Collection(collection).Indexes().CreateMany(ctx, models)
-	if err != nil {
+	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

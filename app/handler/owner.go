@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"time"
@@ -121,12 +120,8 @@ func (o *OwnerHandler) Update() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cursor := o.OwnerModel.All(ctx)
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			log.Fatalln(err.Error())
-		}
-	}()
+	cursor := database.All(ctx, o.OwnerModel.Name())
+	defer database.CloseCursor(ctx, cursor)
 
 	if cursor.RemainingBatchLength() == 0 {
 		return nil
@@ -354,16 +349,8 @@ func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	opts := options.Aggregate().SetBatchSize(1000)
-	cursor, err := o.OwnerModel.Model.Collection().Aggregate(ctx, pipeline, opts)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			log.Fatalln(err.Error())
-		}
-	}()
+	cursor := database.Aggregate(ctx, o.OwnerModel.Name(), pipeline)
+	defer database.CloseCursor(ctx, cursor)
 
 	var models []mongo.WriteModel
 	count := 0
@@ -398,12 +385,8 @@ func (o *OwnerHandler) ClearRanks(batch int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cursor := o.OwnerModel.All(ctx)
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			log.Fatalln(err.Error())
-		}
-	}()
+	cursor := database.All(ctx, o.OwnerModel.Name())
+	defer database.CloseCursor(ctx, cursor)
 
 	var models []mongo.WriteModel
 	for cursor.Next(ctx) {
@@ -463,5 +446,5 @@ func (o *OwnerHandler) Type(owner model.Owner) (t string) {
 	if owner.Followers == nil {
 		t = typeOrganization
 	}
-	return t
+	return
 }
