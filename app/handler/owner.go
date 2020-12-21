@@ -213,148 +213,35 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 }
 
 func (o *OwnerHandler) Rank() {
+	pipelines := []model.RankPipeline{
+		model.FollowersPipeline(typeUser),
+		model.GistForksPipeline(typeUser),
+		model.GistStarsPipeline(typeUser),
+		model.RepositoryForksPipeline(typeUser),
+		model.RepositoryStarsPipeline(typeUser),
+		model.RepositoryForksPipeline(typeOrganization),
+		model.RepositoryStarsPipeline(typeOrganization),
+	}
+	pipelines = append(pipelines, model.RepositoryStarsPipelinesByLanguage(typeUser)...)
+	pipelines = append(pipelines, model.RepositoryStarsPipelinesByLanguage(typeOrganization)...)
+
 	wg := sync.WaitGroup{}
-	wg.Add(6)
-	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch + 1
-	go o.RankFollowers(&wg, batch, typeUser)
-	go o.RankGistStars(&wg, batch, typeUser)
-	go o.RankRepositoryStars(&wg, batch, typeUser)
-	go o.RankRepositoryStarsByLanguage(&wg, batch, typeUser)
-	go o.RankRepositoryStars(&wg, batch, typeOrganization)
-	go o.RankRepositoryStarsByLanguage(&wg, batch, typeOrganization)
+	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch
+	for _, pipeline := range pipelines {
+		wg.Add(1)
+		go o.PushRanks(&wg, batch+1, pipeline)
+	}
 	wg.Wait()
+
 	o.BatchModel.Update(o.OwnerModel.Name())
-	o.ClearRanks(batch - 1)
+	o.PullRanks(batch)
 }
 
-func (o *OwnerHandler) RankFollowers(wg *sync.WaitGroup, batch int, t string) {
-	logger.Info("Ranking user followers...")
-	pipeline := mongo.Pipeline{
-		bson.D{
-			{"$match", bson.D{
-				{"type", t},
-			}},
-		},
-		bson.D{
-			{"$project", bson.D{
-				{"_id", "$_id"},
-				{"total_count", bson.D{
-					{"$sum", "$followers.total_count"},
-				}},
-			}},
-		},
-		bson.D{
-			{"$sort", bson.D{
-				{"total_count", -1},
-			}},
-		},
-	}
-	tags := []string{t, "followers"}
-	count := o.UpdateRanks(pipeline, batch, tags)
-	logger.Success(fmt.Sprintf("Ranked %d %s followers!", count, t))
-	wg.Done()
-}
-
-func (o *OwnerHandler) RankGistStars(wg *sync.WaitGroup, batch int, t string) {
-	logger.Info("Ranking user gist stars...")
-	pipeline := mongo.Pipeline{
-		bson.D{
-			{"$match", bson.D{
-				{"type", t},
-			}},
-		},
-		bson.D{
-			{"$project", bson.D{
-				{"_id", "$_id"},
-				{"total_count", bson.D{
-					{"$sum", "$gists.stargazers.total_count"},
-				}},
-			}},
-		},
-		bson.D{
-			{"$sort", bson.D{
-				{"total_count", -1},
-			}},
-		},
-	}
-	tags := []string{t, "gist_stars"}
-	count := o.UpdateRanks(pipeline, batch, tags)
-	logger.Success(fmt.Sprintf("Ranked %d %s gist stars!", count, t))
-	wg.Done()
-}
-
-func (o *OwnerHandler) RankRepositoryStars(wg *sync.WaitGroup, batch int, t string) {
-	logger.Info(fmt.Sprintf("Ranking %s repository stars...", t))
-	pipeline := mongo.Pipeline{
-		bson.D{
-			{"$match", bson.D{
-				{"type", t},
-			}},
-		},
-		bson.D{
-			{"$project", bson.D{
-				{"_id", "$_id"},
-				{"total_count", bson.D{
-					{"$sum", "$repositories.stargazers.total_count"},
-				}},
-			}},
-		},
-		bson.D{
-			{"$sort", bson.D{
-				{"total_count", -1},
-			}},
-		},
-	}
-	tags := []string{t, "repository_stars"}
-	count := o.UpdateRanks(pipeline, batch, tags)
-	logger.Success(fmt.Sprintf("Ranked %d %s repository stars!", count, t))
-	wg.Done()
-}
-
-func (o *OwnerHandler) RankRepositoryStarsByLanguage(wg *sync.WaitGroup, batch int, t string) {
-	logger.Info(fmt.Sprintf("Ranking %s repository stars by language...", t))
-	count := 0
-	for _, language := range util.Languages() {
-		pipeline := mongo.Pipeline{
-			bson.D{
-				{"$match", bson.D{
-					{"type", t},
-				}},
-			},
-			bson.D{
-				{"$unwind", "$repositories"},
-			},
-			bson.D{
-				{"$match", bson.D{
-					{"repositories.primary_language.name", language},
-				}},
-			},
-			bson.D{
-				{"$group", bson.D{
-					{"_id", "$_id"},
-					{"total_count", bson.D{
-						{"$sum", "$repositories.stargazers.total_count"},
-					}},
-				}},
-			},
-			bson.D{
-				{"$sort", bson.D{
-					{"total_count", -1},
-				}},
-			},
-		}
-		tags := []string{t, "repository_stars", language}
-		count += o.UpdateRanks(pipeline, batch, tags)
-	}
-	logger.Success(fmt.Sprintf("Ranked %d %s repository stars by language!", count, t))
-	wg.Done()
-}
-
-func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) int {
+func (o *OwnerHandler) PushRanks(wg *sync.WaitGroup, batch int, pipeline model.RankPipeline) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cursor := database.Aggregate(ctx, o.OwnerModel.Name(), pipeline)
+	cursor := database.Aggregate(ctx, o.OwnerModel.Name(), pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
 	var models []mongo.WriteModel
@@ -368,7 +255,7 @@ func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) 
 		rank := model.Rank{
 			Rank:       count + 1,
 			TotalCount: ownerRank.TotalCount,
-			Tags:       tags,
+			Tags:       pipeline.Tags,
 			Batch:      batch,
 			CreatedAt:  time.Now(),
 		}
@@ -382,11 +269,12 @@ func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) 
 			models = models[:0]
 		}
 	}
+	wg.Done()
 
 	return count
 }
 
-func (o *OwnerHandler) ClearRanks(batch int) {
+func (o *OwnerHandler) PullRanks(batch int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

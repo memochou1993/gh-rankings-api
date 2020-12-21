@@ -4,6 +4,9 @@ query OwnerRepositories {
       edges {
         cursor
         node {
+          forks {
+            totalCount
+          }
           name
           primaryLanguage {
             name

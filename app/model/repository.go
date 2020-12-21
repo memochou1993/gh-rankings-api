@@ -1,7 +1,8 @@
 package model
 
 type Repository struct {
-	Name            string `json:"name" bson:"name"`
+	Forks           Directory `json:"forks" bson:"forks"`
+	Name            string    `json:"name" bson:"name"`
 	PrimaryLanguage struct {
 		Name string `json:"name" bson:"name"`
 	} `json:"primaryLanguage" bson:"primary_language"`

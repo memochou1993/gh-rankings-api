@@ -4,6 +4,9 @@ query OwnerGists {
       edges {
         cursor
         node {
+          forks {
+            totalCount
+          }
           name
           stargazers {
             totalCount
