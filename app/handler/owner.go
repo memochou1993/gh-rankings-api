@@ -213,17 +213,24 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 }
 
 func (o *OwnerHandler) Rank() {
+	logger.Info("Executing rank pipelines...")
 	pipelines := []model.RankPipeline{
 		followersPipeline(typeUser),
 		gistForksPipeline(typeUser),
 		gistStarsPipeline(typeUser),
 		repositoryForksPipeline(typeUser),
 		repositoryStarsPipeline(typeUser),
+		repositoryWatchersPipeline(typeUser),
 		repositoryForksPipeline(typeOrganization),
 		repositoryStarsPipeline(typeOrganization),
+		repositoryWatchersPipeline(typeOrganization),
 	}
+	pipelines = append(pipelines, repositoryForksByLanguagePipelines(typeUser)...)
+	pipelines = append(pipelines, repositoryForksByLanguagePipelines(typeOrganization)...)
 	pipelines = append(pipelines, repositoryStarsByLanguagePipelines(typeUser)...)
 	pipelines = append(pipelines, repositoryStarsByLanguagePipelines(typeOrganization)...)
+	pipelines = append(pipelines, repositoryWatchersByLanguagePipelines(typeUser)...)
+	pipelines = append(pipelines, repositoryWatchersByLanguagePipelines(typeOrganization)...)
 
 	wg := sync.WaitGroup{}
 	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch
@@ -232,6 +239,7 @@ func (o *OwnerHandler) Rank() {
 		go o.PushRanks(&wg, batch+1, pipeline)
 	}
 	wg.Wait()
+	logger.Success(fmt.Sprintf("Executed %d rank pipelines!", len(pipelines)))
 
 	o.BatchModel.Update(o.OwnerModel.Name())
 	o.PullRanks(batch)
@@ -372,6 +380,50 @@ func repositoryStarsPipeline(ownerType string) model.RankPipeline {
 	}
 }
 
+func repositoryWatchersPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "repositories.watchers"),
+		Tags:     []string{ownerType, "repository", "watchers"},
+	}
+}
+
+func repositoryForksByLanguagePipelines(ownerType string) (pipelines []model.RankPipeline) {
+	for _, language := range util.Languages() {
+		pipelines = append(pipelines, model.RankPipeline{
+			Pipeline: mongo.Pipeline{
+				bson.D{
+					{"$match", bson.D{
+						{"type", ownerType},
+					}},
+				},
+				bson.D{
+					{"$unwind", "$repositories"},
+				},
+				bson.D{
+					{"$match", bson.D{
+						{"repositories.primary_language.name", language},
+					}},
+				},
+				bson.D{
+					{"$group", bson.D{
+						{"_id", "$_id"},
+						{"total_count", bson.D{
+							{"$sum", "$repositories.forks.total_count"},
+						}},
+					}},
+				},
+				bson.D{
+					{"$sort", bson.D{
+						{"total_count", -1},
+					}},
+				},
+			},
+			Tags: []string{ownerType, "repository", "forks", language},
+		})
+	}
+	return
+}
+
 func repositoryStarsByLanguagePipelines(ownerType string) (pipelines []model.RankPipeline) {
 	for _, language := range util.Languages() {
 		pipelines = append(pipelines, model.RankPipeline{
@@ -404,6 +456,43 @@ func repositoryStarsByLanguagePipelines(ownerType string) (pipelines []model.Ran
 				},
 			},
 			Tags: []string{ownerType, "repository", "stars", language},
+		})
+	}
+	return
+}
+
+func repositoryWatchersByLanguagePipelines(ownerType string) (pipelines []model.RankPipeline) {
+	for _, language := range util.Languages() {
+		pipelines = append(pipelines, model.RankPipeline{
+			Pipeline: mongo.Pipeline{
+				bson.D{
+					{"$match", bson.D{
+						{"type", ownerType},
+					}},
+				},
+				bson.D{
+					{"$unwind", "$repositories"},
+				},
+				bson.D{
+					{"$match", bson.D{
+						{"repositories.primary_language.name", language},
+					}},
+				},
+				bson.D{
+					{"$group", bson.D{
+						{"_id", "$_id"},
+						{"total_count", bson.D{
+							{"$sum", "$repositories.watchers.total_count"},
+						}},
+					}},
+				},
+				bson.D{
+					{"$sort", bson.D{
+						{"total_count", -1},
+					}},
+				},
+			},
+			Tags: []string{ownerType, "repository", "watchers", language},
 		})
 	}
 	return
