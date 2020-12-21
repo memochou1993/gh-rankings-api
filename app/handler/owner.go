@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -214,19 +215,21 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 }
 
 func (o *OwnerHandler) Rank() {
-	// TODO: use goroutine and waiting group
+	wg := sync.WaitGroup{}
+	wg.Add(6)
 	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch + 1
-	o.RankFollowers(batch, typeUser)
-	o.RankGistStars(batch, typeUser)
-	o.RankRepositoryStars(batch, typeUser)
-	o.RankRepositoryStarsByLanguage(batch, typeUser)
-	o.RankRepositoryStars(batch, typeOrganization)
-	o.RankRepositoryStarsByLanguage(batch, typeOrganization)
+	go o.RankFollowers(&wg, batch, typeUser)
+	go o.RankGistStars(&wg, batch, typeUser)
+	go o.RankRepositoryStars(&wg, batch, typeUser)
+	go o.RankRepositoryStarsByLanguage(&wg, batch, typeUser)
+	go o.RankRepositoryStars(&wg, batch, typeOrganization)
+	go o.RankRepositoryStarsByLanguage(&wg, batch, typeOrganization)
+	wg.Wait()
 	o.BatchModel.Update(o.OwnerModel.Name())
 	o.ClearRanks(batch - 1)
 }
 
-func (o *OwnerHandler) RankFollowers(batch int, t string) {
+func (o *OwnerHandler) RankFollowers(wg *sync.WaitGroup, batch int, t string) {
 	logger.Info("Ranking user followers...")
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -251,9 +254,10 @@ func (o *OwnerHandler) RankFollowers(batch int, t string) {
 	tags := []string{t, "followers"}
 	count := o.UpdateRanks(pipeline, batch, tags)
 	logger.Success(fmt.Sprintf("Ranked %d %s followers!", count, t))
+	wg.Done()
 }
 
-func (o *OwnerHandler) RankGistStars(batch int, t string) {
+func (o *OwnerHandler) RankGistStars(wg *sync.WaitGroup, batch int, t string) {
 	logger.Info("Ranking user gist stars...")
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -278,9 +282,10 @@ func (o *OwnerHandler) RankGistStars(batch int, t string) {
 	tags := []string{t, "gist_stars"}
 	count := o.UpdateRanks(pipeline, batch, tags)
 	logger.Success(fmt.Sprintf("Ranked %d %s gist stars!", count, t))
+	wg.Done()
 }
 
-func (o *OwnerHandler) RankRepositoryStars(batch int, t string) {
+func (o *OwnerHandler) RankRepositoryStars(wg *sync.WaitGroup, batch int, t string) {
 	logger.Info(fmt.Sprintf("Ranking %s repository stars...", t))
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -305,9 +310,10 @@ func (o *OwnerHandler) RankRepositoryStars(batch int, t string) {
 	tags := []string{t, "repository_stars"}
 	count := o.UpdateRanks(pipeline, batch, tags)
 	logger.Success(fmt.Sprintf("Ranked %d %s repository stars!", count, t))
+	wg.Done()
 }
 
-func (o *OwnerHandler) RankRepositoryStarsByLanguage(batch int, t string) {
+func (o *OwnerHandler) RankRepositoryStarsByLanguage(wg *sync.WaitGroup, batch int, t string) {
 	logger.Info(fmt.Sprintf("Ranking %s repository stars by language...", t))
 	count := 0
 	for _, language := range util.Languages() {
@@ -343,6 +349,7 @@ func (o *OwnerHandler) RankRepositoryStarsByLanguage(batch int, t string) {
 		count += o.UpdateRanks(pipeline, batch, tags)
 	}
 	logger.Success(fmt.Sprintf("Ranked %d %s repository stars by language!", count, t))
+	wg.Done()
 }
 
 func (o *OwnerHandler) UpdateRanks(pipeline []bson.D, batch int, tags []string) int {
