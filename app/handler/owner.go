@@ -176,7 +176,9 @@ func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
 
 	filter := bson.D{{"_id", owner.Login}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
-	o.OwnerModel.Model.Collection().FindOneAndUpdate(ctx, filter, update)
+	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
+		log.Fatalln(err.Error())
+	}
 	logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
 }
 
@@ -204,7 +206,9 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 
 	filter := bson.D{{"_id", owner.Login}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
-	o.OwnerModel.Model.Collection().FindOneAndUpdate(ctx, filter, update)
+	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
+		log.Fatalln(err.Error())
+	}
 	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type))
 }
 

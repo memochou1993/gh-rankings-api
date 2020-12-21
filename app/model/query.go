@@ -18,8 +18,8 @@ type Payload struct {
 type Query struct {
 	Schema string
 	Field  string
-	OwnerArguments
 	SearchArguments
+	OwnerArguments
 	GistsArguments
 	RepositoriesArguments
 }
@@ -27,8 +27,8 @@ type Query struct {
 func (q Query) String() string {
 	query := q.Schema
 	query = strings.Replace(query, "<Field>", q.Field, 1)
-	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
 	query = strings.Replace(query, "<SearchArguments>", util.ParseStruct(q.SearchArguments, ","), 1)
+	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
 	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
 	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 
@@ -40,15 +40,15 @@ func (q Query) String() string {
 	return string(b)
 }
 
-type OwnerArguments struct {
-	Login string `json:"login,omitempty"`
-}
-
 type SearchArguments struct {
 	After string `json:"after,omitempty"`
 	First int    `json:"first,omitempty"`
 	Query string `json:"query,omitempty"`
 	Type  string `json:"type,omitempty"`
+}
+
+type OwnerArguments struct {
+	Login string `json:"login,omitempty"`
 }
 
 type GistsArguments struct {
