@@ -54,7 +54,7 @@ func (o *OwnerHandler) Travel(from *time.Time, q *model.Query) error {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.SearchQuery(*from), " "))
+	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(searchQuery(*from), " "))
 
 	var owners []model.Owner
 	if err := o.FetchOwners(q, &owners); err != nil {
@@ -68,7 +68,7 @@ func (o *OwnerHandler) Travel(from *time.Time, q *model.Query) error {
 
 func (o *OwnerHandler) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	res := model.OwnerResponse{}
-	if err := o.Fetch(*q, &res); err != nil {
+	if err := fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
@@ -94,7 +94,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 
 	var models []mongo.WriteModel
 	for _, owner := range owners {
-		owner.Type = o.Type(owner)
+		owner.Type = ownerType(owner)
 		filter := bson.D{{"_id", owner.Login}}
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
@@ -131,7 +131,7 @@ func (o *OwnerHandler) Update() error {
 			log.Fatalln(err.Error())
 		}
 
-		if o.Type(owner) == typeUser {
+		if ownerType(owner) == typeUser {
 			var gists []model.Gist
 			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.Login)
 			if err := o.FetchGists(gistsQuery, &gists); err != nil {
@@ -141,7 +141,7 @@ func (o *OwnerHandler) Update() error {
 		}
 
 		var repositories []model.Repository
-		repositoriesQuery.Field = o.Type(owner)
+		repositoriesQuery.Field = ownerType(owner)
 		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.Login)
 		if err := o.FetchRepositories(repositoriesQuery, &repositories); err != nil {
 			return err
@@ -154,7 +154,7 @@ func (o *OwnerHandler) Update() error {
 
 func (o *OwnerHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	res := model.OwnerResponse{}
-	if err := o.Fetch(*q, &res); err != nil {
+	if err := fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Owner.Gists.Edges {
@@ -184,7 +184,7 @@ func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
 
 func (o *OwnerHandler) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
 	res := model.OwnerResponse{}
-	if err := o.Fetch(*q, &res); err != nil {
+	if err := fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Owner.Repositories.Edges {
@@ -214,16 +214,16 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 
 func (o *OwnerHandler) Rank() {
 	pipelines := []model.RankPipeline{
-		model.FollowersPipeline(typeUser),
-		model.GistForksPipeline(typeUser),
-		model.GistStarsPipeline(typeUser),
-		model.RepositoryForksPipeline(typeUser),
-		model.RepositoryStarsPipeline(typeUser),
-		model.RepositoryForksPipeline(typeOrganization),
-		model.RepositoryStarsPipeline(typeOrganization),
+		followersPipeline(typeUser),
+		gistForksPipeline(typeUser),
+		gistStarsPipeline(typeUser),
+		repositoryForksPipeline(typeUser),
+		repositoryStarsPipeline(typeUser),
+		repositoryForksPipeline(typeOrganization),
+		repositoryStarsPipeline(typeOrganization),
 	}
-	pipelines = append(pipelines, model.RepositoryStarsPipelinesByLanguage(typeUser)...)
-	pipelines = append(pipelines, model.RepositoryStarsPipelinesByLanguage(typeOrganization)...)
+	pipelines = append(pipelines, repositoryStarsByLanguagePipelines(typeUser)...)
+	pipelines = append(pipelines, repositoryStarsByLanguagePipelines(typeOrganization)...)
 
 	wg := sync.WaitGroup{}
 	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch
@@ -300,7 +300,23 @@ func (o *OwnerHandler) PullRanks(batch int) {
 	}
 }
 
-func (o *OwnerHandler) Fetch(q model.Query, res *model.OwnerResponse) (err error) {
+func (o *OwnerHandler) CreateIndexes() {
+	database.CreateIndexes(o.OwnerModel.Model.Name(), []string{
+		"created_at",
+		"name",
+		"ranks.tags",
+	})
+}
+
+func ownerType(owner model.Owner) (ownerType string) {
+	ownerType = typeUser
+	if owner.Followers == nil {
+		ownerType = typeOrganization
+	}
+	return
+}
+
+func fetch(q model.Query, res *model.OwnerResponse) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -310,23 +326,10 @@ func (o *OwnerHandler) Fetch(q model.Query, res *model.OwnerResponse) (err error
 	for _, err := range res.Errors {
 		return err
 	}
-
-	return nil
+	return
 }
 
-func (o *OwnerHandler) CreateIndexes() {
-	if len(database.Indexes(o.OwnerModel.Model.Name())) > 0 {
-		return
-	}
-
-	database.CreateIndexes(o.OwnerModel.Model.Name(), []string{
-		"created_at",
-		"name",
-		"ranks.tags",
-	})
-}
-
-func (o *OwnerHandler) SearchQuery(from time.Time) model.SearchQuery {
+func searchQuery(from time.Time) model.SearchQuery {
 	return model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
@@ -334,10 +337,74 @@ func (o *OwnerHandler) SearchQuery(from time.Time) model.SearchQuery {
 	}
 }
 
-func (o *OwnerHandler) Type(owner model.Owner) (t string) {
-	t = typeUser
-	if owner.Followers == nil {
-		t = typeOrganization
+func followersPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "followers"),
+		Tags:     []string{ownerType, "followers"},
+	}
+}
+
+func gistForksPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "gists.forks"),
+		Tags:     []string{ownerType, "gist", "forks"},
+	}
+}
+
+func gistStarsPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "gists.stargazers"),
+		Tags:     []string{ownerType, "gist", "stars"},
+	}
+}
+
+func repositoryForksPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "repositories.forks"),
+		Tags:     []string{ownerType, "repository", "forks"},
+	}
+}
+
+func repositoryStarsPipeline(ownerType string) model.RankPipeline {
+	return model.RankPipeline{
+		Pipeline: model.TotalCountPipeline(ownerType, "repositories.stargazers"),
+		Tags:     []string{ownerType, "repository", "stars"},
+	}
+}
+
+func repositoryStarsByLanguagePipelines(ownerType string) (pipelines []model.RankPipeline) {
+	for _, language := range util.Languages() {
+		pipelines = append(pipelines, model.RankPipeline{
+			Pipeline: mongo.Pipeline{
+				bson.D{
+					{"$match", bson.D{
+						{"type", ownerType},
+					}},
+				},
+				bson.D{
+					{"$unwind", "$repositories"},
+				},
+				bson.D{
+					{"$match", bson.D{
+						{"repositories.primary_language.name", language},
+					}},
+				},
+				bson.D{
+					{"$group", bson.D{
+						{"_id", "$_id"},
+						{"total_count", bson.D{
+							{"$sum", "$repositories.stargazers.total_count"},
+						}},
+					}},
+				},
+				bson.D{
+					{"$sort", bson.D{
+						{"total_count", -1},
+					}},
+				},
+			},
+			Tags: []string{ownerType, "repository", "stars", language},
+		})
 	}
 	return
 }
