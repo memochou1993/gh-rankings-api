@@ -1,0 +1,40 @@
+query SearchRepositories {
+  search(<SearchArguments>) {
+    edges {
+      cursor
+      node {
+        ... on Repository {
+          forks {
+            totalCount
+          }
+          name
+          nameWithOwner
+          owner {
+            login
+          }
+          primaryLanguage {
+            name
+          }
+          stargazers {
+            totalCount
+          }
+          watchers {
+            totalCount
+          }
+        }
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+  rateLimit {
+    cost
+    limit
+    nodeCount
+    remaining
+    resetAt
+    used
+  }
+}

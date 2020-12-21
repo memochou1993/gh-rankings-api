@@ -116,9 +116,9 @@ func (e Error) Error() string {
 	return e.Message
 }
 
-func NewOwnersQuery() *Query {
+func NewSearchOwnersQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("owners"),
+		Schema: ReadQuery("search_owners"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",

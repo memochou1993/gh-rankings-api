@@ -1,4 +1,4 @@
-query Owners {
+query SearchOwners {
   search(<SearchArguments>) {
     edges {
       cursor

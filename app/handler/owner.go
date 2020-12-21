@@ -44,7 +44,7 @@ func (o *OwnerHandler) Init(starter chan<- struct{}) {
 func (o *OwnerHandler) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.NewOwnersQuery()
+	q := model.NewSearchOwnersQuery()
 
 	return o.Travel(&from, q)
 }
