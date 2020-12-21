@@ -40,27 +40,6 @@ func (q Query) String() string {
 	return string(b)
 }
 
-func NewGistsQuery() *Query {
-	return &Query{
-		Schema: ReadQuery("user_gists"),
-		GistsArguments: GistsArguments{
-			First:   100,
-			OrderBy: "{field:CREATED_AT,direction:DESC}",
-		},
-	}
-}
-
-func NewOwnerRepositoriesQuery() *Query {
-	return &Query{
-		Schema: ReadQuery("owner_repositories"),
-		RepositoriesArguments: RepositoriesArguments{
-			First:             100,
-			OrderBy:           "{field:CREATED_AT,direction:DESC}",
-			OwnerAffiliations: "OWNER",
-		},
-	}
-}
-
 type OwnerArguments struct {
 	Login string `json:"login,omitempty"`
 }
@@ -135,6 +114,37 @@ type Error struct {
 
 func (e Error) Error() string {
 	return e.Message
+}
+
+func NewOwnersQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("owners"),
+		SearchArguments: SearchArguments{
+			First: 100,
+			Type:  "USER",
+		},
+	}
+}
+
+func NewOwnerGistsQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("owner_gists"),
+		GistsArguments: GistsArguments{
+			First:   100,
+			OrderBy: "{field:CREATED_AT,direction:ASC}",
+		},
+	}
+}
+
+func NewOwnerRepositoriesQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("owner_repositories"),
+		RepositoriesArguments: RepositoriesArguments{
+			First:             100,
+			OrderBy:           "{field:CREATED_AT,direction:ASC}",
+			OwnerAffiliations: "OWNER",
+		},
+	}
 }
 
 func ReadQuery(filename string) string {

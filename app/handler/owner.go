@@ -43,15 +43,9 @@ func (o *OwnerHandler) Init(starter chan<- struct{}) {
 func (o *OwnerHandler) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.Query{
-		Schema: model.ReadQuery("owners"),
-		SearchArguments: model.SearchArguments{
-			First: 100,
-			Type:  "USER",
-		},
-	}
+	q := model.NewOwnersQuery()
 
-	return o.Travel(&from, &q)
+	return o.Travel(&from, q)
 }
 
 func (o *OwnerHandler) Travel(from *time.Time, q *model.Query) error {
@@ -128,7 +122,7 @@ func (o *OwnerHandler) Update() error {
 		return nil
 	}
 	logger.Info("Updating user gists...")
-	gistsQuery := model.NewGistsQuery()
+	gistsQuery := model.NewOwnerGistsQuery()
 	logger.Info("Updating owner repositories...")
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
 	for cursor.Next(ctx) {
@@ -444,7 +438,7 @@ func (o *OwnerHandler) SearchQuery(from time.Time) model.SearchQuery {
 	return model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
-		Sort:    "joined",
+		Sort:    "joined-asc",
 	}
 }
 
