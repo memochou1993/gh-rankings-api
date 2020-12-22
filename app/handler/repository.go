@@ -29,11 +29,10 @@ func NewRepositoryHandler() *RepositoryHandler {
 	}
 }
 
-func (r *RepositoryHandler) Init(starter chan<- struct{}) {
+func (r *RepositoryHandler) Init() {
 	logger.Info("Initializing repository collection...")
 	r.CreateIndexes()
 	logger.Success("Repository collection initialized!")
-	starter <- struct{}{}
 }
 
 func (r *RepositoryHandler) Collect() error {

@@ -34,11 +34,10 @@ func NewOwnerHandler() *OwnerHandler {
 	}
 }
 
-func (o *OwnerHandler) Init(starter chan<- struct{}) {
+func (o *OwnerHandler) Init() {
 	logger.Info("Initializing owner collection...")
 	o.CreateIndexes()
 	logger.Success("Owner collection initialized!")
-	starter <- struct{}{}
 }
 
 func (o *OwnerHandler) Collect() error {

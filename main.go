@@ -16,7 +16,7 @@ func init() {
 
 func main() {
 	h := handler.NewHandler()
-	h.Build()
+	h.Init()
 
 	time.Sleep(6 * time.Hour) // FIXME
 }
