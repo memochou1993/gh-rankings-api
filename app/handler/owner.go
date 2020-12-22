@@ -256,19 +256,22 @@ func (o *OwnerHandler) PushRanks(wg *sync.WaitGroup, batch int, pipeline model.R
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		ownerRank := model.OwnerRank{}
-		if err := cursor.Decode(&ownerRank); err != nil {
+		record := struct {
+			ID         string `bson:"_id"`
+			TotalCount int    `bson:"total_count"`
+		}{}
+		if err := cursor.Decode(&record); err != nil {
 			log.Fatalln(err.Error())
 		}
 
 		rank := model.Rank{
 			Rank:       count + 1,
-			TotalCount: ownerRank.TotalCount,
+			TotalCount: record.TotalCount,
 			Tags:       pipeline.Tags,
 			Batch:      batch,
 			CreatedAt:  time.Now(),
 		}
-		filter := bson.D{{"_id", ownerRank.Login}}
+		filter := bson.D{{"_id", record.ID}}
 		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {

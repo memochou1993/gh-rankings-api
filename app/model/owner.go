@@ -53,11 +53,6 @@ type OwnerResponse struct {
 	Errors []Error `json:"errors"`
 }
 
-type OwnerRank struct {
-	Login      string `bson:"_id"` // TODO: change to ID
-	TotalCount int    `bson:"total_count"`
-}
-
 type OwnerModel struct {
 	*Model
 }

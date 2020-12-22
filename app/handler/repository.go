@@ -137,19 +137,22 @@ func (r *RepositoryHandler) PushRanks(wg *sync.WaitGroup, batch int, pipeline mo
 	var models []mongo.WriteModel
 	count := 0
 	for ; cursor.Next(ctx); count++ {
-		repositoryRank := model.RepositoryRank{}
-		if err := cursor.Decode(&repositoryRank); err != nil {
+		record := struct {
+			ID         string `bson:"_id"`
+			TotalCount int    `bson:"total_count"`
+		}{}
+		if err := cursor.Decode(&record); err != nil {
 			log.Fatalln(err.Error())
 		}
 
 		rank := model.Rank{
 			Rank:       count + 1,
-			TotalCount: repositoryRank.TotalCount,
+			TotalCount: record.TotalCount,
 			Tags:       pipeline.Tags,
 			Batch:      batch,
 			CreatedAt:  time.Now(),
 		}
-		filter := bson.D{{"_id", repositoryRank.NameWithOwner}}
+		filter := bson.D{{"_id", record.ID}}
 		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {

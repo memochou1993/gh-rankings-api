@@ -32,11 +32,6 @@ type RepositoryResponse struct {
 	Errors []Error `json:"errors"`
 }
 
-type RepositoryRank struct {
-	NameWithOwner string `bson:"_id"` // TODO: change to ID
-	TotalCount    int    `bson:"total_count"`
-}
-
 type RepositoryModel struct {
 	*Model
 }
