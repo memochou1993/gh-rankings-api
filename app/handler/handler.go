@@ -23,8 +23,7 @@ func (h *Handler) Build() {
 	h.RepositoryHandler.Init(h.starter)
 	<-h.starter
 	go h.collectRepositories()
-	// TODO
-	// go h.rankRepositories()
+	go h.rankRepositories()
 	h.OwnerHandler.Init(h.starter)
 	<-h.starter
 	go h.collectOwners()
@@ -41,14 +40,12 @@ func (h *Handler) collectRepositories() {
 	}
 }
 
-// func (h *Handler) rankRepositories() {
-// 	t := time.NewTicker(10 * time.Minute) // FIXME
-// 	for ; true; <-t.C {
-// 		if err := h.RepositoryHandler.Rank(); err != nil {
-// 			logger.Error(err.Error())
-// 		}
-// 	}
-// }
+func (h *Handler) rankRepositories() {
+	t := time.NewTicker(10 * time.Minute) // FIXME
+	for ; true; <-t.C {
+		h.RepositoryHandler.Rank()
+	}
+}
 
 func (h *Handler) collectOwners() {
 	t := time.NewTicker(10 * time.Minute) // FIXME

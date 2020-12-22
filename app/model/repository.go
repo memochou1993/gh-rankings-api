@@ -33,7 +33,7 @@ type RepositoryResponse struct {
 }
 
 type RepositoryRank struct {
-	NameWithOwner string `bson:"_id"`
+	NameWithOwner string `bson:"_id"` // TODO: change to ID
 	TotalCount    int    `bson:"total_count"`
 }
 

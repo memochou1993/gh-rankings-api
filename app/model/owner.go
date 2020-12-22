@@ -54,7 +54,7 @@ type OwnerResponse struct {
 }
 
 type OwnerRank struct {
-	Login      string `bson:"_id"`
+	Login      string `bson:"_id"` // TODO: change to ID
 	TotalCount int    `bson:"total_count"`
 }
 

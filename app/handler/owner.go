@@ -214,7 +214,7 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 }
 
 func (o *OwnerHandler) Rank() {
-	logger.Info("Executing rank pipelines...")
+	logger.Info("Executing owner rank pipelines...")
 	pipelines := []model.RankPipeline{
 		o.rankPipeline(typeUser, "followers"),
 		o.rankPipeline(typeUser, "gists.forks"),
@@ -240,7 +240,7 @@ func (o *OwnerHandler) Rank() {
 		go o.PushRanks(&wg, batch+1, pipeline)
 	}
 	wg.Wait()
-	logger.Success(fmt.Sprintf("Executed %d rank pipelines!", len(pipelines)))
+	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 
 	o.BatchModel.Update(o.OwnerModel.Name())
 	o.PullRanks(batch)
