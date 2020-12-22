@@ -67,8 +67,10 @@ type RepositoriesArguments struct {
 type SearchQuery struct {
 	Created   string `json:"created,omitempty"`
 	Followers string `json:"followers,omitempty"`
+	Fork      string `json:"fork,omitempty"`
 	Repos     string `json:"repos,omitempty"`
 	Sort      string `json:"sort,omitempty"`
+	Stars     string `json:"stars,omitempty"`
 	Type      string `json:"type,omitempty"`
 }
 
@@ -114,6 +116,16 @@ type Error struct {
 
 func (e Error) Error() string {
 	return e.Message
+}
+
+func NewRepositoriesQuery() *Query {
+	return &Query{
+		Schema: ReadQuery("search_repositories"),
+		SearchArguments: SearchArguments{
+			First: 100,
+			Type:  "REPOSITORY",
+		},
+	}
 }
 
 func NewSearchOwnersQuery() *Query {

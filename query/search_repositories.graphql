@@ -4,11 +4,13 @@ query SearchRepositories {
       cursor
       node {
         ... on Repository {
+          createdAt
           forks {
             totalCount
           }
           name
           nameWithOwner
+          openGraphImageUrl
           owner {
             login
           }

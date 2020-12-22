@@ -1,10 +1,16 @@
 package model
 
+import "time"
+
 type Repository struct {
-	Forks           Directory `json:"forks" bson:"forks"`
-	Name            string    `json:"name" bson:"name"`
-	NameWithOwner   string    `json:"nameWithOwner" bson:"_id"`
-	Owner           `json:"owner" bson:"owner"`
+	CreatedAt         time.Time `json:"createdAt" bson:"created_at"`
+	Forks             Directory `json:"forks" bson:"forks"`
+	Name              string    `json:"name" bson:"name"`
+	NameWithOwner     string    `json:"nameWithOwner" bson:"_id"`
+	OpenGraphImageUrl string    `json:"openGraphImageUrl" bson:"open_graph_image_url"`
+	Owner             struct {
+		Login string `json:"login" bson:"login"`
+	} `json:"owner" bson:"owner"`
 	PrimaryLanguage struct {
 		Name string `json:"name" bson:"name"`
 	} `json:"primaryLanguage" bson:"primary_language"`
