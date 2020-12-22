@@ -6,6 +6,7 @@ import (
 )
 
 type Interface interface {
+	Name() string
 	Collection() *mongo.Collection
 }
 

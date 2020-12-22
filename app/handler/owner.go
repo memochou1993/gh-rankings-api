@@ -233,82 +233,16 @@ func (o *OwnerHandler) Rank() {
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "watchers")...)
 
 	wg := sync.WaitGroup{}
-	batch := o.BatchModel.Get(o.OwnerModel.Name()).Batch
+	batch := o.BatchModel.Get(o.OwnerModel).Batch
+	wg.Add(len(pipelines))
 	for _, pipeline := range pipelines {
-		wg.Add(1)
-		go o.PushRanks(&wg, batch+1, pipeline)
+		go model.PushRanks(o.OwnerModel, batch+1, pipeline, &wg)
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 
-	o.BatchModel.Update(o.OwnerModel.Name())
-	o.PullRanks(batch)
-}
-
-func (o *OwnerHandler) PushRanks(wg *sync.WaitGroup, batch int, pipeline model.RankPipeline) int {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	cursor := database.Aggregate(ctx, o.OwnerModel.Name(), pipeline.Pipeline)
-	defer database.CloseCursor(ctx, cursor)
-
-	var models []mongo.WriteModel
-	count := 0
-	for ; cursor.Next(ctx); count++ {
-		record := struct {
-			ID         string `bson:"_id"`
-			TotalCount int    `bson:"total_count"`
-		}{}
-		if err := cursor.Decode(&record); err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		rank := model.Rank{
-			Rank:       count + 1,
-			TotalCount: record.TotalCount,
-			Tags:       pipeline.Tags,
-			Batch:      batch,
-			CreatedAt:  time.Now(),
-		}
-		filter := bson.D{{"_id", record.ID}}
-		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
-		if cursor.RemainingBatchLength() == 0 {
-			if _, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models); err != nil {
-				log.Fatalln(err.Error())
-			}
-			models = models[:0]
-		}
-	}
-	wg.Done()
-
-	return count
-}
-
-func (o *OwnerHandler) PullRanks(batch int) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	cursor := database.All(ctx, o.OwnerModel.Name())
-	defer database.CloseCursor(ctx, cursor)
-
-	var models []mongo.WriteModel
-	for cursor.Next(ctx) {
-		owner := model.Owner{}
-		if err := cursor.Decode(&owner); err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		filter := bson.D{{"_id", owner.ID()}}
-		update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
-		if cursor.RemainingBatchLength() == 0 {
-			if _, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models); err != nil {
-				log.Fatalln(err.Error())
-			}
-			models = models[:0]
-		}
-	}
+	o.BatchModel.Update(o.OwnerModel)
+	model.PullRanks(o.OwnerModel, batch)
 }
 
 func (o *OwnerHandler) CreateIndexes() {

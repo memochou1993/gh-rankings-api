@@ -114,82 +114,16 @@ func (r *RepositoryHandler) Rank() {
 	}
 
 	wg := sync.WaitGroup{}
-	batch := r.BatchModel.Get(r.RepositoryModel.Name()).Batch
+	batch := r.BatchModel.Get(r.RepositoryModel).Batch
+	wg.Add(len(pipelines))
 	for _, pipeline := range pipelines {
-		wg.Add(1)
-		go r.PushRanks(&wg, batch+1, pipeline)
+		go model.PushRanks(r.RepositoryModel, batch+1, pipeline, &wg)
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 
-	r.BatchModel.Update(r.RepositoryModel.Name())
-	r.PullRanks(batch)
-}
-
-func (r *RepositoryHandler) PushRanks(wg *sync.WaitGroup, batch int, pipeline model.RankPipeline) int {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	cursor := database.Aggregate(ctx, r.RepositoryModel.Name(), pipeline.Pipeline)
-	defer database.CloseCursor(ctx, cursor)
-
-	var models []mongo.WriteModel
-	count := 0
-	for ; cursor.Next(ctx); count++ {
-		record := struct {
-			ID         string `bson:"_id"`
-			TotalCount int    `bson:"total_count"`
-		}{}
-		if err := cursor.Decode(&record); err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		rank := model.Rank{
-			Rank:       count + 1,
-			TotalCount: record.TotalCount,
-			Tags:       pipeline.Tags,
-			Batch:      batch,
-			CreatedAt:  time.Now(),
-		}
-		filter := bson.D{{"_id", record.ID}}
-		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
-		if cursor.RemainingBatchLength() == 0 {
-			if _, err := r.RepositoryModel.Model.Collection().BulkWrite(ctx, models); err != nil {
-				log.Fatalln(err.Error())
-			}
-			models = models[:0]
-		}
-	}
-	wg.Done()
-
-	return count
-}
-
-func (r *RepositoryHandler) PullRanks(batch int) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	cursor := database.All(ctx, r.RepositoryModel.Name())
-	defer database.CloseCursor(ctx, cursor)
-
-	var models []mongo.WriteModel
-	for cursor.Next(ctx) {
-		repository := model.Repository{}
-		if err := cursor.Decode(&repository); err != nil {
-			log.Fatalln(err.Error())
-		}
-
-		filter := bson.D{{"_id", repository.ID()}}
-		update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
-		if cursor.RemainingBatchLength() == 0 {
-			if _, err := r.RepositoryModel.Model.Collection().BulkWrite(ctx, models); err != nil {
-				log.Fatalln(err.Error())
-			}
-			models = models[:0]
-		}
-	}
+	r.BatchModel.Update(r.RepositoryModel)
+	model.PullRanks(r.RepositoryModel, batch)
 }
 
 func (r *RepositoryHandler) CreateIndexes() {

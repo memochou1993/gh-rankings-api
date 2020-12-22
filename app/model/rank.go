@@ -1,7 +1,13 @@
 package model
 
 import (
+	"context"
+	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/github-rankings/logger"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
+	"sync"
 	"time"
 )
 
@@ -16,4 +22,53 @@ type Rank struct {
 type RankPipeline struct {
 	Pipeline mongo.Pipeline
 	Tags     []string
+}
+
+func PullRanks(model Interface, batch int) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	filter := bson.D{}
+	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
+	if _, err := database.Collection(model.Name()).UpdateMany(ctx, filter, update); err != nil {
+		logger.Error(err)
+	}
+}
+
+func PushRanks(model Interface, batch int, pipeline RankPipeline, wg *sync.WaitGroup) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	defer wg.Done()
+
+	cursor := database.Aggregate(ctx, model.Name(), pipeline.Pipeline)
+	defer database.CloseCursor(ctx, cursor)
+
+	var models []mongo.WriteModel
+	for count := 0; cursor.Next(ctx); count++ {
+		record := struct {
+			ID         string `bson:"_id"`
+			TotalCount int    `bson:"total_count"`
+		}{}
+		if err := cursor.Decode(&record); err != nil {
+			log.Fatalln(err.Error())
+		}
+
+		rank := Rank{
+			Rank:       count + 1,
+			TotalCount: record.TotalCount,
+			Tags:       pipeline.Tags,
+			Batch:      batch,
+			CreatedAt:  time.Now(),
+		}
+		filter := bson.D{{"_id", record.ID}}
+		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
+		if cursor.RemainingBatchLength() == 0 {
+			if _, err := model.Collection().BulkWrite(ctx, models); err != nil {
+				log.Fatalln(err.Error())
+			}
+			models = models[:0]
+		}
+	}
 }
