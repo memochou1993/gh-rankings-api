@@ -112,6 +112,9 @@ func (r *RepositoryHandler) Rank() {
 		r.rankPipeline("stargazers"),
 		r.rankPipeline("watchers"),
 	}
+	pipelines = append(pipelines, r.rankPipelinesByLanguage("forks")...)
+	pipelines = append(pipelines, r.rankPipelinesByLanguage("stargazers")...)
+	pipelines = append(pipelines, r.rankPipelinesByLanguage("watchers")...)
 
 	wg := sync.WaitGroup{}
 	batch := r.BatchModel.Get(r.RepositoryModel).Batch
@@ -176,4 +179,33 @@ func (r *RepositoryHandler) rankPipeline(object string) model.RankPipeline {
 		},
 		Tags: tags,
 	}
+}
+
+func (r *RepositoryHandler) rankPipelinesByLanguage(object string) (pipelines []model.RankPipeline) {
+	for _, language := range util.Languages() {
+		pipelines = append(pipelines, model.RankPipeline{
+			Pipeline: mongo.Pipeline{
+				bson.D{
+					{"$match", bson.D{
+						{"primary_language.name", language},
+					}},
+				},
+				bson.D{
+					{"$project", bson.D{
+						{"_id", "$_id"},
+						{"total_count", bson.D{
+							{"$sum", fmt.Sprintf("$%s.total_count", object)},
+						}},
+					}},
+				},
+				bson.D{
+					{"$sort", bson.D{
+						{"total_count", -1},
+					}},
+				},
+			},
+			Tags: []string{"repository", object, language},
+		})
+	}
+	return
 }
