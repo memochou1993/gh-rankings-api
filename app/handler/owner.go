@@ -35,9 +35,9 @@ func NewOwnerHandler() *OwnerHandler {
 }
 
 func (o *OwnerHandler) Init(starter chan<- struct{}) {
-	logger.Info("Initializing owners collection...")
+	logger.Info("Initializing owner collection...")
 	o.CreateIndexes()
-	logger.Success("Owners collection initialized!")
+	logger.Success("Owner collection initialized!")
 	starter <- struct{}{}
 }
 
@@ -227,10 +227,10 @@ func (o *OwnerHandler) Rank() {
 		o.rankPipeline(typeOrganization, "repositories.watchers"),
 	}
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeUser, "forks")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "forks")...)
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeUser, "stargazers")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "stargazers")...)
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeUser, "watchers")...)
+	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "forks")...)
+	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "stargazers")...)
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "watchers")...)
 
 	wg := sync.WaitGroup{}

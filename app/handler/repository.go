@@ -28,9 +28,9 @@ func NewRepositoryHandler() *RepositoryHandler {
 }
 
 func (r *RepositoryHandler) Init(starter chan<- struct{}) {
-	logger.Info("Initializing repositories collection...")
+	logger.Info("Initializing repository collection...")
 	r.CreateIndexes()
-	logger.Success("Repositories collection initialized!")
+	logger.Success("Repository collection initialized!")
 	starter <- struct{}{}
 }
 
