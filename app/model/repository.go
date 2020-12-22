@@ -18,6 +18,10 @@ type Repository struct {
 	Watchers   Directory `json:"watchers" bson:"watchers"`
 }
 
+func (r Repository) ID() string {
+	return r.NameWithOwner
+}
+
 type RepositoryResponse struct {
 	Data struct {
 		Search struct {

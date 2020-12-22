@@ -96,7 +96,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 	var models []mongo.WriteModel
 	for _, owner := range owners {
 		owner.Type = o.ownerType(owner)
-		filter := bson.D{{"_id", owner.Login}}
+		filter := bson.D{{"_id", owner.ID()}}
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
@@ -134,7 +134,7 @@ func (o *OwnerHandler) Update() error {
 
 		if o.ownerType(owner) == typeUser {
 			var gists []model.Gist
-			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.Login)
+			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 			if err := o.FetchGists(gistsQuery, &gists); err != nil {
 				return err
 			}
@@ -143,7 +143,7 @@ func (o *OwnerHandler) Update() error {
 
 		var repositories []model.Repository
 		repositoriesQuery.Field = o.ownerType(owner)
-		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.Login)
+		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 		if err := o.FetchRepositories(repositoriesQuery, &repositories); err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"_id", owner.Login}}
+	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
 	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
 		log.Fatalln(err.Error())
@@ -205,7 +205,7 @@ func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []mode
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.D{{"_id", owner.Login}}
+	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
 		log.Fatalln(err.Error())
@@ -300,7 +300,7 @@ func (o *OwnerHandler) PullRanks(batch int) {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"_id", owner.Login}}
+		filter := bson.D{{"_id", owner.ID()}}
 		update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {

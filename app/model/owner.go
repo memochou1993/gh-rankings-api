@@ -17,6 +17,10 @@ type Owner struct {
 	Type         string       `json:"type" bson:"type"`
 }
 
+func (o Owner) ID() string {
+	return o.Login
+}
+
 type OwnerResponse struct {
 	Data struct {
 		Search struct {

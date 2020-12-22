@@ -90,7 +90,7 @@ func (r *RepositoryHandler) StoreRepositories(repositories []model.Repository) {
 
 	var models []mongo.WriteModel
 	for _, repository := range repositories {
-		filter := bson.D{{"_id", repository.NameWithOwner}}
+		filter := bson.D{{"_id", repository.ID()}}
 		update := bson.D{{"$set", repository}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
@@ -181,7 +181,7 @@ func (r *RepositoryHandler) PullRanks(batch int) {
 			log.Fatalln(err.Error())
 		}
 
-		filter := bson.D{{"_id", repository.NameWithOwner}}
+		filter := bson.D{{"_id", repository.ID()}}
 		update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {
