@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -41,7 +42,5 @@ func (b *BatchModel) Update(model Interface) {
 	filter := bson.D{{"model", model.Name()}}
 	update := bson.D{{"$inc", bson.D{{"batch", 1}}}}
 	opts := options.Update().SetUpsert(true)
-	if _, err := b.Collection().UpdateOne(context.Background(), filter, update, opts); err != nil {
-		log.Fatalln(err.Error())
-	}
+	database.UpdateOne(b.Name(), filter, update, opts)
 }

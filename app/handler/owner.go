@@ -166,12 +166,9 @@ func (o *OwnerHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
 }
 
 func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
-	ctx := context.Background()
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
-	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
-		log.Fatalln(err.Error())
-	}
+	database.UpdateOne(o.OwnerModel.Name(), filter, update)
 	logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
 }
 
@@ -194,12 +191,9 @@ func (o *OwnerHandler) FetchRepositories(q *model.Query, repositories *[]model.R
 }
 
 func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []model.Repository) {
-	ctx := context.Background()
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
-	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
-		log.Fatalln(err.Error())
-	}
+	database.UpdateOne(o.OwnerModel.Name(), filter, update)
 	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type))
 }
 

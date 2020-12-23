@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"github.com/memochou1993/github-rankings/database"
-	"github.com/memochou1993/github-rankings/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -26,9 +25,7 @@ type RankPipeline struct {
 func PullRanks(model Interface, batch int) {
 	filter := bson.D{}
 	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
-	if _, err := database.Collection(model.Name()).UpdateMany(context.Background(), filter, update); err != nil {
-		logger.Error(err)
-	}
+	database.UpdateMany(model.Name(), filter, update)
 }
 
 func PushRanks(model Interface, batch int, pipeline RankPipeline) {
