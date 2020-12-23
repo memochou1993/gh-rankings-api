@@ -18,8 +18,8 @@ import (
 )
 
 type RepositoryHandler struct {
-	Batch           time.Time
 	RepositoryModel *model.RepositoryModel
+	UpdatedAt       time.Time
 }
 
 func NewRepositoryHandler() *RepositoryHandler {
@@ -115,18 +115,18 @@ func (r *RepositoryHandler) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	batch := time.Now()
+	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
 		go func(pipeline model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, batch, pipeline)
+			model.PushRanks(r.RepositoryModel, updatedAt, pipeline)
 			<-ch
 		}(pipeline)
 	}
 	wg.Wait()
-	r.Batch = batch
-	model.PullRanks(r.RepositoryModel, batch)
+	r.UpdatedAt = updatedAt
+	model.PullRanks(r.RepositoryModel, updatedAt)
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 

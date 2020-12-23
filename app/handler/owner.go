@@ -23,8 +23,8 @@ const (
 )
 
 type OwnerHandler struct {
-	Batch      time.Time
 	OwnerModel *model.OwnerModel
+	UpdatedAt  time.Time
 }
 
 func NewOwnerHandler() *OwnerHandler {
@@ -219,18 +219,18 @@ func (o *OwnerHandler) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	batch := time.Now()
+	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
 		go func(pipeline model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, batch, pipeline)
+			model.PushRanks(o.OwnerModel, updatedAt, pipeline)
 			<-ch
 		}(pipeline)
 	}
 	wg.Wait()
-	o.Batch = batch
-	model.PullRanks(o.OwnerModel, batch)
+	o.UpdatedAt = updatedAt
+	model.PullRanks(o.OwnerModel, updatedAt)
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
