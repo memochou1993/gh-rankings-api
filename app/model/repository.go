@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"github.com/memochou1993/github-rankings/database"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"time"
+)
 
 type Repository struct {
 	CreatedAt         time.Time `json:"createdAt" bson:"created_at"`
@@ -46,4 +51,24 @@ func NewRepositoryModel() *RepositoryModel {
 			name: "repositories",
 		},
 	}
+}
+
+func (r *RepositoryModel) CreateIndexes() {
+	database.CreateIndexes(r.Name(), []string{
+		"created_at",
+		"ranks.tags",
+	})
+}
+
+func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResult {
+	if len(repositories) == 0 {
+		return nil
+	}
+	var models []mongo.WriteModel
+	for _, repository := range repositories {
+		filter := bson.D{{"_id", repository.ID()}}
+		update := bson.D{{"$set", repository}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
+	}
+	return database.BulkWrite(r.Name(), models)
 }

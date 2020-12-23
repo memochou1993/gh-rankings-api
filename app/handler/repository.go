@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
-	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,7 +28,7 @@ func NewRepositoryHandler() *RepositoryHandler {
 
 func (r *RepositoryHandler) Init() {
 	logger.Info("Initializing repository collection...")
-	r.CreateIndexes()
+	r.RepositoryModel.CreateIndexes()
 	logger.Success("Repository collection initialized!")
 }
 
@@ -53,7 +52,14 @@ func (r *RepositoryHandler) Travel(from *time.Time, q *model.Query) error {
 	if err := r.FetchRepositories(q, &repositories); err != nil {
 		return err
 	}
-	r.StoreRepositories(repositories)
+	if res := r.RepositoryModel.Store(repositories); res != nil {
+		if res.ModifiedCount > 0 {
+			logger.Success(fmt.Sprintf("Updated %d repositories!", res.ModifiedCount))
+		}
+		if res.UpsertedCount > 0 {
+			logger.Success(fmt.Sprintf("Inserted %d repositories!", res.UpsertedCount))
+		}
+	}
 	*from = from.AddDate(0, 0, 7)
 
 	return r.Travel(from, q)
@@ -75,26 +81,6 @@ func (r *RepositoryHandler) FetchRepositories(q *model.Query, repositories *[]mo
 	q.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
 	return r.FetchRepositories(q, repositories)
-}
-
-func (r *RepositoryHandler) StoreRepositories(repositories []model.Repository) {
-	if len(repositories) == 0 {
-		return
-	}
-
-	var models []mongo.WriteModel
-	for _, repository := range repositories {
-		filter := bson.D{{"_id", repository.ID()}}
-		update := bson.D{{"$set", repository}}
-		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
-	}
-	res := database.BulkWrite(r.RepositoryModel.Name(), models)
-	if res.ModifiedCount > 0 {
-		logger.Success(fmt.Sprintf("Updated %d repositories!", res.ModifiedCount))
-	}
-	if res.UpsertedCount > 0 {
-		logger.Success(fmt.Sprintf("Inserted %d repositories!", res.UpsertedCount))
-	}
 }
 
 func (r *RepositoryHandler) Rank() {
@@ -126,13 +112,6 @@ func (r *RepositoryHandler) Rank() {
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 
-func (r *RepositoryHandler) CreateIndexes() {
-	database.CreateIndexes(r.RepositoryModel.Model.Name(), []string{
-		"created_at",
-		"ranks.tags",
-	})
-}
-
 func (r *RepositoryHandler) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		return err
@@ -154,7 +133,6 @@ func (r *RepositoryHandler) searchQuery(from time.Time) model.SearchQuery {
 
 func (r *RepositoryHandler) rankPipeline(object string) model.RankPipeline {
 	tags := strings.Split(object, ".")
-
 	return model.RankPipeline{
 		Pipeline: mongo.Pipeline{
 			bson.D{

@@ -221,7 +221,6 @@ func (o *OwnerHandler) searchQuery(from time.Time) model.SearchQuery {
 func (o *OwnerHandler) rankPipeline(ownerType string, object string) model.RankPipeline {
 	tags := []string{ownerType}
 	tags = append(tags, strings.Split(object, ".")...)
-
 	return model.RankPipeline{
 		Pipeline: mongo.Pipeline{
 			bson.D{
