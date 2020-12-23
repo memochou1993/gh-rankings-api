@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -89,10 +88,7 @@ func (r *RepositoryHandler) StoreRepositories(repositories []model.Repository) {
 		update := bson.D{{"$set", repository}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	res, err := r.RepositoryModel.Model.Collection().BulkWrite(context.Background(), models)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	res := database.BulkWrite(r.RepositoryModel.Name(), models)
 	if res.ModifiedCount > 0 {
 		logger.Success(fmt.Sprintf("Updated %d repositories!", res.ModifiedCount))
 	}

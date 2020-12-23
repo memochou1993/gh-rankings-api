@@ -95,10 +95,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	res, err := o.OwnerModel.Model.Collection().BulkWrite(context.Background(), models)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	res := database.BulkWrite(o.OwnerModel.Name(), models)
 	if res.ModifiedCount > 0 {
 		logger.Success(fmt.Sprintf("Updated %d owners!", res.ModifiedCount))
 	}

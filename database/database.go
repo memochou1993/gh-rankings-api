@@ -41,6 +41,14 @@ func Count(collection string) int64 {
 	return count
 }
 
+func BulkWrite(collection string, models []mongo.WriteModel) *mongo.BulkWriteResult {
+	res, err := Collection(collection).BulkWrite(context.Background(), models)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	return res
+}
+
 func UpdateOne(collection string, filter bson.D, update bson.D, opts ...*options.UpdateOptions) {
 	if _, err := Collection(collection).UpdateOne(context.Background(), filter, update, opts...); err != nil {
 		log.Fatalln(err.Error())

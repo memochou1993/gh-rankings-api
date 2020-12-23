@@ -46,9 +46,7 @@ func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
 		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {
-			if _, err := model.Collection().BulkWrite(ctx, models); err != nil {
-				log.Fatalln(err.Error())
-			}
+			database.BulkWrite(model.Name(), models)
 			models = models[:0]
 		}
 	}
