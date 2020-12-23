@@ -29,7 +29,7 @@ func setUp() {
 }
 
 func TestFetchOwners(t *testing.T) {
-	u := handler.NewOwnerHandler()
+	o := handler.NewOwnerHandler()
 
 	q := model.Query{
 		Schema: model.ReadQuery("search_owners"),
@@ -41,23 +41,23 @@ func TestFetchOwners(t *testing.T) {
 	}
 
 	var owners []model.Owner
-	if err := u.FetchOwners(&q, &owners); err != nil {
+	if err := o.FetchOwners(&q, &owners); err != nil {
 		t.Error(err.Error())
 	}
 	if len(owners) == 0 {
 		t.Fail()
 	}
 
-	test.DropCollection(u.OwnerModel)
+	test.DropCollection(o.OwnerModel)
 }
 
 func TestStoreUsers(t *testing.T) {
-	u := handler.NewOwnerHandler()
+	o := handler.NewOwnerHandler()
 
 	owner := model.Owner{Login: "memochou1993", Followers: &model.Directory{TotalCount: 1}}
 	owners := []model.Owner{owner}
-	u.OwnerModel.Store(owners)
-	res := database.FindOne(u.OwnerModel.Name(), bson.D{{"_id", owner.ID()}})
+	o.OwnerModel.Store(owners)
+	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", owner.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
 		t.Fail()
 	}
@@ -70,16 +70,16 @@ func TestStoreUsers(t *testing.T) {
 		t.Fail()
 	}
 
-	test.DropCollection(u.OwnerModel)
+	test.DropCollection(o.OwnerModel)
 }
 
 func TestStoreOrganizations(t *testing.T) {
-	u := handler.NewOwnerHandler()
+	o := handler.NewOwnerHandler()
 
 	organization := model.Owner{Login: "github"}
 	organizations := []model.Owner{organization}
-	u.OwnerModel.Store(organizations)
-	res := database.FindOne(u.OwnerModel.Name(), bson.D{{"_id", organization.ID()}})
+	o.OwnerModel.Store(organizations)
+	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", organization.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
 		t.Fail()
 	}
@@ -92,11 +92,11 @@ func TestStoreOrganizations(t *testing.T) {
 		t.Fail()
 	}
 
-	test.DropCollection(u.OwnerModel)
+	test.DropCollection(o.OwnerModel)
 }
 
 func TestFetchUserRepositories(t *testing.T) {
-	u := handler.NewOwnerHandler()
+	o := handler.NewOwnerHandler()
 
 	q := model.Query{
 		Schema: model.ReadQuery("owner_repositories"),
@@ -112,18 +112,18 @@ func TestFetchUserRepositories(t *testing.T) {
 	}
 
 	var repositories []model.Repository
-	if err := u.FetchRepositories(&q, &repositories); err != nil {
+	if err := o.FetchRepositories(&q, &repositories); err != nil {
 		t.Error(err.Error())
 	}
 	if len(repositories) == 0 {
 		t.Fail()
 	}
 
-	test.DropCollection(u.OwnerModel)
+	test.DropCollection(o.OwnerModel)
 }
 
 func TestFetchOrganizationRepositories(t *testing.T) {
-	u := handler.NewOwnerHandler()
+	o := handler.NewOwnerHandler()
 
 	q := model.Query{
 		Schema: model.ReadQuery("owner_repositories"),
@@ -139,14 +139,14 @@ func TestFetchOrganizationRepositories(t *testing.T) {
 	}
 
 	var repositories []model.Repository
-	if err := u.FetchRepositories(&q, &repositories); err != nil {
+	if err := o.FetchRepositories(&q, &repositories); err != nil {
 		t.Error(err.Error())
 	}
 	if len(repositories) == 0 {
 		t.Fail()
 	}
 
-	test.DropCollection(u.OwnerModel)
+	test.DropCollection(o.OwnerModel)
 }
 
 func tearDown() {
