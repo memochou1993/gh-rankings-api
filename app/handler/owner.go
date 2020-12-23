@@ -23,13 +23,12 @@ const (
 )
 
 type OwnerHandler struct {
-	BatchModel *model.BatchModel
+	Batch      int64
 	OwnerModel *model.OwnerModel
 }
 
 func NewOwnerHandler() *OwnerHandler {
 	return &OwnerHandler{
-		BatchModel: model.NewBatchModel(),
 		OwnerModel: model.NewOwnerModel(),
 	}
 }
@@ -219,21 +218,20 @@ func (o *OwnerHandler) Rank() {
 
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
-	batch := o.BatchModel.Get(o.OwnerModel).Batch
 	wg.Add(len(pipelines))
+	batch := time.Now().UnixNano()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
 		go func(pipeline model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, batch+1, pipeline)
+			model.PushRanks(o.OwnerModel, batch, pipeline)
 			<-ch
 		}(pipeline)
 	}
 	wg.Wait()
-	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
-
-	o.BatchModel.Update(o.OwnerModel)
+	o.Batch = batch
 	model.PullRanks(o.OwnerModel, batch)
+	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
 func (o *OwnerHandler) CreateIndexes() {

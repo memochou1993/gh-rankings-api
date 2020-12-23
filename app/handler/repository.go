@@ -18,13 +18,12 @@ import (
 )
 
 type RepositoryHandler struct {
-	BatchModel      *model.BatchModel
+	Batch           int64
 	RepositoryModel *model.RepositoryModel
 }
 
 func NewRepositoryHandler() *RepositoryHandler {
 	return &RepositoryHandler{
-		BatchModel:      model.NewBatchModel(),
 		RepositoryModel: model.NewRepositoryModel(),
 	}
 }
@@ -115,21 +114,20 @@ func (r *RepositoryHandler) Rank() {
 
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
-	batch := r.BatchModel.Get(r.RepositoryModel).Batch
 	wg.Add(len(pipelines))
+	batch := time.Now().UnixNano()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
 		go func(pipeline model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, batch+1, pipeline)
+			model.PushRanks(r.RepositoryModel, batch, pipeline)
 			<-ch
 		}(pipeline)
 	}
 	wg.Wait()
-	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
-
-	r.BatchModel.Update(r.RepositoryModel)
+	r.Batch = batch
 	model.PullRanks(r.RepositoryModel, batch)
+	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 
 func (r *RepositoryHandler) CreateIndexes() {

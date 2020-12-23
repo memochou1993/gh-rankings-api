@@ -13,7 +13,7 @@ type Rank struct {
 	Rank       int       `bson:"rank"`
 	TotalCount int       `bson:"total_count"`
 	Tags       []string  `bson:"tags"`
-	Batch      int       `bson:"batch"`
+	Batch      int64     `bson:"batch"`
 	CreatedAt  time.Time `bson:"created_at"`
 }
 
@@ -22,13 +22,13 @@ type RankPipeline struct {
 	Tags     []string
 }
 
-func PullRanks(model Interface, batch int) {
+func PullRanks(model Interface, batch int64) {
 	filter := bson.D{}
-	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
+	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lt", batch}}}}}}}}
 	database.UpdateMany(model.Name(), filter, update)
 }
 
-func PushRanks(model Interface, batch int, pipeline RankPipeline) {
+func PushRanks(model Interface, batch int64, pipeline RankPipeline) {
 	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
