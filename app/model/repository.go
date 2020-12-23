@@ -18,7 +18,7 @@ type Repository struct {
 	Watchers   Directory `json:"watchers" bson:"watchers"`
 }
 
-func (r Repository) ID() string {
+func (r *Repository) ID() string {
 	return r.NameWithOwner
 }
 

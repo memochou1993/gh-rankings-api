@@ -1,6 +1,9 @@
 package model
 
 import (
+	"github.com/memochou1993/github-rankings/database"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -17,7 +20,7 @@ type Owner struct {
 	Type         string       `json:"type" bson:"type"`
 }
 
-func (o Owner) ID() string {
+func (o *Owner) ID() string {
 	return o.Login
 }
 
@@ -67,4 +70,54 @@ func NewOwnerModel() *OwnerModel {
 			name: "owners",
 		},
 	}
+}
+
+func (o *OwnerModel) CreateIndexes() {
+	database.CreateIndexes(o.Name(), []string{
+		"created_at",
+		"name",
+		"ranks.tags",
+	})
+}
+
+func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
+	if len(owners) == 0 {
+		return nil
+	}
+	var models []mongo.WriteModel
+	for _, owner := range owners {
+		owner.Type = o.Type(owner)
+		filter := bson.D{{"_id", owner.ID()}}
+		update := bson.D{{"$set", owner}}
+		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
+	}
+	return database.BulkWrite(o.Name(), models)
+}
+
+func (o *OwnerModel) UpdateGists(owner Owner, gists []Gist) {
+	filter := bson.D{{"_id", owner.ID()}}
+	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
+	database.UpdateOne(o.Name(), filter, update)
+}
+
+func (o *OwnerModel) UpdateRepositories(owner Owner, repositories []Repository) {
+	filter := bson.D{{"_id", owner.ID()}}
+	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
+	database.UpdateOne(o.Name(), filter, update)
+}
+
+func (o *OwnerModel) IsUser(owner Owner) bool {
+	return o.Type(owner) == TypeUser
+}
+
+func (o *OwnerModel) IsOrganization(owner Owner) bool {
+	return o.Type(owner) == TypeOrganization
+}
+
+func (o *OwnerModel) Type(owner Owner) (ownerType string) {
+	ownerType = TypeUser
+	if owner.Followers == nil {
+		ownerType = TypeOrganization
+	}
+	return
 }

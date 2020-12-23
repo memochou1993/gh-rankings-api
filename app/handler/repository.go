@@ -198,7 +198,7 @@ func (r *RepositoryHandler) rankPipelinesByLanguage(object string) (pipelines []
 					}},
 				},
 			},
-			Tags: []string{"repository", object, language},
+			Tags: []string{model.TypeRepository, object, language},
 		})
 	}
 	return
