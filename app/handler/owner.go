@@ -23,7 +23,7 @@ const (
 )
 
 type OwnerHandler struct {
-	Batch      int64
+	Batch      time.Time
 	OwnerModel *model.OwnerModel
 }
 
@@ -219,7 +219,7 @@ func (o *OwnerHandler) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	batch := time.Now().UnixNano()
+	batch := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
 		go func(pipeline model.RankPipeline) {
