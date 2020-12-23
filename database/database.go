@@ -33,14 +33,10 @@ func Collection(name string) *mongo.Collection {
 }
 
 func Count(collection string) int64 {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	count, err := Collection(collection).CountDocuments(ctx, bson.D{})
+	count, err := Collection(collection).CountDocuments(context.Background(), bson.D{})
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	return count
 }
 
@@ -50,7 +46,6 @@ func All(ctx context.Context, collection string) *mongo.Cursor {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	return cursor
 }
 
@@ -60,7 +55,6 @@ func Aggregate(ctx context.Context, collection string, pipeline []bson.D) *mongo
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	return cursor
 }
 
@@ -70,10 +64,8 @@ func CloseCursor(ctx context.Context, cursor *mongo.Cursor) {
 	}
 }
 
-func Indexes(collection string) []bson.D {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func Indexes(collection string) (indexes []bson.D) {
+	ctx := context.Background()
 	cursor, err := Collection(collection).Indexes().List(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
@@ -83,19 +75,13 @@ func Indexes(collection string) []bson.D {
 			log.Fatalln(err.Error())
 		}
 	}()
-
-	var indexes []bson.D
 	if err := cursor.All(ctx, &indexes); err != nil {
 		log.Fatalln(err.Error())
 	}
-
-	return indexes
+	return
 }
 
 func CreateIndexes(collection string, keys []string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
@@ -103,16 +89,12 @@ func CreateIndexes(collection string, keys []string) {
 			Options: options.Index().SetName(key),
 		})
 	}
-
-	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
+	if _, err := Collection(collection).Indexes().CreateMany(context.Background(), models); err != nil {
 		log.Fatalln(err.Error())
 	}
 }
 
 func CreateUniqueIndexes(collection string, keys []string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	var models []mongo.IndexModel
 	for _, key := range keys {
 		models = append(models, mongo.IndexModel{
@@ -120,8 +102,7 @@ func CreateUniqueIndexes(collection string, keys []string) {
 			Options: options.Index().SetUnique(true).SetName(key),
 		})
 	}
-
-	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
+	if _, err := Collection(collection).Indexes().CreateMany(context.Background(), models); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

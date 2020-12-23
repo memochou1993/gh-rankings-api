@@ -89,9 +89,6 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	var models []mongo.WriteModel
 	for _, owner := range owners {
 		owner.Type = o.ownerType(owner)
@@ -99,7 +96,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	res, err := o.OwnerModel.Model.Collection().BulkWrite(ctx, models)
+	res, err := o.OwnerModel.Model.Collection().BulkWrite(context.Background(), models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -112,9 +109,7 @@ func (o *OwnerHandler) StoreOwners(owners []model.Owner) {
 }
 
 func (o *OwnerHandler) Update() error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	ctx := context.Background()
 	cursor := database.All(ctx, o.OwnerModel.Name())
 	defer database.CloseCursor(ctx, cursor)
 
@@ -125,7 +120,7 @@ func (o *OwnerHandler) Update() error {
 	gistsQuery := model.NewOwnerGistsQuery()
 	logger.Info("Updating owner repositories...")
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	for cursor.Next(ctx) {
+	for cursor.Next(context.Background()) {
 		owner := model.Owner{}
 		if err := cursor.Decode(&owner); err != nil {
 			log.Fatalln(err.Error())
@@ -171,9 +166,7 @@ func (o *OwnerHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
 }
 
 func (o *OwnerHandler) UpdateGists(owner model.Owner, gists []model.Gist) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
 	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
@@ -201,9 +194,7 @@ func (o *OwnerHandler) FetchRepositories(q *model.Query, repositories *[]model.R
 }
 
 func (o *OwnerHandler) UpdateRepositories(owner model.Owner, repositories []model.Repository) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	if _, err := o.OwnerModel.Model.Collection().UpdateOne(ctx, filter, update); err != nil {
@@ -260,10 +251,7 @@ func (o *OwnerHandler) CreateIndexes() {
 }
 
 func (o *OwnerHandler) fetch(q model.Query, res *model.OwnerResponse) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := app.Fetch(ctx, fmt.Sprint(q), res); err != nil {
+	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		return err
 	}
 	for _, err := range res.Errors {

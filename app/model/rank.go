@@ -24,20 +24,15 @@ type RankPipeline struct {
 }
 
 func PullRanks(model Interface, batch int) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	filter := bson.D{}
 	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"batch", bson.D{{"$lte", batch}}}}}}}}
-	if _, err := database.Collection(model.Name()).UpdateMany(ctx, filter, update); err != nil {
+	if _, err := database.Collection(model.Name()).UpdateMany(context.Background(), filter, update); err != nil {
 		logger.Error(err)
 	}
 }
 
 func PushRanks(model Interface, batch int, pipeline RankPipeline) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 

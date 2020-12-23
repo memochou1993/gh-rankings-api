@@ -6,7 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"time"
 )
 
 type Batch struct {
@@ -27,11 +26,8 @@ func NewBatchModel() *BatchModel {
 }
 
 func (m *Model) Get(model Interface) (batch Batch) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	filter := bson.D{{"model", model.Name()}}
-	if err := m.Collection().FindOne(ctx, filter).Decode(&batch); err != nil {
+	if err := m.Collection().FindOne(context.Background(), filter).Decode(&batch); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return
 		}
@@ -42,13 +38,10 @@ func (m *Model) Get(model Interface) (batch Batch) {
 }
 
 func (b *BatchModel) Update(model Interface) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	filter := bson.D{{"model", model.Name()}}
 	update := bson.D{{"$inc", bson.D{{"batch", 1}}}}
 	opts := options.Update().SetUpsert(true)
-	if _, err := b.Collection().UpdateOne(ctx, filter, update, opts); err != nil {
+	if _, err := b.Collection().UpdateOne(context.Background(), filter, update, opts); err != nil {
 		log.Fatalln(err.Error())
 	}
 }

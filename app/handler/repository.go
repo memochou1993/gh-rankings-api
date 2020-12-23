@@ -84,16 +84,13 @@ func (r *RepositoryHandler) StoreRepositories(repositories []model.Repository) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	var models []mongo.WriteModel
 	for _, repository := range repositories {
 		filter := bson.D{{"_id", repository.ID()}}
 		update := bson.D{{"$set", repository}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	res, err := r.RepositoryModel.Model.Collection().BulkWrite(ctx, models)
+	res, err := r.RepositoryModel.Model.Collection().BulkWrite(context.Background(), models)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -143,10 +140,7 @@ func (r *RepositoryHandler) CreateIndexes() {
 }
 
 func (r *RepositoryHandler) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := app.Fetch(ctx, fmt.Sprint(q), res); err != nil {
+	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		return err
 	}
 	for _, err := range res.Errors {
