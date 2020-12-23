@@ -49,6 +49,10 @@ func BulkWrite(collection string, models []mongo.WriteModel) *mongo.BulkWriteRes
 	return res
 }
 
+func FindOne(collection string, filter bson.D, opts ...*options.FindOneOptions) *mongo.SingleResult {
+	return Collection(collection).FindOne(context.Background(), filter, opts...)
+}
+
 func UpdateOne(collection string, filter bson.D, update bson.D, opts ...*options.UpdateOptions) {
 	if _, err := Collection(collection).UpdateOne(context.Background(), filter, update, opts...); err != nil {
 		log.Fatalln(err.Error())
