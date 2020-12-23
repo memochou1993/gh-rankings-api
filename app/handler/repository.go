@@ -116,11 +116,17 @@ func (r *RepositoryHandler) Rank() {
 	pipelines = append(pipelines, r.rankPipelinesByLanguage("stargazers")...)
 	pipelines = append(pipelines, r.rankPipelinesByLanguage("watchers")...)
 
+	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	batch := r.BatchModel.Get(r.RepositoryModel).Batch
 	wg.Add(len(pipelines))
 	for _, pipeline := range pipelines {
-		go model.PushRanks(r.RepositoryModel, batch+1, pipeline, &wg)
+		ch <- struct{}{}
+		go func(pipeline model.RankPipeline) {
+			defer wg.Done()
+			model.PushRanks(r.RepositoryModel, batch+1, pipeline)
+			<-ch
+		}(pipeline)
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))

@@ -232,11 +232,17 @@ func (o *OwnerHandler) Rank() {
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "stargazers")...)
 	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(typeOrganization, "watchers")...)
 
+	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	batch := o.BatchModel.Get(o.OwnerModel).Batch
 	wg.Add(len(pipelines))
 	for _, pipeline := range pipelines {
-		go model.PushRanks(o.OwnerModel, batch+1, pipeline, &wg)
+		ch <- struct{}{}
+		go func(pipeline model.RankPipeline) {
+			defer wg.Done()
+			model.PushRanks(o.OwnerModel, batch+1, pipeline)
+			<-ch
+		}(pipeline)
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))

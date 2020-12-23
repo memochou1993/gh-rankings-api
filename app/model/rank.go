@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -35,11 +34,9 @@ func PullRanks(model Interface, batch int) {
 	}
 }
 
-func PushRanks(model Interface, batch int, pipeline RankPipeline, wg *sync.WaitGroup) {
+func PushRanks(model Interface, batch int, pipeline RankPipeline) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	defer wg.Done()
 
 	cursor := database.Aggregate(ctx, model.Name(), pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
