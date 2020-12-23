@@ -37,7 +37,7 @@ func (o *OwnerHandler) Init() {
 func (o *OwnerHandler) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.NewSearchOwnersQuery()
+	q := model.NewOwnersQuery()
 
 	return o.Travel(&from, q)
 }

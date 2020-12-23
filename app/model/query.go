@@ -31,12 +31,10 @@ func (q Query) String() string {
 	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
 	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
 	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
-
 	b, err := json.Marshal(Payload{Query: query})
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	return string(b)
 }
 
@@ -128,7 +126,7 @@ func NewRepositoriesQuery() *Query {
 	}
 }
 
-func NewSearchOwnersQuery() *Query {
+func NewOwnersQuery() *Query {
 	return &Query{
 		Schema: ReadQuery("search_owners"),
 		SearchArguments: SearchArguments{
@@ -164,6 +162,5 @@ func ReadQuery(filename string) string {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-
 	return string(b)
 }

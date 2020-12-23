@@ -91,11 +91,7 @@ func Indexes(collection string) (indexes []bson.D) {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	defer func() {
-		if err := cursor.Close(ctx); err != nil {
-			log.Fatalln(err.Error())
-		}
-	}()
+	defer CloseCursor(ctx, cursor)
 	if err := cursor.All(ctx, &indexes); err != nil {
 		log.Fatalln(err.Error())
 	}
