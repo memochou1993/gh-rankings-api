@@ -1,4 +1,4 @@
-package handler
+package worker
 
 import (
 	"context"
@@ -17,24 +17,24 @@ import (
 	"time"
 )
 
-type OwnerHandler struct {
+type OwnerWorker struct {
 	OwnerModel *model.OwnerModel
 	UpdatedAt  time.Time
 }
 
-func NewOwnerHandler() *OwnerHandler {
-	return &OwnerHandler{
+func NewOwnerWorker() *OwnerWorker {
+	return &OwnerWorker{
 		OwnerModel: model.NewOwnerModel(),
 	}
 }
 
-func (o *OwnerHandler) Init() {
+func (o *OwnerWorker) Init() {
 	logger.Info("Initializing owner collection...")
 	o.OwnerModel.CreateIndexes()
 	logger.Success("Owner collection initialized!")
 }
 
-func (o *OwnerHandler) Collect() error {
+func (o *OwnerWorker) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	q := model.NewOwnersQuery()
@@ -42,7 +42,7 @@ func (o *OwnerHandler) Collect() error {
 	return o.Travel(&from, q)
 }
 
-func (o *OwnerHandler) Travel(from *time.Time, q *model.Query) error {
+func (o *OwnerWorker) Travel(from *time.Time, q *model.Query) error {
 	to := time.Now()
 	if from.After(to) {
 		return nil
@@ -67,7 +67,7 @@ func (o *OwnerHandler) Travel(from *time.Time, q *model.Query) error {
 	return o.Travel(from, q)
 }
 
-func (o *OwnerHandler) FetchOwners(q *model.Query, owners *[]model.Owner) error {
+func (o *OwnerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -85,7 +85,7 @@ func (o *OwnerHandler) FetchOwners(q *model.Query, owners *[]model.Owner) error 
 	return o.FetchOwners(q, owners)
 }
 
-func (o *OwnerHandler) Update() error {
+func (o *OwnerWorker) Update() error {
 	ctx := context.Background()
 	cursor := database.All(ctx, o.OwnerModel.Name())
 	defer database.CloseCursor(ctx, cursor)
@@ -126,7 +126,7 @@ func (o *OwnerHandler) Update() error {
 	return nil
 }
 
-func (o *OwnerHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
+func (o *OwnerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -144,7 +144,7 @@ func (o *OwnerHandler) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	return o.FetchGists(q, gists)
 }
 
-func (o *OwnerHandler) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+func (o *OwnerWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -162,7 +162,7 @@ func (o *OwnerHandler) FetchRepositories(q *model.Query, repositories *[]model.R
 	return o.FetchRepositories(q, repositories)
 }
 
-func (o *OwnerHandler) Rank() {
+func (o *OwnerWorker) Rank() {
 	logger.Info("Executing owner rank pipelines...")
 	pipelines := []model.RankPipeline{
 		o.rankPipeline(model.TypeUser, "followers"),
@@ -200,7 +200,7 @@ func (o *OwnerHandler) Rank() {
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
-func (o *OwnerHandler) fetch(q model.Query, res *model.OwnerResponse) (err error) {
+func (o *OwnerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (o *OwnerHandler) fetch(q model.Query, res *model.OwnerResponse) (err error
 	return
 }
 
-func (o *OwnerHandler) searchQuery(from time.Time) model.SearchQuery {
+func (o *OwnerWorker) searchQuery(from time.Time) model.SearchQuery {
 	return model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
@@ -218,7 +218,7 @@ func (o *OwnerHandler) searchQuery(from time.Time) model.SearchQuery {
 	}
 }
 
-func (o *OwnerHandler) rankPipeline(ownerType string, object string) model.RankPipeline {
+func (o *OwnerWorker) rankPipeline(ownerType string, object string) model.RankPipeline {
 	tags := []string{ownerType}
 	tags = append(tags, strings.Split(object, ".")...)
 	return model.RankPipeline{
@@ -246,7 +246,7 @@ func (o *OwnerHandler) rankPipeline(ownerType string, object string) model.RankP
 	}
 }
 
-func (o *OwnerHandler) repositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []model.RankPipeline) {
+func (o *OwnerWorker) repositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []model.RankPipeline) {
 	for _, language := range util.Languages() {
 		pipelines = append(pipelines, model.RankPipeline{
 			Pipeline: mongo.Pipeline{

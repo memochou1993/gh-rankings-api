@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/memochou1993/github-rankings/app/handler"
+	"github.com/memochou1993/github-rankings/app/worker"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
@@ -15,8 +15,8 @@ func init() {
 }
 
 func main() {
-	h := handler.NewHandler()
-	h.Init()
+	w := worker.NewWorker()
+	w.Init()
 
 	time.Sleep(6 * time.Hour) // FIXME
 }
