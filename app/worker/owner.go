@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -202,6 +203,10 @@ func (o *OwnerWorker) Rank() {
 
 func (o *OwnerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
+		if os.IsTimeout(err) {
+			logger.Error("Retrying...")
+			return o.fetch(q, res)
+		}
 		return err
 	}
 	for _, err := range res.Errors {

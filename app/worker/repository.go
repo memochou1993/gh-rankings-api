@@ -9,6 +9,7 @@ import (
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -114,6 +115,10 @@ func (r *RepositoryWorker) Rank() {
 
 func (r *RepositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
+		if os.IsTimeout(err) {
+			logger.Error("Retrying...")
+			return r.fetch(q, res)
+		}
 		return err
 	}
 	for _, err := range res.Errors {
