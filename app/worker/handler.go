@@ -2,12 +2,21 @@ package worker
 
 import (
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/util"
 	"time"
+)
+
+var (
+	languages []string
 )
 
 type Worker struct {
 	*RepositoryWorker
 	*OwnerWorker
+}
+
+func init() {
+	languages = util.Languages()
 }
 
 func NewWorker() *Worker {
