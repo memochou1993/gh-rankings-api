@@ -64,7 +64,7 @@ func TestStoreUsers(t *testing.T) {
 
 	owner = model.Owner{}
 	if err := res.Decode(&owner); err != nil {
-		t.Fatal()
+		t.Fatal(err.Error())
 	}
 	if owner.Type != model.TypeUser {
 		t.Fail()
@@ -86,7 +86,7 @@ func TestStoreOrganizations(t *testing.T) {
 
 	organization = model.Owner{}
 	if err := res.Decode(&organization); err != nil {
-		t.Fatal()
+		t.Fatal(err.Error())
 	}
 	if organization.Type != model.TypeOrganization {
 		t.Fail()
