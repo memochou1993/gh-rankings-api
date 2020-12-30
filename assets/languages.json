@@ -1,575 +1,1721 @@
 [
-  "C",
-  "C#",
-  "C++",
-  "CoffeeScript",
-  "CSS",
-  "Dart",
-  "DM",
-  "Elixir",
-  "Go",
-  "Groovy",
-  "HTML",
-  "Java",
-  "JavaScript",
-  "Kotlin",
-  "Objective-C",
-  "Perl",
-  "PHP",
-  "PowerShell",
-  "Python",
-  "Ruby",
-  "Rust",
-  "Scala",
-  "Shell",
-  "Swift",
-  "TypeScript",
-  "1C Enterprise",
-  "4D",
-  "ABAP",
-  "ABNF",
-  "ActionScript",
-  "Ada",
-  "Adobe Font Metrics",
-  "Agda",
-  "AGS Script",
-  "AL",
-  "Alloy",
-  "Alpine Abuild",
-  "Altium Designer",
-  "AMPL",
-  "AngelScript",
-  "Ant Build System",
-  "ANTLR",
-  "ApacheConf",
-  "Apex",
-  "API Blueprint",
-  "APL",
-  "Apollo Guidance Computer",
-  "AppleScript",
-  "Arc",
-  "AsciiDoc",
-  "ASL",
-  "ASN.1",
-  "ASP.NET",
-  "AspectJ",
-  "Assembly",
-  "Asymptote",
-  "ATS",
-  "Augeas",
-  "AutoHotkey",
-  "AutoIt",
-  "Avro IDL",
-  "Awk",
-  "Ballerina",
-  "Batchfile",
-  "Befunge",
-  "BibTeX",
-  "Bison",
-  "BitBake",
-  "Blade",
-  "BlitzBasic",
-  "BlitzMax",
-  "Bluespec",
-  "Boo",
-  "Brainfuck",
-  "Brightscript",
-  "Browserslist",
-  "C-ObjDump",
-  "C2hs Haskell",
-  "Cabal Config",
-  "Cap'n Proto",
-  "CartoCSS",
-  "Ceylon",
-  "Chapel",
-  "Charity",
-  "ChucK",
-  "Cirru",
-  "Clarion",
-  "Classic ASP",
-  "Clean",
-  "Click",
-  "CLIPS",
-  "Clojure",
-  "Closure Templates",
-  "Cloud Firestore Security Rules",
-  "CMake",
-  "COBOL",
-  "CodeQL",
-  "ColdFusion",
-  "ColdFusion CFC",
-  "COLLADA",
-  "Common Lisp",
-  "Common Workflow Language",
-  "Component Pascal",
-  "CoNLL-U",
-  "Cool",
-  "Coq",
-  "Cpp-ObjDump",
-  "Creole",
-  "Crystal",
-  "CSON",
-  "Csound",
-  "Csound Document",
-  "Csound Score",
-  "CSV",
-  "Cuda",
-  "cURL Config",
-  "CWeb",
-  "Cycript",
-  "Cython",
-  "D",
-  "D-ObjDump",
-  "Dafny",
-  "Darcs Patch",
-  "DataWeave",
-  "desktop",
-  "Dhall",
-  "Diff",
-  "DIGITAL Command Language",
-  "dircolors",
-  "DirectX 3D File",
-  "DNS Zone",
-  "Dockerfile",
-  "Dogescript",
-  "DTrace",
-  "Dylan",
-  "E",
-  "Eagle",
-  "Easybuild",
-  "EBNF",
-  "eC",
-  "Ecere Projects",
-  "ECL",
-  "ECLiPSe",
-  "EditorConfig",
-  "Edje Data Collection",
-  "edn",
-  "Eiffel",
-  "EJS",
-  "Elm",
-  "Emacs Lisp",
-  "EmberScript",
-  "EML",
-  "EQ",
-  "Erlang",
-  "F#",
-  "F*",
-  "Factor",
-  "Fancy",
-  "Fantom",
-  "Faust",
-  "FIGlet Font",
-  "Filebench WML",
-  "Filterscript",
-  "fish",
-  "FLUX",
-  "Formatted",
-  "Forth",
-  "Fortran",
-  "Fortran Free Form",
-  "FreeMarker",
-  "Frege",
-  "Futhark",
-  "G-code",
-  "Game Maker Language",
-  "GAML",
-  "GAMS",
-  "GAP",
-  "GCC Machine Description",
-  "GDB",
-  "GDScript",
-  "GEDCOM",
-  "Genie",
-  "Genshi",
-  "Gentoo Ebuild",
-  "Gentoo Eclass",
-  "Gerber Image",
-  "Gettext Catalog",
-  "Gherkin",
-  "Git Attributes",
-  "Git Config",
-  "GLSL",
-  "Glyph",
-  "Glyph Bitmap Distribution Format",
-  "GN",
-  "Gnuplot",
-  "Golo",
-  "Gosu",
-  "Grace",
-  "Gradle",
-  "Grammatical Framework",
-  "Graph Modeling Language",
-  "GraphQL",
-  "Graphviz (DOT)",
-  "Groovy Server Pages",
-  "Hack",
-  "Haml",
-  "Handlebars",
-  "HAProxy",
-  "Harbour",
-  "Haskell",
-  "Haxe",
-  "HCL",
-  "HiveQL",
-  "HLSL",
-  "HolyC",
-  "HTML+Django",
-  "HTML+ECR",
-  "HTML+EEX",
-  "HTML+ERB",
-  "HTML+PHP",
-  "HTML+Razor",
-  "HTTP",
-  "HXML",
-  "Hy",
-  "HyPhy",
-  "IDL",
-  "Idris",
-  "Ignore List",
-  "IGOR Pro",
-  "Inform 7",
-  "INI",
-  "Inno Setup",
-  "Io",
-  "Ioke",
-  "IRC log",
-  "Isabelle",
-  "Isabelle ROOT",
-  "J",
-  "Jasmin",
-  "Java Properties",
-  "Java Server Pages",
-  "JavaScript+ERB",
-  "JFlex",
-  "Jison",
-  "Jison Lex",
-  "Jolie",
-  "JSON",
-  "JSON with Comments",
-  "JSON5",
-  "JSONiq",
-  "JSONLD",
-  "Jsonnet",
-  "JSX",
-  "Julia",
-  "Jupyter Notebook",
-  "Kaitai Struct",
-  "KiCad Layout",
-  "KiCad Legacy Layout",
-  "KiCad Schematic",
-  "Kit",
-  "KRL",
-  "LabVIEW",
-  "Lark",
-  "Lasso",
-  "Latte",
-  "Lean",
-  "Less",
-  "Lex",
-  "LFE",
-  "LilyPond",
-  "Limbo",
-  "Linker Script",
-  "Linux Kernel Module",
-  "Liquid",
-  "Literate Agda",
-  "Literate CoffeeScript",
-  "Literate Haskell",
-  "LiveScript",
-  "LLVM",
-  "Logos",
-  "Logtalk",
-  "LOLCODE",
-  "LookML",
-  "LoomScript",
-  "LSL",
-  "LTspice Symbol",
-  "Lua",
-  "M",
-  "M4",
-  "M4Sugar",
-  "Macaulay2",
-  "Makefile",
-  "Mako",
-  "Markdown",
-  "Marko",
-  "Mask",
-  "Mathematica",
-  "MATLAB",
-  "Maven POM",
-  "Max",
-  "MAXScript",
-  "mcfunction",
-  "MediaWiki",
-  "Mercury",
-  "Meson",
-  "Metal",
-  "Microsoft Developer Studio Project",
-  "MiniD",
-  "Mirah",
-  "mIRC Script",
-  "MLIR",
-  "Modelica",
-  "Modula-2",
-  "Modula-3",
-  "Module Management System",
-  "Monkey",
-  "Moocode",
-  "MoonScript",
-  "Motorola 68K Assembly",
-  "MQL4",
-  "MQL5",
-  "MTML",
-  "MUF",
-  "mupad",
-  "Muse",
-  "Mustache",
-  "Myghty",
-  "nanorc",
-  "NASL",
-  "NCL",
-  "Nearley",
-  "Nemerle",
-  "NEON",
-  "nesC",
-  "NetLinx",
-  "NetLinx+ERB",
-  "NetLogo",
-  "NewLisp",
-  "Nextflow",
-  "Nginx",
-  "Nim",
-  "Ninja",
-  "Nit",
-  "Nix",
-  "NL",
-  "NPM Config",
-  "NSIS",
-  "Nu",
-  "NumPy",
-  "NWScript",
-  "ObjDump",
-  "Object Data Instance Notation",
-  "Objective-C++",
-  "Objective-J",
-  "ObjectScript",
-  "OCaml",
-  "Odin",
-  "Omgrofl",
-  "ooc",
-  "Opa",
-  "Opal",
-  "Open Policy Agent",
-  "OpenCL",
-  "OpenEdge ABL",
-  "OpenQASM",
-  "OpenRC runscript",
-  "OpenSCAD",
-  "OpenStep Property List",
-  "OpenType Feature File",
-  "Org",
-  "Ox",
-  "Oxygene",
-  "Oz",
-  "P4",
-  "Pan",
-  "Papyrus",
-  "Parrot",
-  "Parrot Assembly",
-  "Parrot Internal Representation",
-  "Pascal",
-  "Pawn",
-  "Pep8",
-  "Pic",
-  "Pickle",
-  "PicoLisp",
-  "PigLatin",
-  "Pike",
-  "PlantUML",
-  "PLpgSQL",
-  "PLSQL",
-  "Pod",
-  "Pod 6",
-  "PogoScript",
-  "Pony",
-  "PostCSS",
-  "PostScript",
-  "POV-Ray SDL",
-  "PowerBuilder",
-  "Prisma",
-  "Processing",
-  "Proguard",
-  "Prolog",
-  "Propeller Spin",
-  "Protocol Buffer",
-  "Public Key",
-  "Pug",
-  "Puppet",
-  "Pure Data",
-  "PureBasic",
-  "PureScript",
-  "Python console",
-  "Python traceback",
-  "q",
-  "Q#",
-  "QMake",
-  "QML",
-  "Qt Script",
-  "Quake",
-  "R",
-  "Racket",
-  "Ragel",
-  "Raku",
-  "RAML",
-  "Rascal",
-  "Raw token data",
-  "RDoc",
-  "Readline Config",
-  "REALbasic",
-  "Reason",
-  "Rebol",
-  "Red",
-  "Redcode",
-  "Regular Expression",
-  "Ren'Py",
-  "RenderScript",
-  "ReScript",
-  "reStructuredText",
-  "REXX",
-  "Rich Text Format",
-  "Ring",
-  "Riot",
-  "RMarkdown",
-  "RobotFramework",
-  "Roff",
-  "Roff Manpage",
-  "Rouge",
-  "RPC",
-  "RPM Spec",
-  "RUNOFF",
-  "Sage",
-  "SaltStack",
-  "SAS",
-  "Sass",
-  "Scaml",
-  "Scheme",
-  "Scilab",
-  "SCSS",
-  "sed",
-  "Self",
-  "ShaderLab",
-  "ShellSession",
-  "Shen",
-  "Sieve",
-  "Slash",
-  "Slice",
-  "Slim",
-  "Smali",
-  "Smalltalk",
-  "Smarty",
-  "SmPL",
-  "SMT",
-  "Solidity",
-  "SourcePawn",
-  "SPARQL",
-  "Spline Font Database",
-  "SQF",
-  "SQL",
-  "SQLPL",
-  "Squirrel",
-  "SRecode Template",
-  "SSH Config",
-  "Stan",
-  "Standard ML",
-  "Starlark",
-  "Stata",
-  "STON",
-  "Stylus",
-  "SubRip Text",
-  "SugarSS",
-  "SuperCollider",
-  "Svelte",
-  "SVG",
-  "SWIG",
-  "SystemVerilog",
-  "Tcl",
-  "Tcsh",
-  "Tea",
-  "Terra",
-  "TeX",
-  "Texinfo",
-  "Text",
-  "Textile",
-  "Thrift",
-  "TI Program",
-  "TLA",
-  "TOML",
-  "TSQL",
-  "TSV",
-  "TSX",
-  "Turing",
-  "Turtle",
-  "Twig",
-  "TXL",
-  "Type Language",
-  "Unified Parallel C",
-  "Unity3D Asset",
-  "Unix Assembly",
-  "Uno",
-  "UnrealScript",
-  "UrWeb",
-  "V",
-  "Vala",
-  "VBA",
-  "VBScript",
-  "VCL",
-  "Verilog",
-  "VHDL",
-  "Vim Help File",
-  "Vim script",
-  "Vim Snippet",
-  "Visual Basic .NET",
-  "Volt",
-  "Vue",
-  "Wavefront Material",
-  "Wavefront Object",
-  "wdl",
-  "Web Ontology Language",
-  "WebAssembly",
-  "WebIDL",
-  "WebVTT",
-  "Wget Config",
-  "Windows Registry Entries",
-  "wisp",
-  "Wollok",
-  "World of Warcraft Addon Data",
-  "X BitMap",
-  "X Font Directory Index",
-  "X PixMap",
-  "X10",
-  "xBase",
-  "XC",
-  "XCompose",
-  "XML",
-  "XML Property List",
-  "Xojo",
-  "XPages",
-  "XProc",
-  "XQuery",
-  "XS",
-  "XSLT",
-  "Xtend",
-  "Yacc",
-  "YAML",
-  "YANG",
-  "YARA",
-  "YASnippet",
-  "ZAP",
-  "Zeek",
-  "ZenScript",
-  "Zephir",
-  "Zig",
-  "ZIL",
-  "Zimpl"
+  {
+    "name": "C"
+  },
+  {
+    "name": "C#"
+  },
+  {
+    "name": "C++"
+  },
+  {
+    "name": "CoffeeScript"
+  },
+  {
+    "name": "CSS"
+  },
+  {
+    "name": "Dart"
+  },
+  {
+    "name": "DM"
+  },
+  {
+    "name": "Elixir"
+  },
+  {
+    "name": "Go"
+  },
+  {
+    "name": "Groovy"
+  },
+  {
+    "name": "HTML"
+  },
+  {
+    "name": "Java"
+  },
+  {
+    "name": "JavaScript"
+  },
+  {
+    "name": "Kotlin"
+  },
+  {
+    "name": "Objective-C"
+  },
+  {
+    "name": "Perl"
+  },
+  {
+    "name": "PHP"
+  },
+  {
+    "name": "PowerShell"
+  },
+  {
+    "name": "Python"
+  },
+  {
+    "name": "Ruby"
+  },
+  {
+    "name": "Rust"
+  },
+  {
+    "name": "Scala"
+  },
+  {
+    "name": "Shell"
+  },
+  {
+    "name": "Swift"
+  },
+  {
+    "name": "TypeScript"
+  },
+  {
+    "name": "1C Enterprise"
+  },
+  {
+    "name": "4D"
+  },
+  {
+    "name": "ABAP"
+  },
+  {
+    "name": "ABNF"
+  },
+  {
+    "name": "ActionScript"
+  },
+  {
+    "name": "Ada"
+  },
+  {
+    "name": "Adobe Font Metrics"
+  },
+  {
+    "name": "Agda"
+  },
+  {
+    "name": "AGS Script"
+  },
+  {
+    "name": "AL"
+  },
+  {
+    "name": "Alloy"
+  },
+  {
+    "name": "Alpine Abuild"
+  },
+  {
+    "name": "Altium Designer"
+  },
+  {
+    "name": "AMPL"
+  },
+  {
+    "name": "AngelScript"
+  },
+  {
+    "name": "Ant Build System"
+  },
+  {
+    "name": "ANTLR"
+  },
+  {
+    "name": "ApacheConf"
+  },
+  {
+    "name": "Apex"
+  },
+  {
+    "name": "API Blueprint"
+  },
+  {
+    "name": "APL"
+  },
+  {
+    "name": "Apollo Guidance Computer"
+  },
+  {
+    "name": "AppleScript"
+  },
+  {
+    "name": "Arc"
+  },
+  {
+    "name": "AsciiDoc"
+  },
+  {
+    "name": "ASL"
+  },
+  {
+    "name": "ASN.1"
+  },
+  {
+    "name": "ASP.NET"
+  },
+  {
+    "name": "AspectJ"
+  },
+  {
+    "name": "Assembly"
+  },
+  {
+    "name": "Asymptote"
+  },
+  {
+    "name": "ATS"
+  },
+  {
+    "name": "Augeas"
+  },
+  {
+    "name": "AutoHotkey"
+  },
+  {
+    "name": "AutoIt"
+  },
+  {
+    "name": "Avro IDL"
+  },
+  {
+    "name": "Awk"
+  },
+  {
+    "name": "Ballerina"
+  },
+  {
+    "name": "Batchfile"
+  },
+  {
+    "name": "Befunge"
+  },
+  {
+    "name": "BibTeX"
+  },
+  {
+    "name": "Bison"
+  },
+  {
+    "name": "BitBake"
+  },
+  {
+    "name": "Blade"
+  },
+  {
+    "name": "BlitzBasic"
+  },
+  {
+    "name": "BlitzMax"
+  },
+  {
+    "name": "Bluespec"
+  },
+  {
+    "name": "Boo"
+  },
+  {
+    "name": "Brainfuck"
+  },
+  {
+    "name": "Brightscript"
+  },
+  {
+    "name": "Browserslist"
+  },
+  {
+    "name": "C-ObjDump"
+  },
+  {
+    "name": "C2hs Haskell"
+  },
+  {
+    "name": "Cabal Config"
+  },
+  {
+    "name": "Cap'n Proto"
+  },
+  {
+    "name": "CartoCSS"
+  },
+  {
+    "name": "Ceylon"
+  },
+  {
+    "name": "Chapel"
+  },
+  {
+    "name": "Charity"
+  },
+  {
+    "name": "ChucK"
+  },
+  {
+    "name": "Cirru"
+  },
+  {
+    "name": "Clarion"
+  },
+  {
+    "name": "Classic ASP"
+  },
+  {
+    "name": "Clean"
+  },
+  {
+    "name": "Click"
+  },
+  {
+    "name": "CLIPS"
+  },
+  {
+    "name": "Clojure"
+  },
+  {
+    "name": "Closure Templates"
+  },
+  {
+    "name": "Cloud Firestore Security Rules"
+  },
+  {
+    "name": "CMake"
+  },
+  {
+    "name": "COBOL"
+  },
+  {
+    "name": "CodeQL"
+  },
+  {
+    "name": "ColdFusion"
+  },
+  {
+    "name": "ColdFusion CFC"
+  },
+  {
+    "name": "COLLADA"
+  },
+  {
+    "name": "Common Lisp"
+  },
+  {
+    "name": "Common Workflow Language"
+  },
+  {
+    "name": "Component Pascal"
+  },
+  {
+    "name": "CoNLL-U"
+  },
+  {
+    "name": "Cool"
+  },
+  {
+    "name": "Coq"
+  },
+  {
+    "name": "Cpp-ObjDump"
+  },
+  {
+    "name": "Creole"
+  },
+  {
+    "name": "Crystal"
+  },
+  {
+    "name": "CSON"
+  },
+  {
+    "name": "Csound"
+  },
+  {
+    "name": "Csound Document"
+  },
+  {
+    "name": "Csound Score"
+  },
+  {
+    "name": "CSV"
+  },
+  {
+    "name": "Cuda"
+  },
+  {
+    "name": "cURL Config"
+  },
+  {
+    "name": "CWeb"
+  },
+  {
+    "name": "Cycript"
+  },
+  {
+    "name": "Cython"
+  },
+  {
+    "name": "D"
+  },
+  {
+    "name": "D-ObjDump"
+  },
+  {
+    "name": "Dafny"
+  },
+  {
+    "name": "Darcs Patch"
+  },
+  {
+    "name": "DataWeave"
+  },
+  {
+    "name": "desktop"
+  },
+  {
+    "name": "Dhall"
+  },
+  {
+    "name": "Diff"
+  },
+  {
+    "name": "DIGITAL Command Language"
+  },
+  {
+    "name": "dircolors"
+  },
+  {
+    "name": "DirectX 3D File"
+  },
+  {
+    "name": "DNS Zone"
+  },
+  {
+    "name": "Dockerfile"
+  },
+  {
+    "name": "Dogescript"
+  },
+  {
+    "name": "DTrace"
+  },
+  {
+    "name": "Dylan"
+  },
+  {
+    "name": "E"
+  },
+  {
+    "name": "Eagle"
+  },
+  {
+    "name": "Easybuild"
+  },
+  {
+    "name": "EBNF"
+  },
+  {
+    "name": "eC"
+  },
+  {
+    "name": "Ecere Projects"
+  },
+  {
+    "name": "ECL"
+  },
+  {
+    "name": "ECLiPSe"
+  },
+  {
+    "name": "EditorConfig"
+  },
+  {
+    "name": "Edje Data Collection"
+  },
+  {
+    "name": "edn"
+  },
+  {
+    "name": "Eiffel"
+  },
+  {
+    "name": "EJS"
+  },
+  {
+    "name": "Elm"
+  },
+  {
+    "name": "Emacs Lisp"
+  },
+  {
+    "name": "EmberScript"
+  },
+  {
+    "name": "EML"
+  },
+  {
+    "name": "EQ"
+  },
+  {
+    "name": "Erlang"
+  },
+  {
+    "name": "F#"
+  },
+  {
+    "name": "F*"
+  },
+  {
+    "name": "Factor"
+  },
+  {
+    "name": "Fancy"
+  },
+  {
+    "name": "Fantom"
+  },
+  {
+    "name": "Faust"
+  },
+  {
+    "name": "FIGlet Font"
+  },
+  {
+    "name": "Filebench WML"
+  },
+  {
+    "name": "Filterscript"
+  },
+  {
+    "name": "fish"
+  },
+  {
+    "name": "FLUX"
+  },
+  {
+    "name": "Formatted"
+  },
+  {
+    "name": "Forth"
+  },
+  {
+    "name": "Fortran"
+  },
+  {
+    "name": "Fortran Free Form"
+  },
+  {
+    "name": "FreeMarker"
+  },
+  {
+    "name": "Frege"
+  },
+  {
+    "name": "Futhark"
+  },
+  {
+    "name": "G-code"
+  },
+  {
+    "name": "Game Maker Language"
+  },
+  {
+    "name": "GAML"
+  },
+  {
+    "name": "GAMS"
+  },
+  {
+    "name": "GAP"
+  },
+  {
+    "name": "GCC Machine Description"
+  },
+  {
+    "name": "GDB"
+  },
+  {
+    "name": "GDScript"
+  },
+  {
+    "name": "GEDCOM"
+  },
+  {
+    "name": "Genie"
+  },
+  {
+    "name": "Genshi"
+  },
+  {
+    "name": "Gentoo Ebuild"
+  },
+  {
+    "name": "Gentoo Eclass"
+  },
+  {
+    "name": "Gerber Image"
+  },
+  {
+    "name": "Gettext Catalog"
+  },
+  {
+    "name": "Gherkin"
+  },
+  {
+    "name": "Git Attributes"
+  },
+  {
+    "name": "Git Config"
+  },
+  {
+    "name": "GLSL"
+  },
+  {
+    "name": "Glyph"
+  },
+  {
+    "name": "Glyph Bitmap Distribution Format"
+  },
+  {
+    "name": "GN"
+  },
+  {
+    "name": "Gnuplot"
+  },
+  {
+    "name": "Golo"
+  },
+  {
+    "name": "Gosu"
+  },
+  {
+    "name": "Grace"
+  },
+  {
+    "name": "Gradle"
+  },
+  {
+    "name": "Grammatical Framework"
+  },
+  {
+    "name": "Graph Modeling Language"
+  },
+  {
+    "name": "GraphQL"
+  },
+  {
+    "name": "Graphviz (DOT)"
+  },
+  {
+    "name": "Groovy Server Pages"
+  },
+  {
+    "name": "Hack"
+  },
+  {
+    "name": "Haml"
+  },
+  {
+    "name": "Handlebars"
+  },
+  {
+    "name": "HAProxy"
+  },
+  {
+    "name": "Harbour"
+  },
+  {
+    "name": "Haskell"
+  },
+  {
+    "name": "Haxe"
+  },
+  {
+    "name": "HCL"
+  },
+  {
+    "name": "HiveQL"
+  },
+  {
+    "name": "HLSL"
+  },
+  {
+    "name": "HolyC"
+  },
+  {
+    "name": "HTML+Django"
+  },
+  {
+    "name": "HTML+ECR"
+  },
+  {
+    "name": "HTML+EEX"
+  },
+  {
+    "name": "HTML+ERB"
+  },
+  {
+    "name": "HTML+PHP"
+  },
+  {
+    "name": "HTML+Razor"
+  },
+  {
+    "name": "HTTP"
+  },
+  {
+    "name": "HXML"
+  },
+  {
+    "name": "Hy"
+  },
+  {
+    "name": "HyPhy"
+  },
+  {
+    "name": "IDL"
+  },
+  {
+    "name": "Idris"
+  },
+  {
+    "name": "Ignore List"
+  },
+  {
+    "name": "IGOR Pro"
+  },
+  {
+    "name": "Inform 7"
+  },
+  {
+    "name": "INI"
+  },
+  {
+    "name": "Inno Setup"
+  },
+  {
+    "name": "Io"
+  },
+  {
+    "name": "Ioke"
+  },
+  {
+    "name": "IRC log"
+  },
+  {
+    "name": "Isabelle"
+  },
+  {
+    "name": "Isabelle ROOT"
+  },
+  {
+    "name": "J"
+  },
+  {
+    "name": "Jasmin"
+  },
+  {
+    "name": "Java Properties"
+  },
+  {
+    "name": "Java Server Pages"
+  },
+  {
+    "name": "JavaScript+ERB"
+  },
+  {
+    "name": "JFlex"
+  },
+  {
+    "name": "Jison"
+  },
+  {
+    "name": "Jison Lex"
+  },
+  {
+    "name": "Jolie"
+  },
+  {
+    "name": "JSON"
+  },
+  {
+    "name": "JSON with Comments"
+  },
+  {
+    "name": "JSON5"
+  },
+  {
+    "name": "JSONiq"
+  },
+  {
+    "name": "JSONLD"
+  },
+  {
+    "name": "Jsonnet"
+  },
+  {
+    "name": "JSX"
+  },
+  {
+    "name": "Julia"
+  },
+  {
+    "name": "Jupyter Notebook"
+  },
+  {
+    "name": "Kaitai Struct"
+  },
+  {
+    "name": "KiCad Layout"
+  },
+  {
+    "name": "KiCad Legacy Layout"
+  },
+  {
+    "name": "KiCad Schematic"
+  },
+  {
+    "name": "Kit"
+  },
+  {
+    "name": "KRL"
+  },
+  {
+    "name": "LabVIEW"
+  },
+  {
+    "name": "Lark"
+  },
+  {
+    "name": "Lasso"
+  },
+  {
+    "name": "Latte"
+  },
+  {
+    "name": "Lean"
+  },
+  {
+    "name": "Less"
+  },
+  {
+    "name": "Lex"
+  },
+  {
+    "name": "LFE"
+  },
+  {
+    "name": "LilyPond"
+  },
+  {
+    "name": "Limbo"
+  },
+  {
+    "name": "Linker Script"
+  },
+  {
+    "name": "Linux Kernel Module"
+  },
+  {
+    "name": "Liquid"
+  },
+  {
+    "name": "Literate Agda"
+  },
+  {
+    "name": "Literate CoffeeScript"
+  },
+  {
+    "name": "Literate Haskell"
+  },
+  {
+    "name": "LiveScript"
+  },
+  {
+    "name": "LLVM"
+  },
+  {
+    "name": "Logos"
+  },
+  {
+    "name": "Logtalk"
+  },
+  {
+    "name": "LOLCODE"
+  },
+  {
+    "name": "LookML"
+  },
+  {
+    "name": "LoomScript"
+  },
+  {
+    "name": "LSL"
+  },
+  {
+    "name": "LTspice Symbol"
+  },
+  {
+    "name": "Lua"
+  },
+  {
+    "name": "M"
+  },
+  {
+    "name": "M4"
+  },
+  {
+    "name": "M4Sugar"
+  },
+  {
+    "name": "Macaulay2"
+  },
+  {
+    "name": "Makefile"
+  },
+  {
+    "name": "Mako"
+  },
+  {
+    "name": "Markdown"
+  },
+  {
+    "name": "Marko"
+  },
+  {
+    "name": "Mask"
+  },
+  {
+    "name": "Mathematica"
+  },
+  {
+    "name": "MATLAB"
+  },
+  {
+    "name": "Maven POM"
+  },
+  {
+    "name": "Max"
+  },
+  {
+    "name": "MAXScript"
+  },
+  {
+    "name": "mcfunction"
+  },
+  {
+    "name": "MediaWiki"
+  },
+  {
+    "name": "Mercury"
+  },
+  {
+    "name": "Meson"
+  },
+  {
+    "name": "Metal"
+  },
+  {
+    "name": "Microsoft Developer Studio Project"
+  },
+  {
+    "name": "MiniD"
+  },
+  {
+    "name": "Mirah"
+  },
+  {
+    "name": "mIRC Script"
+  },
+  {
+    "name": "MLIR"
+  },
+  {
+    "name": "Modelica"
+  },
+  {
+    "name": "Modula-2"
+  },
+  {
+    "name": "Modula-3"
+  },
+  {
+    "name": "Module Management System"
+  },
+  {
+    "name": "Monkey"
+  },
+  {
+    "name": "Moocode"
+  },
+  {
+    "name": "MoonScript"
+  },
+  {
+    "name": "Motorola 68K Assembly"
+  },
+  {
+    "name": "MQL4"
+  },
+  {
+    "name": "MQL5"
+  },
+  {
+    "name": "MTML"
+  },
+  {
+    "name": "MUF"
+  },
+  {
+    "name": "mupad"
+  },
+  {
+    "name": "Muse"
+  },
+  {
+    "name": "Mustache"
+  },
+  {
+    "name": "Myghty"
+  },
+  {
+    "name": "nanorc"
+  },
+  {
+    "name": "NASL"
+  },
+  {
+    "name": "NCL"
+  },
+  {
+    "name": "Nearley"
+  },
+  {
+    "name": "Nemerle"
+  },
+  {
+    "name": "NEON"
+  },
+  {
+    "name": "nesC"
+  },
+  {
+    "name": "NetLinx"
+  },
+  {
+    "name": "NetLinx+ERB"
+  },
+  {
+    "name": "NetLogo"
+  },
+  {
+    "name": "NewLisp"
+  },
+  {
+    "name": "Nextflow"
+  },
+  {
+    "name": "Nginx"
+  },
+  {
+    "name": "Nim"
+  },
+  {
+    "name": "Ninja"
+  },
+  {
+    "name": "Nit"
+  },
+  {
+    "name": "Nix"
+  },
+  {
+    "name": "NL"
+  },
+  {
+    "name": "NPM Config"
+  },
+  {
+    "name": "NSIS"
+  },
+  {
+    "name": "Nu"
+  },
+  {
+    "name": "NumPy"
+  },
+  {
+    "name": "NWScript"
+  },
+  {
+    "name": "ObjDump"
+  },
+  {
+    "name": "Object Data Instance Notation"
+  },
+  {
+    "name": "Objective-C++"
+  },
+  {
+    "name": "Objective-J"
+  },
+  {
+    "name": "ObjectScript"
+  },
+  {
+    "name": "OCaml"
+  },
+  {
+    "name": "Odin"
+  },
+  {
+    "name": "Omgrofl"
+  },
+  {
+    "name": "ooc"
+  },
+  {
+    "name": "Opa"
+  },
+  {
+    "name": "Opal"
+  },
+  {
+    "name": "Open Policy Agent"
+  },
+  {
+    "name": "OpenCL"
+  },
+  {
+    "name": "OpenEdge ABL"
+  },
+  {
+    "name": "OpenQASM"
+  },
+  {
+    "name": "OpenRC runscript"
+  },
+  {
+    "name": "OpenSCAD"
+  },
+  {
+    "name": "OpenStep Property List"
+  },
+  {
+    "name": "OpenType Feature File"
+  },
+  {
+    "name": "Org"
+  },
+  {
+    "name": "Ox"
+  },
+  {
+    "name": "Oxygene"
+  },
+  {
+    "name": "Oz"
+  },
+  {
+    "name": "P4"
+  },
+  {
+    "name": "Pan"
+  },
+  {
+    "name": "Papyrus"
+  },
+  {
+    "name": "Parrot"
+  },
+  {
+    "name": "Parrot Assembly"
+  },
+  {
+    "name": "Parrot Internal Representation"
+  },
+  {
+    "name": "Pascal"
+  },
+  {
+    "name": "Pawn"
+  },
+  {
+    "name": "Pep8"
+  },
+  {
+    "name": "Pic"
+  },
+  {
+    "name": "Pickle"
+  },
+  {
+    "name": "PicoLisp"
+  },
+  {
+    "name": "PigLatin"
+  },
+  {
+    "name": "Pike"
+  },
+  {
+    "name": "PlantUML"
+  },
+  {
+    "name": "PLpgSQL"
+  },
+  {
+    "name": "PLSQL"
+  },
+  {
+    "name": "Pod"
+  },
+  {
+    "name": "Pod 6"
+  },
+  {
+    "name": "PogoScript"
+  },
+  {
+    "name": "Pony"
+  },
+  {
+    "name": "PostCSS"
+  },
+  {
+    "name": "PostScript"
+  },
+  {
+    "name": "POV-Ray SDL"
+  },
+  {
+    "name": "PowerBuilder"
+  },
+  {
+    "name": "Prisma"
+  },
+  {
+    "name": "Processing"
+  },
+  {
+    "name": "Proguard"
+  },
+  {
+    "name": "Prolog"
+  },
+  {
+    "name": "Propeller Spin"
+  },
+  {
+    "name": "Protocol Buffer"
+  },
+  {
+    "name": "Public Key"
+  },
+  {
+    "name": "Pug"
+  },
+  {
+    "name": "Puppet"
+  },
+  {
+    "name": "Pure Data"
+  },
+  {
+    "name": "PureBasic"
+  },
+  {
+    "name": "PureScript"
+  },
+  {
+    "name": "Python console"
+  },
+  {
+    "name": "Python traceback"
+  },
+  {
+    "name": "q"
+  },
+  {
+    "name": "Q#"
+  },
+  {
+    "name": "QMake"
+  },
+  {
+    "name": "QML"
+  },
+  {
+    "name": "Qt Script"
+  },
+  {
+    "name": "Quake"
+  },
+  {
+    "name": "R"
+  },
+  {
+    "name": "Racket"
+  },
+  {
+    "name": "Ragel"
+  },
+  {
+    "name": "Raku"
+  },
+  {
+    "name": "RAML"
+  },
+  {
+    "name": "Rascal"
+  },
+  {
+    "name": "Raw token data"
+  },
+  {
+    "name": "RDoc"
+  },
+  {
+    "name": "Readline Config"
+  },
+  {
+    "name": "REALbasic"
+  },
+  {
+    "name": "Reason"
+  },
+  {
+    "name": "Rebol"
+  },
+  {
+    "name": "Red"
+  },
+  {
+    "name": "Redcode"
+  },
+  {
+    "name": "Regular Expression"
+  },
+  {
+    "name": "Ren'Py"
+  },
+  {
+    "name": "RenderScript"
+  },
+  {
+    "name": "ReScript"
+  },
+  {
+    "name": "reStructuredText"
+  },
+  {
+    "name": "REXX"
+  },
+  {
+    "name": "Rich Text Format"
+  },
+  {
+    "name": "Ring"
+  },
+  {
+    "name": "Riot"
+  },
+  {
+    "name": "RMarkdown"
+  },
+  {
+    "name": "RobotFramework"
+  },
+  {
+    "name": "Roff"
+  },
+  {
+    "name": "Roff Manpage"
+  },
+  {
+    "name": "Rouge"
+  },
+  {
+    "name": "RPC"
+  },
+  {
+    "name": "RPM Spec"
+  },
+  {
+    "name": "RUNOFF"
+  },
+  {
+    "name": "Sage"
+  },
+  {
+    "name": "SaltStack"
+  },
+  {
+    "name": "SAS"
+  },
+  {
+    "name": "Sass"
+  },
+  {
+    "name": "Scaml"
+  },
+  {
+    "name": "Scheme"
+  },
+  {
+    "name": "Scilab"
+  },
+  {
+    "name": "SCSS"
+  },
+  {
+    "name": "sed"
+  },
+  {
+    "name": "Self"
+  },
+  {
+    "name": "ShaderLab"
+  },
+  {
+    "name": "ShellSession"
+  },
+  {
+    "name": "Shen"
+  },
+  {
+    "name": "Sieve"
+  },
+  {
+    "name": "Slash"
+  },
+  {
+    "name": "Slice"
+  },
+  {
+    "name": "Slim"
+  },
+  {
+    "name": "Smali"
+  },
+  {
+    "name": "Smalltalk"
+  },
+  {
+    "name": "Smarty"
+  },
+  {
+    "name": "SmPL"
+  },
+  {
+    "name": "SMT"
+  },
+  {
+    "name": "Solidity"
+  },
+  {
+    "name": "SourcePawn"
+  },
+  {
+    "name": "SPARQL"
+  },
+  {
+    "name": "Spline Font Database"
+  },
+  {
+    "name": "SQF"
+  },
+  {
+    "name": "SQL"
+  },
+  {
+    "name": "SQLPL"
+  },
+  {
+    "name": "Squirrel"
+  },
+  {
+    "name": "SRecode Template"
+  },
+  {
+    "name": "SSH Config"
+  },
+  {
+    "name": "Stan"
+  },
+  {
+    "name": "Standard ML"
+  },
+  {
+    "name": "Starlark"
+  },
+  {
+    "name": "Stata"
+  },
+  {
+    "name": "STON"
+  },
+  {
+    "name": "Stylus"
+  },
+  {
+    "name": "SubRip Text"
+  },
+  {
+    "name": "SugarSS"
+  },
+  {
+    "name": "SuperCollider"
+  },
+  {
+    "name": "Svelte"
+  },
+  {
+    "name": "SVG"
+  },
+  {
+    "name": "SWIG"
+  },
+  {
+    "name": "SystemVerilog"
+  },
+  {
+    "name": "Tcl"
+  },
+  {
+    "name": "Tcsh"
+  },
+  {
+    "name": "Tea"
+  },
+  {
+    "name": "Terra"
+  },
+  {
+    "name": "TeX"
+  },
+  {
+    "name": "Texinfo"
+  },
+  {
+    "name": "Text"
+  },
+  {
+    "name": "Textile"
+  },
+  {
+    "name": "Thrift"
+  },
+  {
+    "name": "TI Program"
+  },
+  {
+    "name": "TLA"
+  },
+  {
+    "name": "TOML"
+  },
+  {
+    "name": "TSQL"
+  },
+  {
+    "name": "TSV"
+  },
+  {
+    "name": "TSX"
+  },
+  {
+    "name": "Turing"
+  },
+  {
+    "name": "Turtle"
+  },
+  {
+    "name": "Twig"
+  },
+  {
+    "name": "TXL"
+  },
+  {
+    "name": "Type Language"
+  },
+  {
+    "name": "Unified Parallel C"
+  },
+  {
+    "name": "Unity3D Asset"
+  },
+  {
+    "name": "Unix Assembly"
+  },
+  {
+    "name": "Uno"
+  },
+  {
+    "name": "UnrealScript"
+  },
+  {
+    "name": "UrWeb"
+  },
+  {
+    "name": "V"
+  },
+  {
+    "name": "Vala"
+  },
+  {
+    "name": "VBA"
+  },
+  {
+    "name": "VBScript"
+  },
+  {
+    "name": "VCL"
+  },
+  {
+    "name": "Verilog"
+  },
+  {
+    "name": "VHDL"
+  },
+  {
+    "name": "Vim Help File"
+  },
+  {
+    "name": "Vim script"
+  },
+  {
+    "name": "Vim Snippet"
+  },
+  {
+    "name": "Visual Basic .NET"
+  },
+  {
+    "name": "Volt"
+  },
+  {
+    "name": "Vue"
+  },
+  {
+    "name": "Wavefront Material"
+  },
+  {
+    "name": "Wavefront Object"
+  },
+  {
+    "name": "wdl"
+  },
+  {
+    "name": "Web Ontology Language"
+  },
+  {
+    "name": "WebAssembly"
+  },
+  {
+    "name": "WebIDL"
+  },
+  {
+    "name": "WebVTT"
+  },
+  {
+    "name": "Wget Config"
+  },
+  {
+    "name": "Windows Registry Entries"
+  },
+  {
+    "name": "wisp"
+  },
+  {
+    "name": "Wollok"
+  },
+  {
+    "name": "World of Warcraft Addon Data"
+  },
+  {
+    "name": "X BitMap"
+  },
+  {
+    "name": "X Font Directory Index"
+  },
+  {
+    "name": "X PixMap"
+  },
+  {
+    "name": "X10"
+  },
+  {
+    "name": "xBase"
+  },
+  {
+    "name": "XC"
+  },
+  {
+    "name": "XCompose"
+  },
+  {
+    "name": "XML"
+  },
+  {
+    "name": "XML Property List"
+  },
+  {
+    "name": "Xojo"
+  },
+  {
+    "name": "XPages"
+  },
+  {
+    "name": "XProc"
+  },
+  {
+    "name": "XQuery"
+  },
+  {
+    "name": "XS"
+  },
+  {
+    "name": "XSLT"
+  },
+  {
+    "name": "Xtend"
+  },
+  {
+    "name": "Yacc"
+  },
+  {
+    "name": "YAML"
+  },
+  {
+    "name": "YANG"
+  },
+  {
+    "name": "YARA"
+  },
+  {
+    "name": "YASnippet"
+  },
+  {
+    "name": "ZAP"
+  },
+  {
+    "name": "Zeek"
+  },
+  {
+    "name": "ZenScript"
+  },
+  {
+    "name": "Zephir"
+  },
+  {
+    "name": "Zig"
+  },
+  {
+    "name": "ZIL"
+  },
+  {
+    "name": "Zimpl"
+  }
 ]

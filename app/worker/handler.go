@@ -1,13 +1,14 @@
 package worker
 
 import (
+	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"time"
 )
 
 var (
-	languages []string
+	languages model.Languages
 )
 
 type Worker struct {
@@ -16,7 +17,7 @@ type Worker struct {
 }
 
 func init() {
-	languages = util.Languages()
+	util.LoadAsset("languages", &languages)
 }
 
 func NewWorker() *Worker {

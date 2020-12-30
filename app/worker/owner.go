@@ -265,7 +265,7 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, obj
 				},
 				bson.D{
 					{"$match", bson.D{
-						{"repositories.primary_language.name", language},
+						{"repositories.primary_language.name", language.Name},
 					}},
 				},
 				bson.D{
@@ -282,7 +282,7 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, obj
 					}},
 				},
 			},
-			Tags: []string{ownerType, model.TypeRepository, object, language},
+			Tags: []string{ownerType, model.TypeRepository, object, language.Name},
 		})
 	}
 	return

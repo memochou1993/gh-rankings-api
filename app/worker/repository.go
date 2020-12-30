@@ -164,7 +164,7 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines 
 			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{
-						{"primary_language.name", language},
+						{"primary_language.name", language.Name},
 					}},
 				},
 				bson.D{
@@ -181,7 +181,7 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines 
 					}},
 				},
 			},
-			Tags: []string{model.TypeRepository, object, language},
+			Tags: []string{model.TypeRepository, object, language.Name},
 		})
 	}
 	return

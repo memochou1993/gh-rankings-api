@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,17 @@ func LoadEnv() {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln(err.Error())
 	}
+}
+
+func LoadAsset(name string, v interface{}) {
+	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s.json", name))
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	if err = json.Unmarshal(b, &v); err != nil {
+		log.Fatalln(err.Error())
+	}
+	return
 }
 
 func ParseStruct(v interface{}, sep string) string {
@@ -36,26 +48,4 @@ func ParseStruct(v interface{}, sep string) string {
 	s = strings.TrimSuffix(s, "}")
 
 	return s
-}
-
-func Languages() (languages []string) {
-	b, err := ioutil.ReadFile("./assets/languages.json")
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	if err = json.Unmarshal(b, &languages); err != nil {
-		log.Fatalln(err.Error())
-	}
-	return languages
-}
-
-func Locations() (locations []string) {
-	b, err := ioutil.ReadFile("./assets/locations.json")
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	if err = json.Unmarshal(b, &locations); err != nil {
-		log.Fatalln(err.Error())
-	}
-	return locations
 }
