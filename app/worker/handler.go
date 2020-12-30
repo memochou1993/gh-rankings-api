@@ -41,7 +41,7 @@ func (w *Worker) collectRepositories() {
 }
 
 func (w *Worker) rankRepositories() {
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		w.RepositoryWorker.Rank()
 	}
@@ -66,7 +66,7 @@ func (w *Worker) updateOwners() {
 }
 
 func (w *Worker) rankOwners() {
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(10 * time.Minute) // FIXME
 	for ; true; <-t.C {
 		w.OwnerWorker.Rank()
 	}

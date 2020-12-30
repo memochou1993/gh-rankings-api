@@ -48,3 +48,14 @@ func Languages() (languages []string) {
 	}
 	return languages
 }
+
+func Locations() (locations []string) {
+	b, err := ioutil.ReadFile("./assets/locations.json")
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	if err = json.Unmarshal(b, &locations); err != nil {
+		log.Fatalln(err.Error())
+	}
+	return locations
+}
