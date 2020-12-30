@@ -49,7 +49,7 @@ func (o *OwnerWorker) Travel(from *time.Time, q *model.Query) error {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.searchQuery(*from), " "))
+	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newSearchQuery(*from), " "))
 
 	var owners []model.Owner
 	if err := o.FetchOwners(q, &owners); err != nil {
@@ -165,23 +165,23 @@ func (o *OwnerWorker) FetchRepositories(q *model.Query, repositories *[]model.Re
 
 func (o *OwnerWorker) Rank() {
 	logger.Info("Executing owner rank pipelines...")
-	pipelines := []model.RankPipeline{
-		o.rankPipeline(model.TypeUser, "followers"),
-		o.rankPipeline(model.TypeUser, "gists.forks"),
-		o.rankPipeline(model.TypeUser, "gists.stargazers"),
-		o.rankPipeline(model.TypeUser, "repositories.forks"),
-		o.rankPipeline(model.TypeUser, "repositories.stargazers"),
-		o.rankPipeline(model.TypeUser, "repositories.watchers"),
-		o.rankPipeline(model.TypeOrganization, "repositories.forks"),
-		o.rankPipeline(model.TypeOrganization, "repositories.stargazers"),
-		o.rankPipeline(model.TypeOrganization, "repositories.watchers"),
+	pipelines := []*model.RankPipeline{
+		o.newRankPipeline(model.TypeUser, "followers"),
+		o.newRankPipeline(model.TypeUser, "gists.forks"),
+		o.newRankPipeline(model.TypeUser, "gists.stargazers"),
+		o.newRankPipeline(model.TypeUser, "repositories.forks"),
+		o.newRankPipeline(model.TypeUser, "repositories.stargazers"),
+		o.newRankPipeline(model.TypeUser, "repositories.watchers"),
+		o.newRankPipeline(model.TypeOrganization, "repositories.forks"),
+		o.newRankPipeline(model.TypeOrganization, "repositories.stargazers"),
+		o.newRankPipeline(model.TypeOrganization, "repositories.watchers"),
 	}
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeUser, "forks")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeUser, "stargazers")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeUser, "watchers")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeOrganization, "forks")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeOrganization, "stargazers")...)
-	pipelines = append(pipelines, o.repositoryRankPipelinesByLanguage(model.TypeOrganization, "watchers")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeUser, "forks")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeUser, "stargazers")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeUser, "watchers")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeOrganization, "forks")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeOrganization, "stargazers")...)
+	pipelines = append(pipelines, o.newRepositoryRankPipelinesByLanguage(model.TypeOrganization, "watchers")...)
 
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
@@ -189,9 +189,9 @@ func (o *OwnerWorker) Rank() {
 	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline model.RankPipeline) {
+		go func(pipeline *model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, updatedAt, pipeline)
+			model.PushRanks(o.OwnerModel, updatedAt, *pipeline)
 			<-ch
 		}(pipeline)
 	}
@@ -215,19 +215,19 @@ func (o *OwnerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error)
 	return
 }
 
-func (o *OwnerWorker) searchQuery(from time.Time) model.SearchQuery {
-	return model.SearchQuery{
+func (o *OwnerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
+	return &model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
 		Sort:    "joined-asc",
 	}
 }
 
-func (o *OwnerWorker) rankPipeline(ownerType string, object string) model.RankPipeline {
+func (o *OwnerWorker) newRankPipeline(ownerType string, object string) *model.RankPipeline {
 	tags := []string{ownerType}
 	tags = append(tags, strings.Split(object, ".")...)
-	return model.RankPipeline{
-		Pipeline: mongo.Pipeline{
+	return &model.RankPipeline{
+		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$match", bson.D{
 					{"type", ownerType},
@@ -251,10 +251,10 @@ func (o *OwnerWorker) rankPipeline(ownerType string, object string) model.RankPi
 	}
 }
 
-func (o *OwnerWorker) repositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []model.RankPipeline) {
+func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []*model.RankPipeline) {
 	for _, language := range util.Languages() {
-		pipelines = append(pipelines, model.RankPipeline{
-			Pipeline: mongo.Pipeline{
+		pipelines = append(pipelines, &model.RankPipeline{
+			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{
 						{"type", ownerType},

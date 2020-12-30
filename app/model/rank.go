@@ -17,13 +17,13 @@ type Rank struct {
 }
 
 type RankPipeline struct {
-	Pipeline mongo.Pipeline
+	Pipeline *mongo.Pipeline
 	Tags     []string
 }
 
 func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
 	ctx := context.Background()
-	cursor := database.Aggregate(ctx, model.Name(), pipeline.Pipeline)
+	cursor := database.Aggregate(ctx, model.Name(), *pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
 	var models []mongo.WriteModel
@@ -48,6 +48,7 @@ func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
 		if cursor.RemainingBatchLength() == 0 {
 			database.BulkWrite(model.Name(), models)
 			models = models[:0]
+			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }

@@ -47,7 +47,7 @@ func (r *RepositoryWorker) Travel(from *time.Time, q *model.Query) error {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(r.searchQuery(*from), " "))
+	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(r.newSearchQuery(*from), " "))
 
 	var repositories []model.Repository
 	if err := r.FetchRepositories(q, &repositories); err != nil {
@@ -86,14 +86,14 @@ func (r *RepositoryWorker) FetchRepositories(q *model.Query, repositories *[]mod
 
 func (r *RepositoryWorker) Rank() {
 	logger.Info("Executing repository rank pipelines...")
-	pipelines := []model.RankPipeline{
-		r.rankPipeline("forks"),
-		r.rankPipeline("stargazers"),
-		r.rankPipeline("watchers"),
+	pipelines := []*model.RankPipeline{
+		r.newRankPipeline("forks"),
+		r.newRankPipeline("stargazers"),
+		r.newRankPipeline("watchers"),
 	}
-	pipelines = append(pipelines, r.rankPipelinesByLanguage("forks")...)
-	pipelines = append(pipelines, r.rankPipelinesByLanguage("stargazers")...)
-	pipelines = append(pipelines, r.rankPipelinesByLanguage("watchers")...)
+	pipelines = append(pipelines, r.newRankPipelinesByLanguage("forks")...)
+	pipelines = append(pipelines, r.newRankPipelinesByLanguage("stargazers")...)
+	pipelines = append(pipelines, r.newRankPipelinesByLanguage("watchers")...)
 
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
@@ -101,9 +101,9 @@ func (r *RepositoryWorker) Rank() {
 	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline model.RankPipeline) {
+		go func(pipeline *model.RankPipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, updatedAt, pipeline)
+			model.PushRanks(r.RepositoryModel, updatedAt, *pipeline)
 			<-ch
 		}(pipeline)
 	}
@@ -127,8 +127,8 @@ func (r *RepositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (
 	return
 }
 
-func (r *RepositoryWorker) searchQuery(from time.Time) model.SearchQuery {
-	return model.SearchQuery{
+func (r *RepositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
+	return &model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Fork:    "true",
 		Sort:    "stars",
@@ -136,10 +136,10 @@ func (r *RepositoryWorker) searchQuery(from time.Time) model.SearchQuery {
 	}
 }
 
-func (r *RepositoryWorker) rankPipeline(object string) model.RankPipeline {
+func (r *RepositoryWorker) newRankPipeline(object string) *model.RankPipeline {
 	tags := strings.Split(object, ".")
-	return model.RankPipeline{
-		Pipeline: mongo.Pipeline{
+	return &model.RankPipeline{
+		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
@@ -158,10 +158,10 @@ func (r *RepositoryWorker) rankPipeline(object string) model.RankPipeline {
 	}
 }
 
-func (r *RepositoryWorker) rankPipelinesByLanguage(object string) (pipelines []model.RankPipeline) {
+func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines []*model.RankPipeline) {
 	for _, language := range util.Languages() {
-		pipelines = append(pipelines, model.RankPipeline{
-			Pipeline: mongo.Pipeline{
+		pipelines = append(pipelines, &model.RankPipeline{
+			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{
 						{"primary_language.name", language},
