@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/github-rankings/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -41,7 +42,11 @@ func (o *Owner) TagType() {
 	if o.IsOrganization() {
 		tag = TypeOrganization
 	}
-	o.Tags = []string{tag}
+	o.Tags = append(o.Tags, tag)
+}
+
+func (o *Owner) TagLocations() {
+	o.Tags = append(o.Tags, resource.Locate(o.Location)...)
 }
 
 func (o *Owner) Type() (ownerType string) {
@@ -116,6 +121,7 @@ func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
 	var models []mongo.WriteModel
 	for _, owner := range owners {
 		owner.TagType()
+		owner.TagLocations()
 		filter := bson.D{{"_id", owner.ID()}}
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))

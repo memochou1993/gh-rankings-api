@@ -66,7 +66,7 @@ func TestStoreUsers(t *testing.T) {
 	if err := res.Decode(&owner); err != nil {
 		t.Fatal(err.Error())
 	}
-	if owner.Type != model.TypeUser {
+	if !owner.IsUser() {
 		t.Fail()
 	}
 
@@ -76,19 +76,19 @@ func TestStoreUsers(t *testing.T) {
 func TestStoreOrganizations(t *testing.T) {
 	o := worker.NewOwnerWorker()
 
-	organization := model.Owner{Login: "github"}
-	organizations := []model.Owner{organization}
-	o.OwnerModel.Store(organizations)
-	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", organization.ID()}})
+	owner := model.Owner{Login: "github"}
+	owners := []model.Owner{owner}
+	o.OwnerModel.Store(owners)
+	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", owner.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
 		t.Fail()
 	}
 
-	organization = model.Owner{}
-	if err := res.Decode(&organization); err != nil {
+	owner = model.Owner{}
+	if err := res.Decode(&owner); err != nil {
 		t.Fatal(err.Error())
 	}
-	if organization.Type != model.TypeOrganization {
+	if !owner.IsOrganization() {
 		t.Fail()
 	}
 
