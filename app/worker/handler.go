@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	languages model.Languages
+	languages *model.Languages
+	locations *model.Locations
 )
 
 type Worker struct {
@@ -18,6 +19,7 @@ type Worker struct {
 
 func init() {
 	util.LoadAsset("languages", &languages)
+	util.LoadAsset("locations", &locations)
 }
 
 func NewWorker() *Worker {

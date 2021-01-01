@@ -252,7 +252,7 @@ func (o *OwnerWorker) newRankPipeline(ownerType string, object string) *model.Ra
 }
 
 func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []*model.RankPipeline) {
-	for _, language := range languages {
+	for _, language := range *languages {
 		pipelines = append(pipelines, &model.RankPipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{
