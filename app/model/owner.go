@@ -16,8 +16,8 @@ type Owner struct {
 	Name         string       `json:"name" bson:"name"`
 	Gists        []Gist       `json:"gists" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
+	Tags         []string     `json:"tags" bson:"tags"`
 	Ranks        []Rank       `json:"ranks" bson:"ranks,omitempty"`
-	Type         string       `json:"type" bson:"type"`
 }
 
 func (o *Owner) ID() string {
@@ -86,7 +86,11 @@ func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
 	}
 	var models []mongo.WriteModel
 	for _, owner := range owners {
-		owner.Type = o.Type(owner)
+		// FIXME
+		owner.Tags = []string{TypeUser}
+		if o.IsOrganization(owner) {
+			owner.Tags = []string{TypeOrganization}
+		}
 		filter := bson.D{{"_id", owner.ID()}}
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
@@ -106,18 +110,23 @@ func (o *OwnerModel) UpdateRepositories(owner Owner, repositories []Repository) 
 	database.UpdateOne(o.Name(), filter, update)
 }
 
+func (o *OwnerModel) HasFollowers(owner Owner) bool {
+	return owner.Followers != nil
+}
+
 func (o *OwnerModel) IsUser(owner Owner) bool {
-	return o.Type(owner) == TypeUser
+	return o.HasFollowers(owner)
 }
 
 func (o *OwnerModel) IsOrganization(owner Owner) bool {
-	return o.Type(owner) == TypeOrganization
+	return !o.HasFollowers(owner)
 }
 
 func (o *OwnerModel) Type(owner Owner) (ownerType string) {
-	ownerType = TypeUser
-	if owner.Followers == nil {
-		ownerType = TypeOrganization
+	for _, tag := range owner.Tags {
+		if tag == TypeUser {
+			return TypeUser
+		}
 	}
-	return
+	return TypeOrganization
 }

@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -136,15 +135,14 @@ func (r *RepositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (r *RepositoryWorker) newRankPipeline(object string) *model.RankPipeline {
-	tags := strings.Split(object, ".")
+func (r *RepositoryWorker) newRankPipeline(field string) *model.RankPipeline {
 	return &model.RankPipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
 					{"total_count", bson.D{
-						{"$sum", fmt.Sprintf("$%s.total_count", object)},
+						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},
 				}},
 			},
@@ -154,11 +152,11 @@ func (r *RepositoryWorker) newRankPipeline(object string) *model.RankPipeline {
 				}},
 			},
 		},
-		Tags: tags,
+		Tags: []string{model.TypeRepository, field},
 	}
 }
 
-func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines []*model.RankPipeline) {
+func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.RankPipeline) {
 	for _, language := range languages {
 		pipelines = append(pipelines, &model.RankPipeline{
 			Pipeline: &mongo.Pipeline{
@@ -171,7 +169,7 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines 
 					{"$project", bson.D{
 						{"_id", "$_id"},
 						{"total_count", bson.D{
-							{"$sum", fmt.Sprintf("$%s.total_count", object)},
+							{"$sum", fmt.Sprintf("$%s.total_count", field)},
 						}},
 					}},
 				},
@@ -181,7 +179,7 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines 
 					}},
 				},
 			},
-			Tags: []string{model.TypeRepository, object, language.Name},
+			Tags: []string{model.TypeRepository, field, language.Name},
 		})
 	}
 	return

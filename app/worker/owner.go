@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -115,13 +114,13 @@ func (o *OwnerWorker) Update() error {
 		}
 
 		var repositories []model.Repository
-		repositoriesQuery.Field = owner.Type
+		repositoriesQuery.Field = o.OwnerModel.Type(owner)
 		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 		if err := o.FetchRepositories(repositoriesQuery, &repositories); err != nil {
 			return err
 		}
 		o.OwnerModel.UpdateRepositories(owner, repositories)
-		logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type))
+		logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), o.OwnerModel.Type(owner)))
 	}
 
 	return nil
@@ -223,21 +222,19 @@ func (o *OwnerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (o *OwnerWorker) newRankPipeline(ownerType string, object string) *model.RankPipeline {
-	tags := []string{ownerType}
-	tags = append(tags, strings.Split(object, ".")...)
+func (o *OwnerWorker) newRankPipeline(tag string, field string) *model.RankPipeline {
 	return &model.RankPipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$match", bson.D{
-					{"type", ownerType},
+					{"tags", tag},
 				}},
 			},
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
 					{"total_count", bson.D{
-						{"$sum", fmt.Sprintf("$%s.total_count", object)},
+						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},
 				}},
 			},
@@ -247,17 +244,17 @@ func (o *OwnerWorker) newRankPipeline(ownerType string, object string) *model.Ra
 				}},
 			},
 		},
-		Tags: tags,
+		Tags: []string{tag, field},
 	}
 }
 
-func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, object string) (pipelines []*model.RankPipeline) {
+func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(tag string, field string) (pipelines []*model.RankPipeline) {
 	for _, language := range languages {
 		pipelines = append(pipelines, &model.RankPipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{
-						{"type", ownerType},
+						{"tags", tag},
 					}},
 				},
 				bson.D{
@@ -272,7 +269,7 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, obj
 					{"$group", bson.D{
 						{"_id", "$_id"},
 						{"total_count", bson.D{
-							{"$sum", fmt.Sprintf("$repositories.%s.total_count", object)},
+							{"$sum", fmt.Sprintf("$repositories.%s.total_count", field)},
 						}},
 					}},
 				},
@@ -282,7 +279,7 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(ownerType string, obj
 					}},
 				},
 			},
-			Tags: []string{ownerType, model.TypeRepository, object, language.Name},
+			Tags: []string{tag, fmt.Sprintf("repositories.%s", field), language.Name},
 		})
 	}
 	return
