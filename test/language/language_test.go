@@ -96,6 +96,11 @@ func TestLocate(t *testing.T) {
 			actual:   resource.Locate("Netherlands Antilles"),
 		},
 		{
+			name:     "Brasil",
+			expected: []string{"Brazil"},
+			actual:   resource.Locate("Brasil"),
+		},
+		{
 			name:     "Formosa",
 			expected: []string{},
 			actual:   resource.Locate("Formosa"),

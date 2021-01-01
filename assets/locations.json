@@ -1239,6 +1239,12 @@
   },
   {
     "name": "Brazil",
+    "aliases": [
+      {
+        "name": "Brasil",
+        "unique": true
+      }
+    ],
     "cities": [
       {
         "name": "Acre",
