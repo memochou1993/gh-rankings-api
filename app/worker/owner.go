@@ -103,7 +103,7 @@ func (o *OwnerWorker) Update() error {
 			log.Fatalln(err.Error())
 		}
 
-		if o.OwnerModel.IsUser(owner) {
+		if owner.IsUser() {
 			var gists []model.Gist
 			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 			if err := o.FetchGists(gistsQuery, &gists); err != nil {
@@ -114,13 +114,13 @@ func (o *OwnerWorker) Update() error {
 		}
 
 		var repositories []model.Repository
-		repositoriesQuery.Field = o.OwnerModel.Type(owner)
+		repositoriesQuery.Field = owner.Type()
 		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 		if err := o.FetchRepositories(repositoriesQuery, &repositories); err != nil {
 			return err
 		}
 		o.OwnerModel.UpdateRepositories(owner, repositories)
-		logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), o.OwnerModel.Type(owner)))
+		logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type()))
 	}
 
 	return nil

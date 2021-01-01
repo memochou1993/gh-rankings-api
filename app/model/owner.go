@@ -24,6 +24,35 @@ func (o *Owner) ID() string {
 	return o.Login
 }
 
+func (o *Owner) HasFollowers() bool {
+	return o.Followers != nil
+}
+
+func (o *Owner) IsUser() bool {
+	return o.HasFollowers()
+}
+
+func (o *Owner) IsOrganization() bool {
+	return !o.HasFollowers()
+}
+
+func (o *Owner) TagType() {
+	tag := TypeUser
+	if o.IsOrganization() {
+		tag = TypeOrganization
+	}
+	o.Tags = []string{tag}
+}
+
+func (o *Owner) Type() (ownerType string) {
+	for _, tag := range o.Tags {
+		if tag == TypeUser {
+			return TypeUser
+		}
+	}
+	return TypeOrganization
+}
+
 type OwnerResponse struct {
 	Data struct {
 		Search struct {
@@ -86,11 +115,7 @@ func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
 	}
 	var models []mongo.WriteModel
 	for _, owner := range owners {
-		// FIXME
-		owner.Tags = []string{TypeUser}
-		if o.IsOrganization(owner) {
-			owner.Tags = []string{TypeOrganization}
-		}
+		owner.TagType()
 		filter := bson.D{{"_id", owner.ID()}}
 		update := bson.D{{"$set", owner}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
@@ -108,25 +133,4 @@ func (o *OwnerModel) UpdateRepositories(owner Owner, repositories []Repository) 
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	database.UpdateOne(o.Name(), filter, update)
-}
-
-func (o *OwnerModel) HasFollowers(owner Owner) bool {
-	return owner.Followers != nil
-}
-
-func (o *OwnerModel) IsUser(owner Owner) bool {
-	return o.HasFollowers(owner)
-}
-
-func (o *OwnerModel) IsOrganization(owner Owner) bool {
-	return !o.HasFollowers(owner)
-}
-
-func (o *OwnerModel) Type(owner Owner) (ownerType string) {
-	for _, tag := range owner.Tags {
-		if tag == TypeUser {
-			return TypeUser
-		}
-	}
-	return TypeOrganization
 }
