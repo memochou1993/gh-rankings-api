@@ -159,7 +159,7 @@ func (r *RepositoryWorker) newRankPipeline(object string) *model.RankPipeline {
 }
 
 func (r *RepositoryWorker) newRankPipelinesByLanguage(object string) (pipelines []*model.RankPipeline) {
-	for _, language := range *languages {
+	for _, language := range languages {
 		pipelines = append(pipelines, &model.RankPipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{

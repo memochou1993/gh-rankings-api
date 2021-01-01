@@ -8,18 +8,18 @@ import (
 )
 
 var (
-	languages *model.Languages
-	locations *model.Locations
+	languages model.Languages
+	locations model.Locations
 )
+
+func Init() {
+	util.LoadAsset("languages", &languages)
+	util.LoadAsset("locations", &locations)
+}
 
 type Worker struct {
 	*RepositoryWorker
 	*OwnerWorker
-}
-
-func init() {
-	util.LoadAsset("languages", &languages)
-	util.LoadAsset("locations", &locations)
 }
 
 func NewWorker() *Worker {

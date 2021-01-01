@@ -12,6 +12,7 @@ func init() {
 	util.LoadEnv()
 	database.Init()
 	logger.Init()
+	worker.Init()
 }
 
 func main() {
