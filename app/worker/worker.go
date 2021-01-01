@@ -1,21 +1,9 @@
 package worker
 
 import (
-	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/logger"
-	"github.com/memochou1993/github-rankings/util"
 	"time"
 )
-
-var (
-	languages model.Languages
-	locations model.Locations
-)
-
-func Init() {
-	util.LoadAsset("languages", &languages)
-	util.LoadAsset("locations", &locations)
-}
 
 type Worker struct {
 	*RepositoryWorker

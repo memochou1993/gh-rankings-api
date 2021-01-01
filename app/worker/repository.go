@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/resource"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -157,7 +158,7 @@ func (r *RepositoryWorker) newRankPipeline(field string) *model.RankPipeline {
 }
 
 func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.RankPipeline) {
-	for _, language := range languages {
+	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.RankPipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{

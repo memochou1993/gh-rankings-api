@@ -4,6 +4,7 @@ import (
 	"github.com/memochou1993/github-rankings/app/worker"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/github-rankings/resource"
 	"github.com/memochou1993/github-rankings/util"
 	"time"
 )
@@ -12,7 +13,7 @@ func init() {
 	util.LoadEnv()
 	database.Init()
 	logger.Init()
-	worker.Init()
+	resource.Init()
 }
 
 func main() {

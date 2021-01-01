@@ -1,23 +1,33 @@
-package model
+package resource
 
 import (
+	"github.com/memochou1993/github-rankings/util"
 	"strings"
 )
+
+var (
+	Languages []Language
+	Locations []Location
+)
+
+type Language struct {
+	Name string
+}
 
 type Location struct {
 	Name    string
 	Aliases []Location
+	Cities  []Location
 	Unique  bool
 }
 
-type Locations []struct {
-	Name    string
-	Aliases []Location
-	Cities  []Location
+func Init() {
+	util.LoadAsset("languages", &Languages)
+	util.LoadAsset("locations", &Locations)
 }
 
-func (l Locations) Locate(text string) (locations []string) {
-	for _, location := range l {
+func Locate(text string) (locations []string) {
+	for _, location := range Locations {
 		if text == location.Name {
 			return append(locations, location.Name)
 		}
@@ -27,7 +37,7 @@ func (l Locations) Locate(text string) (locations []string) {
 			}
 		}
 	}
-	for _, location := range l {
+	for _, location := range Locations {
 		if strings.Contains(text, location.Name) {
 			locations = append(locations, location.Name)
 			for _, city := range location.Cities {
@@ -59,9 +69,9 @@ func (l Locations) Locate(text string) (locations []string) {
 			}
 		}
 	}
-	for _, location := range l {
+	for _, location := range Locations {
 		for _, city := range location.Cities {
-			if l.isFuzzy(city.Name) {
+			if isFuzzy(city.Name) {
 				continue
 			}
 			if strings.Contains(text, city.Name) && city.Unique {
@@ -77,6 +87,6 @@ func (l Locations) Locate(text string) (locations []string) {
 	return
 }
 
-func (l Locations) isFuzzy(text string) bool {
+func isFuzzy(text string) bool {
 	return len(text) <= 5
 }
