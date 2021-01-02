@@ -94,7 +94,7 @@ func (o *OwnerWorker) Update() error {
 	if cursor.RemainingBatchLength() == 0 {
 		return nil
 	}
-	logger.Info("Updating user gists...")
+	logger.Info("Updating owner gists...")
 	gistsQuery := model.NewOwnerGistsQuery()
 	logger.Info("Updating owner repositories...")
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
@@ -103,26 +103,41 @@ func (o *OwnerWorker) Update() error {
 		if err := cursor.Decode(&owner); err != nil {
 			log.Fatalln(err.Error())
 		}
-
-		if owner.IsUser() {
-			var gists []model.Gist
-			gistsQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
-			if err := o.FetchGists(gistsQuery, &gists); err != nil {
-				return err
-			}
-			o.OwnerModel.UpdateGists(owner, gists)
-			logger.Success(fmt.Sprintf("Updated %d user gists!", len(gists)))
-		}
-
-		var repositories []model.Repository
-		repositoriesQuery.Field = owner.Type()
-		repositoriesQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
-		if err := o.FetchRepositories(repositoriesQuery, &repositories); err != nil {
+		if err := o.UpdateGists(owner, gistsQuery); err != nil {
 			return err
 		}
-		o.OwnerModel.UpdateRepositories(owner, repositories)
-		logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type()))
+		if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
+			return err
+		}
 	}
+
+	return nil
+}
+
+func (o *OwnerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
+	if !owner.IsUser() {
+		return nil
+	}
+	var gists []model.Gist
+	q.OwnerArguments.Login = strconv.Quote(owner.ID())
+	if err := o.FetchGists(q, &gists); err != nil {
+		return err
+	}
+	o.OwnerModel.UpdateGists(owner, gists)
+	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), owner.Type()))
+
+	return nil
+}
+
+func (o *OwnerWorker) UpdateRepositories(owner model.Owner, q *model.Query) error {
+	var repositories []model.Repository
+	q.Field = owner.Type()
+	q.OwnerArguments.Login = strconv.Quote(owner.ID())
+	if err := o.FetchRepositories(q, &repositories); err != nil {
+		return err
+	}
+	o.OwnerModel.UpdateRepositories(owner, repositories)
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type()))
 
 	return nil
 }
