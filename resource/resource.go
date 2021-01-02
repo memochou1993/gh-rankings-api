@@ -22,11 +22,11 @@ type Location struct {
 }
 
 func (l Location) is(name string) bool {
-	return l.Name == name
+	return strings.ToUpper(l.Name) == strings.ToUpper(name)
 }
 
 func (l Location) isSimilar(name string) bool {
-	return strings.Contains(name, l.Name)
+	return strings.Contains(strings.ToUpper(name), strings.ToUpper(l.Name))
 }
 
 func (l Location) isUnique() bool {

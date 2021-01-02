@@ -33,18 +33,16 @@ func TestLocate(t *testing.T) {
 			expected: []string{"Taiwan", "Taipei"},
 			actual:   resource.Locate("Taipei, Taiwan"),
 		},
-		// TODO: lowercase
-		// {
-		// 	name: "taipei, taiwan",
-		// 	expected: []string{},
-		// 	actual:   locations.Locate("taipei, taiwan"),
-		// },
-		// TODO: uppercase
-		// {
-		// 	name: "TAIPEI, TAIWAN",
-		// 	expected: []string{},
-		// 	actual:   locations.Locate("TAIPEI, TAIWAN"),
-		// },
+		{
+			name:     "taipei, taiwan",
+			expected: []string{"Taiwan", "Taipei"},
+			actual:   resource.Locate("taipei, taiwan"),
+		},
+		{
+			name:     "TAIPEI, TAIWAN",
+			expected: []string{"Taiwan", "Taipei"},
+			actual:   resource.Locate("TAIPEI, TAIWAN"),
+		},
 		{
 			name:     "Taiwan",
 			expected: []string{"Taiwan"},
