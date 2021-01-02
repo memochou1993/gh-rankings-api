@@ -65,8 +65,8 @@ func UpdateMany(collection string, filter bson.D, update bson.D, opts ...*option
 	}
 }
 
-func All(ctx context.Context, collection string) *mongo.Cursor {
-	opts := options.Find().SetBatchSize(1000)
+func All(ctx context.Context, collection string, skip int, limit int) *mongo.Cursor {
+	opts := options.Find().SetBatchSize(1000).SetSkip(int64(skip)).SetLimit(int64(limit))
 	cursor, err := Collection(collection).Find(ctx, bson.D{}, opts)
 	if err != nil {
 		log.Fatalln(err.Error())

@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
@@ -88,25 +89,33 @@ func (o *OwnerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 
 func (o *OwnerWorker) Update() error {
 	ctx := context.Background()
-	cursor := database.All(ctx, o.OwnerModel.Name())
-	defer database.CloseCursor(ctx, cursor)
-
-	if cursor.RemainingBatchLength() == 0 {
-		return nil
-	}
+	limit := 100
 	logger.Info("Updating owner gists...")
 	gistsQuery := model.NewOwnerGistsQuery()
 	logger.Info("Updating owner repositories...")
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	for cursor.Next(context.Background()) {
-		owner := model.Owner{}
-		if err := cursor.Decode(&owner); err != nil {
-			log.Fatalln(err.Error())
-		}
-		if err := o.UpdateGists(owner, gistsQuery); err != nil {
-			return err
-		}
-		if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
+	for page := 0; true; page++ {
+		err := func() error {
+			cursor := database.All(ctx, o.OwnerModel.Name(), page*limit, limit)
+			defer database.CloseCursor(ctx, cursor)
+			if cursor.RemainingBatchLength() == 0 {
+				return errors.New("")
+			}
+			for cursor.Next(context.Background()) {
+				owner := model.Owner{}
+				if err := cursor.Decode(&owner); err != nil {
+					log.Fatalln(err.Error())
+				}
+				if err := o.UpdateGists(owner, gistsQuery); err != nil {
+					return err
+				}
+				if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
+					return err
+				}
+			}
+			return nil
+		}()
+		if err != nil {
 			return err
 		}
 	}
