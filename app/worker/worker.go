@@ -24,11 +24,11 @@ func (w *Worker) Init() {
 }
 
 func (w *Worker) work() {
-	go w.collectRepositories()
-	go w.rankRepositories()
-	go w.collectOwners()
+	// go w.collectRepositories()
+	// go w.rankRepositories()
+	// go w.collectOwners()
 	go w.updateOwners()
-	go w.rankOwners()
+	// go w.rankOwners()
 }
 
 func (w *Worker) collectRepositories() {
