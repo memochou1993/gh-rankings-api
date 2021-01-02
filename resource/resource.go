@@ -21,6 +21,18 @@ type Location struct {
 	Unique  bool
 }
 
+func (l Location) is(name string) bool {
+	return l.Name == name
+}
+
+func (l Location) isSimilar(name string) bool {
+	return strings.Contains(name, l.Name)
+}
+
+func (l Location) isUnique() bool {
+	return l.Unique
+}
+
 func Init() {
 	util.LoadAsset("languages", &Languages)
 	util.LoadAsset("locations", &Locations)
@@ -28,24 +40,24 @@ func Init() {
 
 func Locate(text string) (locations []string) {
 	for _, location := range Locations {
-		if text == location.Name {
+		if location.is(text) {
 			return append(locations, location.Name)
 		}
 		for _, alias := range location.Aliases {
-			if text == alias.Name && alias.Unique {
+			if alias.is(text) && alias.isUnique() {
 				return append(locations, location.Name)
 			}
 		}
 	}
 	for _, location := range Locations {
-		if strings.Contains(text, location.Name) {
+		if location.isSimilar(text) {
 			locations = append(locations, location.Name)
 			for _, city := range location.Cities {
-				if strings.Contains(text, city.Name) {
+				if city.isSimilar(text) {
 					return append(locations, city.Name)
 				}
 				for _, alias := range city.Aliases {
-					if strings.Contains(text, alias.Name) {
+					if alias.isSimilar(text) {
 						return append(locations, city.Name)
 					}
 				}
@@ -53,14 +65,14 @@ func Locate(text string) (locations []string) {
 			return
 		}
 		for _, alias := range location.Aliases {
-			if strings.Contains(text, alias.Name) && alias.Unique {
+			if alias.isSimilar(text) && alias.isUnique() {
 				locations = append(locations, location.Name)
 				for _, city := range location.Cities {
-					if strings.Contains(text, city.Name) {
+					if city.isSimilar(text) {
 						return append(locations, city.Name)
 					}
 					for _, alias := range city.Aliases {
-						if strings.Contains(text, alias.Name) {
+						if alias.isSimilar(text) {
 							return append(locations, city.Name)
 						}
 					}
@@ -74,11 +86,11 @@ func Locate(text string) (locations []string) {
 			if isFuzzy(city.Name) {
 				continue
 			}
-			if strings.Contains(text, city.Name) && city.Unique {
+			if city.isSimilar(text) && city.isUnique() {
 				return append(locations, location.Name, city.Name)
 			}
 			for _, alias := range city.Aliases {
-				if strings.Contains(text, alias.Name) {
+				if alias.isSimilar(text) {
 					return append(locations, location.Name, city.Name)
 				}
 			}
