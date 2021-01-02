@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
@@ -88,18 +87,19 @@ func (o *OwnerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 }
 
 func (o *OwnerWorker) Update() error {
-	ctx := context.Background()
-	limit := 100
 	logger.Info("Updating owner gists...")
-	gistsQuery := model.NewOwnerGistsQuery()
 	logger.Info("Updating owner repositories...")
+	ctx := context.Background()
+	stop := false
+	limit := 100
+	gistsQuery := model.NewOwnerGistsQuery()
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	for page := 0; true; page++ {
+	for page := 0; !stop; page++ {
 		err := func() error {
 			cursor := database.All(ctx, o.OwnerModel.Name(), page*limit, limit)
 			defer database.CloseCursor(ctx, cursor)
 			if cursor.RemainingBatchLength() == 0 {
-				return errors.New("")
+				stop = true
 			}
 			for cursor.Next(context.Background()) {
 				owner := model.Owner{}
