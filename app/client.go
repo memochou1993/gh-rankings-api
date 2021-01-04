@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/memochou1993/github-rankings/logger"
 	"github.com/spf13/viper"
 	"io"
 	"log"
@@ -37,8 +37,7 @@ func Fetch(ctx context.Context, q string, v interface{}) error {
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
-		logger.Error("Something went wrong...")
-		return nil
+		return errors.New(fmt.Sprintf("Received unexpected status code: %d", resp.StatusCode))
 	}
 	return json.NewDecoder(resp.Body).Decode(v)
 }
