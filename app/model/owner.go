@@ -15,8 +15,8 @@ type Owner struct {
 	Location     string       `json:"location" bson:"location"`
 	Login        string       `json:"login" bson:"_id"`
 	Name         string       `json:"name" bson:"name"`
-	Gists        []Gist       `json:"gists" bson:"gists,omitempty"`
-	Repositories []Repository `json:"repositories" bson:"repositories,omitempty"`
+	Gists        []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
+	Repositories []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
 	Tags         []string     `json:"tags" bson:"tags"`
 	Ranks        []Rank       `json:"ranks" bson:"ranks,omitempty"`
 }

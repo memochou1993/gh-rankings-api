@@ -10,10 +10,10 @@ import (
 )
 
 type Rank struct {
-	Rank       int       `bson:"rank"`
-	TotalCount int       `bson:"total_count"`
-	Tags       []string  `bson:"tags"`
-	UpdatedAt  time.Time `bson:"updated_at"`
+	Rank       int       `json:"rank" bson:"rank"`
+	TotalCount int       `json:"total_count" bson:"total_count"`
+	Tags       []string  `json:"tags" bson:"tags"`
+	UpdatedAt  time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 type RankPipeline struct {
