@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"github.com/memochou1993/github-rankings/logger"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -61,7 +60,7 @@ func UpdateOne(collection string, filter bson.D, update bson.D, opts ...*options
 
 func UpdateMany(collection string, filter bson.D, update bson.D, opts ...*options.UpdateOptions) {
 	if _, err := Collection(collection).UpdateMany(context.Background(), filter, update, opts...); err != nil {
-		logger.Error(err)
+		log.Fatalln(err.Error())
 	}
 }
 
