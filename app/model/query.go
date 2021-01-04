@@ -158,7 +158,7 @@ func NewOwnerRepositoriesQuery() *Query {
 }
 
 func ReadQuery(filename string) string {
-	b, err := ioutil.ReadFile(fmt.Sprintf("./query/%s.graphql", filename))
+	b, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

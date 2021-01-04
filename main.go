@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/app/worker"
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
-	"github.com/memochou1993/github-rankings/resource"
 	"github.com/memochou1993/github-rankings/util"
 	"time"
 )

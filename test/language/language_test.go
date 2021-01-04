@@ -2,7 +2,7 @@ package language
 
 import (
 	"fmt"
-	"github.com/memochou1993/github-rankings/resource"
+	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/test"
 	"os"
 	"reflect"

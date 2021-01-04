@@ -1,8 +1,8 @@
 package model
 
 import (
+	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/database"
-	"github.com/memochou1993/github-rankings/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
