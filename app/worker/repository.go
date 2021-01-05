@@ -99,13 +99,13 @@ func (r *RepositoryWorker) Rank() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
 	updatedAt := time.Now()
-	for _, pipeline := range pipelines {
+	for _, p := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline *model.Pipeline) {
+		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, updatedAt, *pipeline)
+			model.PushRanks(r.RepositoryModel, updatedAt, *p)
 			<-ch
-		}(pipeline)
+		}(p)
 	}
 	wg.Wait()
 	r.UpdatedAt = updatedAt

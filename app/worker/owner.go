@@ -197,13 +197,13 @@ func (o *OwnerWorker) Rank() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
 	updatedAt := time.Now()
-	for _, pipeline := range pipelines {
+	for _, p := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline *model.Pipeline) {
+		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, updatedAt, *pipeline)
+			model.PushRanks(o.OwnerModel, updatedAt, *p)
 			<-ch
-		}(pipeline)
+		}(p)
 	}
 	wg.Wait()
 	o.UpdatedAt = updatedAt
