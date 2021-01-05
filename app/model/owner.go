@@ -39,24 +39,19 @@ func (o *Owner) IsOrganization() bool {
 }
 
 func (o *Owner) TagType() {
-	tag := TypeUser
-	if o.IsOrganization() {
-		tag = TypeOrganization
-	}
-	o.Tags = append(o.Tags, tag)
+	o.Tags = append(o.Tags, o.Type())
 }
 
 func (o *Owner) TagLocations() {
 	o.Tags = append(o.Tags, resource.Locate(o.Location)...)
 }
 
-func (o *Owner) Type() (ownerType string) {
-	for _, tag := range o.Tags {
-		if tag == TypeUser {
-			return TypeUser
-		}
+func (o *Owner) Type() (t string) {
+	t = TypeUser
+	if o.IsOrganization() {
+		t = TypeOrganization
 	}
-	return TypeOrganization
+	return
 }
 
 type OwnerResponse struct {
