@@ -27,6 +27,24 @@ func (r *RepositoryWorker) Init() {
 	logger.Success("Repository collection initialized!")
 }
 
+func (r *RepositoryWorker) Work() {
+	go func() {
+		t := time.NewTicker(10 * time.Minute)
+		for ; true; <-t.C {
+			if err := r.Collect(); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+	}()
+
+	go func() {
+		t := time.NewTicker(24 * time.Hour)
+		for ; true; <-t.C {
+			r.Rank()
+		}
+	}()
+}
+
 func (r *RepositoryWorker) Collect() error {
 	logger.Info("Collecting repositories...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)

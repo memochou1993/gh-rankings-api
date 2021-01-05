@@ -29,6 +29,33 @@ func (o *OwnerWorker) Init() {
 	logger.Success("Owner collection initialized!")
 }
 
+func (o *OwnerWorker) Work() {
+	go func() {
+		t := time.NewTicker(10 * time.Second)
+		for ; true; <-t.C {
+			if err := o.Collect(); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+	}()
+
+	go func() {
+		t := time.NewTicker(10 * time.Minute)
+		for ; true; <-t.C {
+			if err := o.Update(); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+	}()
+
+	go func() {
+		t := time.NewTicker(24 * time.Hour)
+		for ; true; <-t.C {
+			o.Rank()
+		}
+	}()
+}
+
 func (o *OwnerWorker) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
