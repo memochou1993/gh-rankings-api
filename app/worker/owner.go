@@ -23,12 +23,6 @@ type OwnerWorker struct {
 	UpdatedAt  time.Time
 }
 
-func NewOwnerWorker() *OwnerWorker {
-	return &OwnerWorker{
-		OwnerModel: model.NewOwnerModel(),
-	}
-}
-
 func (o *OwnerWorker) Init() {
 	logger.Info("Initializing owner collection...")
 	o.OwnerModel.CreateIndexes()
@@ -345,4 +339,10 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 		})
 	}
 	return
+}
+
+func NewOwnerWorker() *OwnerWorker {
+	return &OwnerWorker{
+		OwnerModel: model.NewOwnerModel(),
+	}
 }

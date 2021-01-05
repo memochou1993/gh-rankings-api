@@ -5,69 +5,66 @@ import (
 	"time"
 )
 
-type Worker struct {
-	*RepositoryWorker
-	*OwnerWorker
+var (
+	Repository *RepositoryWorker
+	Owner      *OwnerWorker
+)
+
+func Init() {
+	Owner = NewOwnerWorker()
+	Owner.Init()
+
+	Repository = NewRepositoryWorker()
+	Repository.Init()
+
+	work()
 }
 
-func NewWorker() *Worker {
-	return &Worker{
-		RepositoryWorker: NewRepositoryWorker(),
-		OwnerWorker:      NewOwnerWorker(),
-	}
+func work() {
+	go collectRepositories()
+	go rankRepositories()
+	go collectOwners()
+	go updateOwners()
+	go rankOwners()
 }
 
-func (w *Worker) Init() {
-	w.RepositoryWorker.Init()
-	w.OwnerWorker.Init()
-	w.work()
-}
-
-func (w *Worker) work() {
-	go w.collectRepositories()
-	go w.rankRepositories()
-	go w.collectOwners()
-	go w.updateOwners()
-	go w.rankOwners()
-}
-
-func (w *Worker) collectRepositories() {
+func collectRepositories() {
 	t := time.NewTicker(10 * time.Minute)
 	for ; true; <-t.C {
-		if err := w.RepositoryWorker.Collect(); err != nil {
+		if err := Repository.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
-func (w *Worker) rankRepositories() {
+func rankRepositories() {
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		w.RepositoryWorker.Rank()
+		Repository.Rank()
 	}
 }
 
-func (w *Worker) collectOwners() {
+func collectOwners() {
 	t := time.NewTicker(10 * time.Minute)
 	for ; true; <-t.C {
-		if err := w.OwnerWorker.Collect(); err != nil {
+		if err := Owner.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
-func (w *Worker) updateOwners() {
+func updateOwners() {
 	t := time.NewTicker(10 * time.Minute)
 	for ; true; <-t.C {
-		if err := w.OwnerWorker.Update(); err != nil {
+		if err := Owner.Update(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
-func (w *Worker) rankOwners() {
+func rankOwners() {
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		w.OwnerWorker.Rank()
+		Owner.Rank()
 	}
 }

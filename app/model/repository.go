@@ -45,14 +45,6 @@ type RepositoryModel struct {
 	*Model
 }
 
-func NewRepositoryModel() *RepositoryModel {
-	return &RepositoryModel{
-		&Model{
-			name: "repositories",
-		},
-	}
-}
-
 func (r *RepositoryModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
 		"ranks.tags",
@@ -70,4 +62,12 @@ func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResul
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
 	return database.BulkWrite(r.Name(), models)
+}
+
+func NewRepositoryModel() *RepositoryModel {
+	return &RepositoryModel{
+		&Model{
+			name: "repositories",
+		},
+	}
 }

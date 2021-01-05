@@ -8,6 +8,7 @@ import (
 	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
+	"log"
 	"net/http"
 )
 
@@ -16,13 +17,12 @@ func init() {
 	database.Init()
 	logger.Init()
 	resource.Init()
+	worker.Init()
 }
 
 func main() {
-	w := worker.NewWorker()
-	w.Init()
-
 	r := mux.NewRouter()
+	r.HandleFunc("/owners", handler.ListOwners)
 	r.HandleFunc("/owners/{login}", handler.ShowOwner)
-	http.ListenAndServe(":80", r)
+	log.Fatalln(http.ListenAndServe(":80", r))
 }

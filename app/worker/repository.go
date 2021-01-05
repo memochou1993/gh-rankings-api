@@ -21,12 +21,6 @@ type RepositoryWorker struct {
 	UpdatedAt       time.Time
 }
 
-func NewRepositoryWorker() *RepositoryWorker {
-	return &RepositoryWorker{
-		RepositoryModel: model.NewRepositoryModel(),
-	}
-}
-
 func (r *RepositoryWorker) Init() {
 	logger.Info("Initializing repository collection...")
 	r.RepositoryModel.CreateIndexes()
@@ -184,4 +178,10 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 		})
 	}
 	return
+}
+
+func NewRepositoryWorker() *RepositoryWorker {
+	return &RepositoryWorker{
+		RepositoryModel: model.NewRepositoryModel(),
+	}
 }

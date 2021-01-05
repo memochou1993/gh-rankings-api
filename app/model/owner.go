@@ -99,14 +99,6 @@ type OwnerModel struct {
 	*Model
 }
 
-func NewOwnerModel() *OwnerModel {
-	return &OwnerModel{
-		&Model{
-			name: "owners",
-		},
-	}
-}
-
 func (o *OwnerModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
 		"ranks.tags",
@@ -147,4 +139,12 @@ func (o *OwnerModel) UpdateRepositories(owner Owner, repositories []Repository) 
 	filter := bson.D{{"_id", owner.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
 	database.UpdateOne(o.Name(), filter, update)
+}
+
+func NewOwnerModel() *OwnerModel {
+	return &OwnerModel{
+		&Model{
+			name: "owners",
+		},
+	}
 }
