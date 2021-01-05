@@ -357,6 +357,13 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 					}},
 				},
 				bson.D{
+					{"$match", bson.D{
+						{"total_count", bson.D{
+							{"$gt", 0},
+						}},
+					}},
+				},
+				bson.D{
 					{"$sort", bson.D{
 						{"total_count", -1},
 					}},
