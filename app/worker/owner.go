@@ -189,7 +189,7 @@ func (o *OwnerWorker) FetchRepositories(q *model.Query, repositories *[]model.Re
 
 func (o *OwnerWorker) Rank() {
 	logger.Info("Executing owner rank pipelines...")
-	var pipelines []*model.RankPipeline
+	var pipelines []*model.Pipeline
 	pipelines = append(pipelines, o.newUserRankPipelines()...)
 	pipelines = append(pipelines, o.newOrganizationRankPipelines()...)
 
@@ -199,7 +199,7 @@ func (o *OwnerWorker) Rank() {
 	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline *model.RankPipeline) {
+		go func(pipeline *model.Pipeline) {
 			defer wg.Done()
 			model.PushRanks(o.OwnerModel, updatedAt, *pipeline)
 			<-ch
@@ -233,7 +233,7 @@ func (o *OwnerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (o *OwnerWorker) newUserRankPipelines() (pipelines []*model.RankPipeline) {
+func (o *OwnerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
 	tag := model.TypeUser
 	fields := []string{
 		"followers",
@@ -253,7 +253,7 @@ func (o *OwnerWorker) newUserRankPipelines() (pipelines []*model.RankPipeline) {
 	return
 }
 
-func (o *OwnerWorker) newOrganizationRankPipelines() (pipelines []*model.RankPipeline) {
+func (o *OwnerWorker) newOrganizationRankPipelines() (pipelines []*model.Pipeline) {
 	tag := model.TypeOrganization
 	fields := []string{
 		"repositories.forks",
@@ -270,8 +270,8 @@ func (o *OwnerWorker) newOrganizationRankPipelines() (pipelines []*model.RankPip
 	return
 }
 
-func (o *OwnerWorker) newRankPipeline(field string, tags ...string) *model.RankPipeline {
-	return &model.RankPipeline{
+func (o *OwnerWorker) newRankPipeline(field string, tags ...string) *model.Pipeline {
+	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$match", bson.D{
@@ -298,7 +298,7 @@ func (o *OwnerWorker) newRankPipeline(field string, tags ...string) *model.RankP
 	}
 }
 
-func (o *OwnerWorker) newRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.RankPipeline) {
+func (o *OwnerWorker) newRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, o.newRankPipeline(field, append(tags, location.Name)...))
 		for _, city := range location.Cities {
@@ -308,9 +308,9 @@ func (o *OwnerWorker) newRankPipelinesByLocation(field string, tags ...string) (
 	return
 }
 
-func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.RankPipeline) {
+func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.RankPipeline{
+		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{

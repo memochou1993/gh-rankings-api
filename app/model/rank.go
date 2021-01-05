@@ -17,18 +17,17 @@ type Rank struct {
 	UpdatedAt  time.Time `json:"updated_at" bson:"updated_at"`
 }
 
-type RankPipeline struct {
+type Pipeline struct {
 	Pipeline *mongo.Pipeline
 	Tags     []string
 }
 
-func CountRanks(model Interface, pipeline mongo.Pipeline) int {
+func CountRanks(model Interface, p mongo.Pipeline) int {
 	ctx := context.Background()
 	r := struct {
 		Count int `bson:"count"`
 	}{}
-	p := append(pipeline, bson.D{{"$count", "count"}})
-	cursor := database.Aggregate(ctx, model.Name(), p)
+	cursor := database.Aggregate(ctx, model.Name(), append(p, bson.D{{"$count", "count"}}))
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&r); err != nil {
@@ -38,12 +37,12 @@ func CountRanks(model Interface, pipeline mongo.Pipeline) int {
 	return r.Count
 }
 
-func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
+func PushRanks(model Interface, updatedAt time.Time, p Pipeline) {
 	ctx := context.Background()
-	cursor := database.Aggregate(ctx, model.Name(), *pipeline.Pipeline)
+	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	last := CountRanks(model, *pipeline.Pipeline)
+	last := CountRanks(model, *p.Pipeline)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -59,7 +58,7 @@ func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
 			Rank:       i + 1,
 			Last:       last,
 			TotalCount: r.TotalCount,
-			Tags:       pipeline.Tags,
+			Tags:       p.Tags,
 			UpdatedAt:  updatedAt,
 		}
 		filter := bson.D{{"_id", r.ID}}

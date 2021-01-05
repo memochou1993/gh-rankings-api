@@ -86,7 +86,7 @@ func (r *RepositoryWorker) FetchRepositories(q *model.Query, repositories *[]mod
 
 func (r *RepositoryWorker) Rank() {
 	logger.Info("Executing repository rank pipelines...")
-	pipelines := []*model.RankPipeline{
+	pipelines := []*model.Pipeline{
 		r.newRankPipeline("forks"),
 		r.newRankPipeline("stargazers"),
 		r.newRankPipeline("watchers"),
@@ -101,7 +101,7 @@ func (r *RepositoryWorker) Rank() {
 	updatedAt := time.Now()
 	for _, pipeline := range pipelines {
 		ch <- struct{}{}
-		go func(pipeline *model.RankPipeline) {
+		go func(pipeline *model.Pipeline) {
 			defer wg.Done()
 			model.PushRanks(r.RepositoryModel, updatedAt, *pipeline)
 			<-ch
@@ -136,8 +136,8 @@ func (r *RepositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (r *RepositoryWorker) newRankPipeline(field string) *model.RankPipeline {
-	return &model.RankPipeline{
+func (r *RepositoryWorker) newRankPipeline(field string) *model.Pipeline {
+	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$project", bson.D{
@@ -157,9 +157,9 @@ func (r *RepositoryWorker) newRankPipeline(field string) *model.RankPipeline {
 	}
 }
 
-func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.RankPipeline) {
+func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.RankPipeline{
+		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
 				bson.D{
 					{"$match", bson.D{
