@@ -109,8 +109,6 @@ func NewOwnerModel() *OwnerModel {
 
 func (o *OwnerModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
-		"created_at",
-		"name",
 		"ranks.tags",
 	})
 }

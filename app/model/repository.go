@@ -55,7 +55,6 @@ func NewRepositoryModel() *RepositoryModel {
 
 func (r *RepositoryModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
-		"created_at",
 		"ranks.tags",
 	})
 }
