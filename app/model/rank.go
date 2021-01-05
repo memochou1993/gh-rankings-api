@@ -11,6 +11,7 @@ import (
 
 type Rank struct {
 	Rank       int       `json:"rank" bson:"rank"`
+	Last       int       `json:"last" bson:"last"`
 	TotalCount int       `json:"total_count" bson:"total_count"`
 	Tags       []string  `json:"tags" bson:"tags"`
 	UpdatedAt  time.Time `json:"updated_at" bson:"updated_at"`
@@ -21,28 +22,47 @@ type RankPipeline struct {
 	Tags     []string
 }
 
+func CountRanks(model Interface, pipeline mongo.Pipeline) int {
+	ctx := context.Background()
+	r := struct {
+		Count int `bson:"count"`
+	}{}
+	p := append(pipeline, bson.D{{"$count", "count"}})
+	cursor := database.Aggregate(ctx, model.Name(), p)
+	defer database.CloseCursor(ctx, cursor)
+	for cursor.Next(ctx) {
+		if err := cursor.Decode(&r); err != nil {
+			log.Fatalln(err.Error())
+		}
+	}
+	return r.Count
+}
+
 func PushRanks(model Interface, updatedAt time.Time, pipeline RankPipeline) {
 	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), *pipeline.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
+	last := CountRanks(model, *pipeline.Pipeline)
+
 	var models []mongo.WriteModel
-	for count := 0; cursor.Next(ctx); count++ {
-		record := struct {
+	for i := 0; cursor.Next(ctx); i++ {
+		r := struct {
 			ID         string `bson:"_id"`
 			TotalCount int    `bson:"total_count"`
 		}{}
-		if err := cursor.Decode(&record); err != nil {
+		if err := cursor.Decode(&r); err != nil {
 			log.Fatalln(err.Error())
 		}
 
 		rank := Rank{
-			Rank:       count + 1,
-			TotalCount: record.TotalCount,
+			Rank:       i + 1,
+			Last:       last,
+			TotalCount: r.TotalCount,
 			Tags:       pipeline.Tags,
 			UpdatedAt:  updatedAt,
 		}
-		filter := bson.D{{"_id", record.ID}}
+		filter := bson.D{{"_id", r.ID}}
 		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update))
 		if cursor.RemainingBatchLength() == 0 {
