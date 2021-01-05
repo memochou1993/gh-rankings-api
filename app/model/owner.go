@@ -5,6 +5,7 @@ import (
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -112,6 +113,15 @@ func (o *OwnerModel) CreateIndexes() {
 		"name",
 		"ranks.tags",
 	})
+}
+
+func (o *OwnerModel) Find(id string) *mongo.SingleResult {
+	projection := bson.D{
+		{"gists", 0},
+		{"repositories", 0},
+	}
+	opts := options.FindOne().SetProjection(projection)
+	return database.FindOne(o.Name(), bson.D{{"_id", id}}, opts)
 }
 
 func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
