@@ -18,7 +18,7 @@ import (
 
 type RepositoryWorker struct {
 	RepositoryModel *model.RepositoryModel
-	UpdatedAt       time.Time
+	Timestamp       time.Time
 }
 
 func (r *RepositoryWorker) Init() {
@@ -110,18 +110,18 @@ func (r *RepositoryWorker) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	updatedAt := time.Now()
+	timestamp := time.Now()
 	for _, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, updatedAt, *p)
+			model.PushRanks(r.RepositoryModel, timestamp, *p)
 			<-ch
 		}(p)
 	}
 	wg.Wait()
-	r.UpdatedAt = updatedAt
-	model.PullRanks(r.RepositoryModel, updatedAt)
+	r.Timestamp = timestamp
+	model.PullRanks(r.RepositoryModel, timestamp)
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 

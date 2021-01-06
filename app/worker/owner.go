@@ -20,7 +20,7 @@ import (
 
 type OwnerWorker struct {
 	OwnerModel *model.OwnerModel
-	UpdatedAt  time.Time
+	Timestamp  time.Time
 }
 
 func (o *OwnerWorker) Init() {
@@ -217,18 +217,18 @@ func (o *OwnerWorker) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	updatedAt := time.Now()
+	timestamp := time.Now()
 	for _, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, updatedAt, *p)
+			model.PushRanks(o.OwnerModel, timestamp, *p)
 			<-ch
 		}(p)
 	}
 	wg.Wait()
-	o.UpdatedAt = updatedAt
-	model.PullRanks(o.OwnerModel, updatedAt)
+	o.Timestamp = timestamp
+	model.PullRanks(o.OwnerModel, timestamp)
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 

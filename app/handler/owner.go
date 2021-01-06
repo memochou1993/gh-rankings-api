@@ -20,12 +20,12 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
-	updatedAt := worker.Owner.UpdatedAt
+	timestamp := worker.Owner.Timestamp
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if page < 0 || err != nil {
 		page = 1
 	}
-	res := ownerModel.List(tags, updatedAt, int(page))
+	res := ownerModel.List(tags, timestamp, int(page))
 
 	response(w, http.StatusOK, res)
 }

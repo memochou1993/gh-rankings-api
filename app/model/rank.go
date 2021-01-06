@@ -37,7 +37,7 @@ func CountRanks(model Interface, p mongo.Pipeline) int {
 	return r.Count
 }
 
-func PushRanks(model Interface, updatedAt time.Time, p Pipeline) {
+func PushRanks(model Interface, timestamp time.Time, p Pipeline) {
 	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
@@ -59,7 +59,7 @@ func PushRanks(model Interface, updatedAt time.Time, p Pipeline) {
 			Last:       last,
 			TotalCount: r.TotalCount,
 			Tags:       p.Tags,
-			UpdatedAt:  updatedAt,
+			UpdatedAt:  timestamp,
 		}
 		filter := bson.D{{"_id", r.ID}}
 		update := bson.D{{"$push", bson.D{{"ranks", rank}}}}
@@ -72,8 +72,8 @@ func PushRanks(model Interface, updatedAt time.Time, p Pipeline) {
 	}
 }
 
-func PullRanks(model Interface, updatedAt time.Time) {
+func PullRanks(model Interface, timestamp time.Time) {
 	filter := bson.D{}
-	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"updated_at", bson.D{{"$lt", updatedAt}}}}}}}}
+	update := bson.D{{"$pull", bson.D{{"ranks", bson.D{{"updated_at", bson.D{{"$lt", timestamp}}}}}}}}
 	database.UpdateMany(model.Name(), filter, update)
 }

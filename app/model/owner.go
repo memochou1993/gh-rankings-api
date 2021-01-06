@@ -102,7 +102,7 @@ func (o *OwnerModel) CreateIndexes() {
 	})
 }
 
-func (o *OwnerModel) List(tags []string, updatedAt time.Time, page int) (res []bson.M) {
+func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) (res []bson.M) {
 	ctx := context.Background()
 	limit := 10
 	pipeline := mongo.Pipeline{
@@ -113,7 +113,7 @@ func (o *OwnerModel) List(tags []string, updatedAt time.Time, page int) (res []b
 			{"$match", bson.D{
 				{"$and", []bson.D{{
 					{"ranks.tags", tags},
-					{"ranks.updated_at", updatedAt},
+					{"ranks.updated_at", timestamp},
 				}}},
 			}},
 		},
