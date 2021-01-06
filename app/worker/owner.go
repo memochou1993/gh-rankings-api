@@ -115,9 +115,9 @@ func (o *OwnerWorker) Update() error {
 	limit := 100
 	gistsQuery := model.NewOwnerGistsQuery()
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	for page := 0; !stop; page++ {
+	for i := 0; !stop; i++ {
 		err := func() error {
-			cursor := database.All(ctx, o.OwnerModel.Name(), page*limit, limit)
+			cursor := database.All(ctx, o.OwnerModel.Name(), i*limit, limit)
 			defer database.CloseCursor(ctx, cursor)
 			if cursor.RemainingBatchLength() == 0 {
 				stop = true
