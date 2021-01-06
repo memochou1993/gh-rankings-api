@@ -1,11 +1,13 @@
 package model
 
 import (
+	"context"
 	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"time"
 )
 
@@ -98,6 +100,48 @@ func (o *OwnerModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
 		"ranks.tags",
 	})
+}
+
+func (o *OwnerModel) List(tags []string, updatedAt time.Time, page int) (res []bson.M) {
+	ctx := context.Background()
+	limit := 10
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$unwind", "$ranks"},
+		},
+		bson.D{
+			{"$match", bson.D{
+				{"$and", []bson.D{{
+					{"ranks.tags", tags},
+					{"ranks.updated_at", updatedAt},
+				}}},
+			}},
+		},
+		bson.D{
+			{"$project", bson.D{
+				{"_id", "$_id"},
+				{"avatar_url", "$avatar_url"},
+				{"location", "$location"},
+				{"name", "$name"},
+				{"rank", "$ranks"},
+			}},
+		},
+		bson.D{
+			{"$sort", bson.D{
+				{"rank.rank", 1},
+			}},
+		},
+		bson.D{
+			{"$skip", (page - 1) * limit},
+		},
+		bson.D{
+			{"$limit", limit},
+		},
+	}
+	if err := database.Aggregate(ctx, o.Name(), pipeline).All(ctx, &res); err != nil {
+		log.Fatalln(err.Error())
+	}
+	return
 }
 
 func (o *OwnerModel) Find(id string) *mongo.SingleResult {

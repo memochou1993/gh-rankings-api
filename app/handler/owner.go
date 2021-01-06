@@ -3,8 +3,11 @@ package handler
 import (
 	"github.com/gorilla/mux"
 	"github.com/memochou1993/github-rankings/app/model"
+	"github.com/memochou1993/github-rankings/app/worker"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 var ownerModel *model.OwnerModel
@@ -14,13 +17,21 @@ func init() {
 }
 
 func ListOwners(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer closeBody(r)
 
-	// TODO
+	tags := strings.Split(r.URL.Query().Get("tags"), ",")
+	updatedAt := worker.Owner.UpdatedAt
+	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
+	if page < 0 || err != nil {
+		page = 1
+	}
+	res := ownerModel.List(tags, updatedAt, int(page))
+
+	response(w, http.StatusOK, res)
 }
 
 func ShowOwner(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer closeBody(r)
 
 	login := mux.Vars(r)["login"]
 	res := ownerModel.Find(login)
