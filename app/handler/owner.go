@@ -20,7 +20,7 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
-	timestamp := worker.Owner.Timestamp
+	timestamp := worker.OwnerWorker.Timestamp
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if page < 0 || err != nil {
 		page = 1

@@ -16,36 +16,18 @@ import (
 	"time"
 )
 
-type RepositoryWorker struct {
+type repositoryWorker struct {
 	RepositoryModel *model.RepositoryModel
 	Timestamp       time.Time
 }
 
-func (r *RepositoryWorker) Init() {
+func (r *repositoryWorker) Init() {
 	logger.Info("Initializing repository collection...")
 	r.RepositoryModel.CreateIndexes()
-	logger.Success("Repository collection initialized!")
+	logger.Success("RepositoryWorker collection initialized!")
 }
 
-func (r *RepositoryWorker) Work() {
-	go func() {
-		t := time.NewTicker(10 * time.Minute)
-		for ; true; <-t.C {
-			if err := r.Collect(); err != nil {
-				logger.Error(err.Error())
-			}
-		}
-	}()
-
-	go func() {
-		t := time.NewTicker(24 * time.Hour)
-		for ; true; <-t.C {
-			r.Rank()
-		}
-	}()
-}
-
-func (r *RepositoryWorker) Collect() error {
+func (r *repositoryWorker) Collect() error {
 	logger.Info("Collecting repositories...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	q := model.NewRepositoriesQuery()
@@ -53,7 +35,7 @@ func (r *RepositoryWorker) Collect() error {
 	return r.Travel(&from, q)
 }
 
-func (r *RepositoryWorker) Travel(from *time.Time, q *model.Query) error {
+func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
 	to := time.Now()
 	if from.After(to) {
 		return nil
@@ -78,7 +60,7 @@ func (r *RepositoryWorker) Travel(from *time.Time, q *model.Query) error {
 	return r.Travel(from, q)
 }
 
-func (r *RepositoryWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+func (r *repositoryWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
 	res := model.RepositoryResponse{}
 	if err := r.fetch(*q, &res); err != nil {
 		return err
@@ -96,7 +78,7 @@ func (r *RepositoryWorker) FetchRepositories(q *model.Query, repositories *[]mod
 	return r.FetchRepositories(q, repositories)
 }
 
-func (r *RepositoryWorker) Rank() {
+func (r *repositoryWorker) Rank() {
 	logger.Info("Executing repository rank pipelines...")
 	pipelines := []*model.Pipeline{
 		r.newRankPipeline("forks"),
@@ -125,7 +107,7 @@ func (r *RepositoryWorker) Rank() {
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 
-func (r *RepositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
+func (r *repositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
@@ -139,7 +121,7 @@ func (r *RepositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (
 	return
 }
 
-func (r *RepositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
+func (r *repositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	return &model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Fork:    "true",
@@ -148,7 +130,7 @@ func (r *RepositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (r *RepositoryWorker) newRankPipeline(field string) *model.Pipeline {
+func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
@@ -169,7 +151,7 @@ func (r *RepositoryWorker) newRankPipeline(field string) *model.Pipeline {
 	}
 }
 
-func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
+func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -198,8 +180,8 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 	return
 }
 
-func NewRepositoryWorker() *RepositoryWorker {
-	return &RepositoryWorker{
+func NewRepositoryWorker() *repositoryWorker {
+	return &repositoryWorker{
 		RepositoryModel: model.NewRepositoryModel(),
 	}
 }

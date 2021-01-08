@@ -18,45 +18,18 @@ import (
 	"time"
 )
 
-type OwnerWorker struct {
+type ownerWorker struct {
 	OwnerModel *model.OwnerModel
 	Timestamp  time.Time
 }
 
-func (o *OwnerWorker) Init() {
+func (o *ownerWorker) Init() {
 	logger.Info("Initializing owner collection...")
 	o.OwnerModel.CreateIndexes()
-	logger.Success("Owner collection initialized!")
+	logger.Success("ownerWorker collection initialized!")
 }
 
-func (o *OwnerWorker) Work() {
-	go func() {
-		t := time.NewTicker(10 * time.Second)
-		for ; true; <-t.C {
-			if err := o.Collect(); err != nil {
-				logger.Error(err.Error())
-			}
-		}
-	}()
-
-	go func() {
-		t := time.NewTicker(10 * time.Minute)
-		for ; true; <-t.C {
-			if err := o.Update(); err != nil {
-				logger.Error(err.Error())
-			}
-		}
-	}()
-
-	go func() {
-		t := time.NewTicker(24 * time.Hour)
-		for ; true; <-t.C {
-			o.Rank()
-		}
-	}()
-}
-
-func (o *OwnerWorker) Collect() error {
+func (o *ownerWorker) Collect() error {
 	logger.Info("Collecting owners...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	q := model.NewOwnersQuery()
@@ -64,7 +37,7 @@ func (o *OwnerWorker) Collect() error {
 	return o.Travel(&from, q)
 }
 
-func (o *OwnerWorker) Travel(from *time.Time, q *model.Query) error {
+func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 	to := time.Now()
 	if from.After(to) {
 		return nil
@@ -89,7 +62,7 @@ func (o *OwnerWorker) Travel(from *time.Time, q *model.Query) error {
 	return o.Travel(from, q)
 }
 
-func (o *OwnerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
+func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -107,7 +80,7 @@ func (o *OwnerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	return o.FetchOwners(q, owners)
 }
 
-func (o *OwnerWorker) Update() error {
+func (o *ownerWorker) Update() error {
 	logger.Info("Updating owner gists...")
 	logger.Info("Updating owner repositories...")
 	ctx := context.Background()
@@ -144,7 +117,7 @@ func (o *OwnerWorker) Update() error {
 	return nil
 }
 
-func (o *OwnerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
+func (o *ownerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
 	if !owner.IsUser() {
 		return nil
 	}
@@ -159,7 +132,7 @@ func (o *OwnerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
 	return nil
 }
 
-func (o *OwnerWorker) UpdateRepositories(owner model.Owner, q *model.Query) error {
+func (o *ownerWorker) UpdateRepositories(owner model.Owner, q *model.Query) error {
 	var repositories []model.Repository
 	q.Field = owner.Type()
 	q.OwnerArguments.Login = strconv.Quote(owner.ID())
@@ -172,7 +145,7 @@ func (o *OwnerWorker) UpdateRepositories(owner model.Owner, q *model.Query) erro
 	return nil
 }
 
-func (o *OwnerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
+func (o *ownerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -190,7 +163,7 @@ func (o *OwnerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	return o.FetchGists(q, gists)
 }
 
-func (o *OwnerWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+func (o *ownerWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -208,7 +181,7 @@ func (o *OwnerWorker) FetchRepositories(q *model.Query, repositories *[]model.Re
 	return o.FetchRepositories(q, repositories)
 }
 
-func (o *OwnerWorker) Rank() {
+func (o *ownerWorker) Rank() {
 	logger.Info("Executing owner rank pipelines...")
 	var pipelines []*model.Pipeline
 	pipelines = append(pipelines, o.newUserRankPipelines()...)
@@ -232,7 +205,7 @@ func (o *OwnerWorker) Rank() {
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
-func (o *OwnerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
+func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
@@ -246,7 +219,7 @@ func (o *OwnerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error)
 	return
 }
 
-func (o *OwnerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
+func (o *ownerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	return &model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
@@ -254,7 +227,7 @@ func (o *OwnerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 	}
 }
 
-func (o *OwnerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
+func (o *ownerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
 	tag := model.TypeUser
 	fields := []string{
 		"followers",
@@ -274,7 +247,7 @@ func (o *OwnerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
 	return
 }
 
-func (o *OwnerWorker) newOrganizationRankPipelines() (pipelines []*model.Pipeline) {
+func (o *ownerWorker) newOrganizationRankPipelines() (pipelines []*model.Pipeline) {
 	tag := model.TypeOrganization
 	fields := []string{
 		"repositories.forks",
@@ -291,7 +264,7 @@ func (o *OwnerWorker) newOrganizationRankPipelines() (pipelines []*model.Pipelin
 	return
 }
 
-func (o *OwnerWorker) newRankPipeline(field string, tags ...string) *model.Pipeline {
+func (o *ownerWorker) newRankPipeline(field string, tags ...string) *model.Pipeline {
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
@@ -319,7 +292,7 @@ func (o *OwnerWorker) newRankPipeline(field string, tags ...string) *model.Pipel
 	}
 }
 
-func (o *OwnerWorker) newRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
+func (o *ownerWorker) newRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, o.newRankPipeline(field, append(tags, location.Name)...))
 		for _, city := range location.Cities {
@@ -329,7 +302,7 @@ func (o *OwnerWorker) newRankPipelinesByLocation(field string, tags ...string) (
 	return
 }
 
-func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
+func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -375,8 +348,8 @@ func (o *OwnerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 	return
 }
 
-func NewOwnerWorker() *OwnerWorker {
-	return &OwnerWorker{
+func NewOwnerWorker() *ownerWorker {
+	return &ownerWorker{
 		OwnerModel: model.NewOwnerModel(),
 	}
 }
