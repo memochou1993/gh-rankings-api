@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/app/worker"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,9 +25,14 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 	if page < 0 || err != nil {
 		page = 1
 	}
-	res := ownerModel.List(tags, timestamp, int(page))
 
-	response(w, http.StatusOK, res)
+	var owners []model.Owner
+	cursor := ownerModel.List(tags, timestamp, int(page))
+	if err := cursor.All(context.Background(), &owners); err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	response(w, http.StatusOK, owners)
 }
 
 func ShowOwner(w http.ResponseWriter, r *http.Request) {

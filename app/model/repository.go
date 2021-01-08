@@ -22,7 +22,7 @@ type Repository struct {
 	} `json:"primaryLanguage" bson:"primary_language"`
 	Stargazers Directory `json:"stargazers" bson:"stargazers"`
 	Watchers   Directory `json:"watchers" bson:"watchers"`
-	Rank       `json:"rank" bson:"rank"`
+	Rank       *Rank     `json:"rank" bson:"rank,omitempty"`
 }
 
 func (r *Repository) ID() string {
@@ -74,7 +74,9 @@ func (r *RepositoryModel) List(tags []string, timestamp time.Time, page int) *mo
 			}},
 		},
 		bson.D{
-			{"$unset", "ranks"},
+			{"$project", bson.D{
+				{"ranks", 0},
+			}},
 		},
 		bson.D{
 			{"$sort", bson.D{

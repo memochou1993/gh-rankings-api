@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"time"
 )
 
@@ -21,7 +20,7 @@ type Owner struct {
 	Gists        []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
 	Tags         []string     `json:"tags" bson:"tags"`
-	Ranks        []Rank       `json:"ranks" bson:"ranks,omitempty"`
+	Rank         *Rank        `json:"rank" bson:"rank,omitempty"`
 }
 
 func (o *Owner) ID() string {
@@ -102,7 +101,7 @@ func (o *OwnerModel) CreateIndexes() {
 	})
 }
 
-func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) (res []bson.M) {
+func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) *mongo.Cursor {
 	ctx := context.Background()
 	limit := 10
 	pipeline := mongo.Pipeline{
@@ -118,12 +117,15 @@ func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) (res []b
 			}},
 		},
 		bson.D{
-			{"$project", bson.D{
-				{"_id", "$_id"},
-				{"avatar_url", "$avatar_url"},
-				{"location", "$location"},
-				{"name", "$name"},
+			{"$addFields", bson.D{
 				{"rank", "$ranks"},
+			}},
+		},
+		bson.D{
+			{"$project", bson.D{
+				{"gists", 0},
+				{"repositories", 0},
+				{"ranks", 0},
 			}},
 		},
 		bson.D{
@@ -138,10 +140,7 @@ func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) (res []b
 			{"$limit", limit},
 		},
 	}
-	if err := database.Aggregate(ctx, o.Name(), pipeline).All(ctx, &res); err != nil {
-		log.Fatalln(err.Error())
-	}
-	return
+	return database.Aggregate(ctx, o.Name(), pipeline)
 }
 
 func (o *OwnerModel) Find(id string) *mongo.SingleResult {
