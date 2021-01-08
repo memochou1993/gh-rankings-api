@@ -16,16 +16,16 @@ const (
 )
 
 type Owner struct {
-	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
-	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
-	Followers    *Directory   `json:"followers" bson:"followers"`
-	Location     string       `json:"location" bson:"location"`
+	AvatarURL    string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
+	CreatedAt    *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
+	Followers    *Directory   `json:"followers,omitempty" bson:"followers,omitempty"`
+	Location     string       `json:"location,omitempty" bson:"location,omitempty"`
 	Login        string       `json:"login" bson:"_id"`
-	Name         string       `json:"name" bson:"name"`
+	Name         string       `json:"name,omitempty" bson:"name,omitempty"`
 	Gists        []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
-	Tags         []string     `json:"tags" bson:"tags"`
-	Rank         *Rank        `json:"rank" bson:"rank,omitempty"`
+	Tags         []string     `json:"tags,omitempty" bson:"tags,omitempty"`
+	Rank         *Rank        `json:"rank,omitempty" bson:"rank,omitempty"`
 }
 
 func (o *Owner) ID() string {
@@ -70,9 +70,9 @@ type OwnerResponse struct {
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		Owner struct {
-			AvatarURL string    `json:"avatarUrl"`
-			CreatedAt time.Time `json:"createdAt"`
-			Followers Directory `json:"followers"`
+			AvatarURL string     `json:"avatarUrl"`
+			CreatedAt *time.Time `json:"createdAt"`
+			Followers *Directory `json:"followers"`
 			Gists     struct {
 				Edges []struct {
 					Cursor string `json:"cursor"`
@@ -128,9 +128,10 @@ func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) *mongo.C
 		},
 		bson.D{
 			{"$project", bson.D{
-				{"gists", 0},
-				{"repositories", 0},
-				{"ranks", 0},
+				{"avatar_url", 1},
+				{"location", 1},
+				{"name", 1},
+				{"rank", 1},
 			}},
 		},
 		bson.D{

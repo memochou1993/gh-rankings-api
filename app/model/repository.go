@@ -9,20 +9,20 @@ import (
 )
 
 type Repository struct {
-	CreatedAt         time.Time `json:"createdAt" bson:"created_at"`
-	Forks             Directory `json:"forks" bson:"forks"`
-	Name              string    `json:"name" bson:"name"`
-	NameWithOwner     string    `json:"nameWithOwner" bson:"_id"`
-	OpenGraphImageUrl string    `json:"openGraphImageUrl" bson:"open_graph_image_url"`
+	CreatedAt         *time.Time `json:"createdAt,omitempty" bson:"created_at,omitempty"`
+	Forks             *Directory `json:"forks,omitempty" bson:"forks,omitempty"`
+	Name              string     `json:"name,omitempty" bson:"name,omitempty"`
+	NameWithOwner     string     `json:"nameWithOwner" bson:"_id"`
+	OpenGraphImageUrl string     `json:"openGraphImageUrl,omitempty" bson:"open_graph_image_url,omitempty"`
 	Owner             struct {
-		Login string `json:"login" bson:"login"`
-	} `json:"owner" bson:"owner"`
+		Login string `json:"login,omitempty" bson:"login,omitempty"`
+	} `json:"owner,omitempty" bson:"owner,omitempty"`
 	PrimaryLanguage struct {
-		Name string `json:"name" bson:"name"`
-	} `json:"primaryLanguage" bson:"primary_language"`
-	Stargazers Directory `json:"stargazers" bson:"stargazers"`
-	Watchers   Directory `json:"watchers" bson:"watchers"`
-	Rank       *Rank     `json:"rank" bson:"rank,omitempty"`
+		Name string `json:"name,omitempty" bson:"name,omitempty"`
+	} `json:"primaryLanguage,omitempty" bson:"primary_language,omitempty"`
+	Stargazers *Directory `json:"stargazers,omitempty" bson:"stargazers,omitempty"`
+	Watchers   *Directory `json:"watchers,omitempty" bson:"watchers,omitempty"`
+	Rank       *Rank      `json:"rank,omitempty" bson:"rank,omitempty"`
 }
 
 func (r *Repository) ID() string {
@@ -75,7 +75,10 @@ func (r *RepositoryModel) List(tags []string, timestamp time.Time, page int) *mo
 		},
 		bson.D{
 			{"$project", bson.D{
-				{"ranks", 0},
+				{"open_graph_image_url", 1},
+				{"owner", 1},
+				{"primary_language", 1},
+				{"rank", 1},
 			}},
 		},
 		bson.D{

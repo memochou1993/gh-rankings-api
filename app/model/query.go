@@ -73,7 +73,7 @@ type SearchQuery struct {
 }
 
 type Directory struct {
-	TotalCount int `json:"totalCount" bson:"total_count"`
+	TotalCount int `json:"totalCount,omitempty" bson:"total_count,omitempty"`
 }
 
 type PageInfo struct {
