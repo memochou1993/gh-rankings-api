@@ -10,11 +10,9 @@ import (
 	"strings"
 )
 
-var ownerModel *model.OwnerModel
-
-func init() {
+var (
 	ownerModel = model.NewOwnerModel()
-}
+)
 
 func ListOwners(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)

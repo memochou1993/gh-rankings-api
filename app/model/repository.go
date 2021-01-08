@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,6 +22,7 @@ type Repository struct {
 	} `json:"primaryLanguage" bson:"primary_language"`
 	Stargazers Directory `json:"stargazers" bson:"stargazers"`
 	Watchers   Directory `json:"watchers" bson:"watchers"`
+	Rank       `json:"rank" bson:"rank"`
 }
 
 func (r *Repository) ID() string {
@@ -49,6 +51,44 @@ func (r *RepositoryModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
 		"ranks.tags",
 	})
+}
+
+func (r *RepositoryModel) List(tags []string, timestamp time.Time, page int) *mongo.Cursor {
+	ctx := context.Background()
+	limit := 10
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$unwind", "$ranks"},
+		},
+		bson.D{
+			{"$match", bson.D{
+				{"$and", []bson.D{{
+					{"ranks.tags", tags},
+					{"ranks.updated_at", timestamp},
+				}}},
+			}},
+		},
+		bson.D{
+			{"$addFields", bson.D{
+				{"rank", "$ranks"},
+			}},
+		},
+		bson.D{
+			{"$unset", "ranks"},
+		},
+		bson.D{
+			{"$sort", bson.D{
+				{"rank.rank", 1},
+			}},
+		},
+		bson.D{
+			{"$skip", (page - 1) * limit},
+		},
+		bson.D{
+			{"$limit", limit},
+		},
+	}
+	return database.Aggregate(ctx, r.Name(), pipeline)
 }
 
 func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResult {

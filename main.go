@@ -24,5 +24,6 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/owners", handler.ListOwners)
 	r.HandleFunc("/owners/{login}", handler.ShowOwner)
+	r.HandleFunc("/repositories", handler.ListRepositories)
 	log.Fatalln(http.ListenAndServe(":80", r))
 }
