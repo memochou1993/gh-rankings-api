@@ -29,7 +29,7 @@ func setUp() {
 }
 
 func TestFetchRepositories(t *testing.T) {
-	r := worker.NewRepositoryWorker()
+	r := worker.RepositoryWorker
 
 	q := model.Query{
 		Schema: model.ReadQuery("search_repositories"),
@@ -52,7 +52,7 @@ func TestFetchRepositories(t *testing.T) {
 }
 
 func TestStoreRepositories(t *testing.T) {
-	r := worker.NewRepositoryWorker()
+	r := worker.RepositoryWorker
 
 	repository := model.Repository{NameWithOwner: "memochou1993/github-rankings"}
 	repositories := []model.Repository{repository}

@@ -29,7 +29,7 @@ func setUp() {
 }
 
 func TestFetchOwners(t *testing.T) {
-	o := worker.NewOwnerWorker()
+	o := worker.OwnerWorker
 
 	q := model.Query{
 		Schema: model.ReadQuery("search_owners"),
@@ -52,7 +52,7 @@ func TestFetchOwners(t *testing.T) {
 }
 
 func TestStoreUsers(t *testing.T) {
-	o := worker.NewOwnerWorker()
+	o := worker.OwnerWorker
 
 	owner := model.Owner{Login: "memochou1993", Followers: &model.Directory{TotalCount: 1}}
 	owners := []model.Owner{owner}
@@ -74,7 +74,7 @@ func TestStoreUsers(t *testing.T) {
 }
 
 func TestStoreOrganizations(t *testing.T) {
-	o := worker.NewOwnerWorker()
+	o := worker.OwnerWorker
 
 	owner := model.Owner{Login: "github"}
 	owners := []model.Owner{owner}
@@ -96,7 +96,7 @@ func TestStoreOrganizations(t *testing.T) {
 }
 
 func TestFetchUserRepositories(t *testing.T) {
-	o := worker.NewOwnerWorker()
+	o := worker.OwnerWorker
 
 	q := model.Query{
 		Schema: model.ReadQuery("owner_repositories"),
@@ -123,7 +123,7 @@ func TestFetchUserRepositories(t *testing.T) {
 }
 
 func TestFetchOrganizationRepositories(t *testing.T) {
-	o := worker.NewOwnerWorker()
+	o := worker.OwnerWorker
 
 	q := model.Query{
 		Schema: model.ReadQuery("owner_repositories"),
