@@ -165,7 +165,7 @@ func (r *RepositoryWorker) newRankPipeline(field string) *model.Pipeline {
 				}},
 			},
 		},
-		Tags: []string{model.TypeRepository, field},
+		Tags: []string{field},
 	}
 }
 
@@ -192,7 +192,7 @@ func (r *RepositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 					}},
 				},
 			},
-			Tags: []string{model.TypeRepository, field, language.Name},
+			Tags: []string{field, language.Name},
 		})
 	}
 	return

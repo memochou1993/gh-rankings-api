@@ -5,12 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const (
-	TypeRepository   = "repository"
-	TypeUser         = "user"
-	TypeOrganization = "organization"
-)
-
 type Interface interface {
 	Name() string
 	Collection() *mongo.Collection

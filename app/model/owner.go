@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+const (
+	TypeUser         = "user"
+	TypeOrganization = "organization"
+)
+
 type Owner struct {
 	AvatarURL    string       `json:"avatarUrl" bson:"avatar_url"`
 	CreatedAt    time.Time    `json:"createdAt" bson:"created_at"`
