@@ -74,7 +74,7 @@ func All(ctx context.Context, collection string, skip int, limit int) *mongo.Cur
 }
 
 func Aggregate(ctx context.Context, collection string, pipeline []bson.D) *mongo.Cursor {
-	opts := options.Aggregate().SetBatchSize(1000)
+	opts := options.Aggregate().SetBatchSize(1000).SetAllowDiskUse(true)
 	cursor, err := Collection(collection).Aggregate(ctx, pipeline, opts)
 	if err != nil {
 		log.Fatalln(err.Error())
