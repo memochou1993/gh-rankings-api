@@ -102,7 +102,7 @@ type OwnerModel struct {
 
 func (o *OwnerModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
-		"ranks.tags",
+		//
 	})
 }
 

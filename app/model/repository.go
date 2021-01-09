@@ -49,7 +49,7 @@ type RepositoryModel struct {
 
 func (r *RepositoryModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
-		"ranks.tags",
+		//
 	})
 }
 
