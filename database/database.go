@@ -64,6 +64,12 @@ func UpdateMany(collection string, filter bson.D, update bson.D, opts ...*option
 	}
 }
 
+func DeleteMany(collection string, filter bson.D, opts ...*options.DeleteOptions) {
+	if _, err := Collection(collection).DeleteMany(context.Background(), filter, opts...); err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func All(ctx context.Context, collection string, skip int, limit int) *mongo.Cursor {
 	opts := options.Find().SetBatchSize(1000).SetSkip(int64(skip)).SetLimit(int64(limit))
 	cursor, err := Collection(collection).Find(ctx, bson.D{}, opts)

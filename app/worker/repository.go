@@ -17,8 +17,9 @@ import (
 )
 
 type repositoryWorker struct {
-	RepositoryModel *model.RepositoryModel
-	Timestamp       time.Time
+	RepositoryModel     *model.RepositoryModel
+	RepositoryRankModel *model.RepositoryRankModel
+	Timestamp           time.Time
 }
 
 func (r *repositoryWorker) Init() {
@@ -97,13 +98,13 @@ func (r *repositoryWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(r.RepositoryModel, timestamp, *p)
+			r.RepositoryRankModel.Store(timestamp, *p)
 			<-ch
 		}(p)
 	}
 	wg.Wait()
 	r.Timestamp = timestamp
-	model.PullRanks(r.RepositoryModel, timestamp)
+	r.RepositoryRankModel.Delete(timestamp)
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }
 
@@ -182,6 +183,7 @@ func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 
 func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
-		RepositoryModel: model.NewRepositoryModel(),
+		RepositoryModel:     model.NewRepositoryModel(),
+		RepositoryRankModel: model.NewRepositoryRankModel(),
 	}
 }

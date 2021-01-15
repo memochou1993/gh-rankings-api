@@ -25,7 +25,6 @@ type Owner struct {
 	Gists        []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
 	Repositories []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
 	Tags         []string     `json:"tags,omitempty" bson:"tags,omitempty"`
-	Rank         *Rank        `json:"rank,omitempty" bson:"rank,omitempty"`
 }
 
 func (o *Owner) ID() string {

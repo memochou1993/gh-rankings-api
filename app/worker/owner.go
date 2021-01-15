@@ -19,8 +19,9 @@ import (
 )
 
 type ownerWorker struct {
-	OwnerModel *model.OwnerModel
-	Timestamp  time.Time
+	OwnerModel     *model.OwnerModel
+	OwnerRankModel *model.OwnerRankModel
+	Timestamp      time.Time
 }
 
 func (o *ownerWorker) Init() {
@@ -195,13 +196,13 @@ func (o *ownerWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			model.PushRanks(o.OwnerModel, timestamp, *p)
+			o.OwnerRankModel.Store(timestamp, *p)
 			<-ch
 		}(p)
 	}
 	wg.Wait()
 	o.Timestamp = timestamp
-	model.PullRanks(o.OwnerModel, timestamp)
+	o.OwnerRankModel.Delete(timestamp)
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
@@ -350,6 +351,7 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 
 func NewOwnerWorker() *ownerWorker {
 	return &ownerWorker{
-		OwnerModel: model.NewOwnerModel(),
+		OwnerModel:     model.NewOwnerModel(),
+		OwnerRankModel: model.NewOwnerRankModel(),
 	}
 }

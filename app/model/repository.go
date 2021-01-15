@@ -22,7 +22,6 @@ type Repository struct {
 	} `json:"primaryLanguage,omitempty" bson:"primary_language,omitempty"`
 	Stargazers *Directory `json:"stargazers,omitempty" bson:"stargazers,omitempty"`
 	Watchers   *Directory `json:"watchers,omitempty" bson:"watchers,omitempty"`
-	Rank       *Rank      `json:"rank,omitempty" bson:"rank,omitempty"`
 }
 
 func (r *Repository) ID() string {
