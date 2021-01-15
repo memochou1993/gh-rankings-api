@@ -20,8 +20,8 @@ type OwnerRankModel struct {
 
 func (o *OwnerRankModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
-		"login",
-		"ranks.tags",
+		"rank.login",
+		"rank.tags",
 	})
 }
 

@@ -20,8 +20,8 @@ type RepositoryRankModel struct {
 
 func (r *RepositoryRankModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
-		"nameWithOwner",
-		"ranks.tags",
+		"rank.nameWithOwner",
+		"rank.tags",
 	})
 }
 
