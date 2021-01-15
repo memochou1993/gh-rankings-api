@@ -26,8 +26,12 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 
-	var owners []model.Owner
-	cursor := ownerModel.List(tags, timestamp, int(page))
+	var owners []model.OwnerRank
+	if timestamp == nil {
+		response(w, http.StatusOK, owners)
+		return
+	}
+	cursor := model.NewRankModel().List(model.NewOwnerRankModel(), tags, *timestamp, int(page))
 	if err := cursor.All(context.Background(), &owners); err != nil {
 		log.Fatalln(err.Error())
 	}

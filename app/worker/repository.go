@@ -19,12 +19,12 @@ import (
 type repositoryWorker struct {
 	RepositoryModel     *model.RepositoryModel
 	RepositoryRankModel *model.RepositoryRankModel
-	Timestamp           time.Time
+	Timestamp           *time.Time
 }
 
 func (r *repositoryWorker) Init() {
 	logger.Info("Initializing repository collection...")
-	r.RepositoryModel.CreateIndexes()
+	r.RepositoryRankModel.CreateIndexes()
 	logger.Success("RepositoryWorker collection initialized!")
 }
 
@@ -103,7 +103,7 @@ func (r *repositoryWorker) Rank() {
 		}(p)
 	}
 	wg.Wait()
-	r.Timestamp = timestamp
+	r.Timestamp = &timestamp
 	r.RepositoryRankModel.Delete(timestamp)
 	logger.Success(fmt.Sprintf("Executed %d repository rank pipelines!", len(pipelines)))
 }

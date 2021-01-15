@@ -10,10 +10,6 @@ import (
 	"strings"
 )
 
-var (
-	repositoryModel = model.NewRepositoryModel()
-)
-
 func ListRepositories(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
@@ -23,9 +19,13 @@ func ListRepositories(w http.ResponseWriter, r *http.Request) {
 	if page < 0 || err != nil {
 		page = 1
 	}
-	cursor := repositoryModel.List(tags, timestamp, int(page))
 
-	var repositories []model.Repository
+	var repositories []model.RepositoryRank
+	if timestamp == nil {
+		response(w, http.StatusOK, repositories)
+		return
+	}
+	cursor := model.NewRankModel().List(model.NewRepositoryRankModel(), tags, *timestamp, int(page))
 	if err := cursor.All(context.Background(), &repositories); err != nil {
 		log.Fatalln(err.Error())
 	}

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -97,55 +96,6 @@ type OwnerResponse struct {
 
 type OwnerModel struct {
 	*Model
-}
-
-func (o *OwnerModel) CreateIndexes() {
-	database.CreateIndexes(o.Name(), []string{
-		//
-	})
-}
-
-func (o *OwnerModel) List(tags []string, timestamp time.Time, page int) *mongo.Cursor {
-	ctx := context.Background()
-	limit := 10
-	pipeline := mongo.Pipeline{
-		bson.D{
-			{"$unwind", "$ranks"},
-		},
-		bson.D{
-			{"$match", bson.D{
-				{"$and", []bson.D{{
-					{"ranks.tags", tags},
-					{"ranks.updated_at", timestamp},
-				}}},
-			}},
-		},
-		bson.D{
-			{"$addFields", bson.D{
-				{"rank", "$ranks"},
-			}},
-		},
-		bson.D{
-			{"$project", bson.D{
-				{"avatar_url", 1},
-				{"location", 1},
-				{"name", 1},
-				{"rank", 1},
-			}},
-		},
-		bson.D{
-			{"$sort", bson.D{
-				{"rank.rank", 1},
-			}},
-		},
-		bson.D{
-			{"$skip", (page - 1) * limit},
-		},
-		bson.D{
-			{"$limit", limit},
-		},
-	}
-	return database.Aggregate(ctx, o.Name(), pipeline)
 }
 
 func (o *OwnerModel) Find(id string) *mongo.SingleResult {

@@ -21,12 +21,12 @@ import (
 type ownerWorker struct {
 	OwnerModel     *model.OwnerModel
 	OwnerRankModel *model.OwnerRankModel
-	Timestamp      time.Time
+	Timestamp      *time.Time
 }
 
 func (o *ownerWorker) Init() {
 	logger.Info("Initializing owner collection...")
-	o.OwnerModel.CreateIndexes()
+	o.OwnerRankModel.CreateIndexes()
 	logger.Success("ownerWorker collection initialized!")
 }
 
@@ -201,7 +201,7 @@ func (o *ownerWorker) Rank() {
 		}(p)
 	}
 	wg.Wait()
-	o.Timestamp = timestamp
+	o.Timestamp = &timestamp
 	o.OwnerRankModel.Delete(timestamp)
 	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
