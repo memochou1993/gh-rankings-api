@@ -25,7 +25,7 @@ type repositoryWorker struct {
 func (r *repositoryWorker) Init() {
 	logger.Info("Initializing repository collection...")
 	r.RepositoryRankModel.CreateIndexes()
-	logger.Success("RepositoryWorker collection initialized!")
+	logger.Success("Repository collection initialized!")
 }
 
 func (r *repositoryWorker) Collect() error {
@@ -137,6 +137,7 @@ func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
+					{"open_graph_image_url", "$open_graph_image_url"},
 					{"total_count", bson.D{
 						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},

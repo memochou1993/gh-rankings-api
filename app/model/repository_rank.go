@@ -11,8 +11,15 @@ import (
 )
 
 type RepositoryRank struct {
-	NameWithOwner string `json:"nameWithOwner" bson:"nameWithOwner"`
-	Rank          *Rank  `json:"rank,omitempty" bson:"rank,omitempty"`
+	NameWithOwner     string `json:"nameWithOwner" bson:"nameWithOwner"`
+	OpenGraphImageUrl string `json:"openGraphImageUrl" bson:"open_graph_image_url"`
+	Rank              *Rank  `json:"rank,omitempty" bson:"rank,omitempty"`
+}
+
+type RepositoryRankRecord struct {
+	ID                string `bson:"_id"`
+	OpenGraphImageUrl string `bson:"open_graph_image_url"`
+	TotalCount        int    `bson:"total_count"`
 }
 
 type RepositoryRankModel struct {
@@ -69,16 +76,14 @@ func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) {
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
-		rec := struct {
-			ID         string `bson:"_id"`
-			TotalCount int    `bson:"total_count"`
-		}{}
+		rec := RepositoryRankRecord{}
 		if err := cursor.Decode(&rec); err != nil {
 			log.Fatalln(err.Error())
 		}
 
 		doc := RepositoryRank{
-			NameWithOwner: rec.ID,
+			NameWithOwner:     rec.ID,
+			OpenGraphImageUrl: rec.OpenGraphImageUrl,
 			Rank: &Rank{
 				Rank:       i + 1,
 				Last:       last,

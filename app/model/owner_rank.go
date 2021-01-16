@@ -11,8 +11,15 @@ import (
 )
 
 type OwnerRank struct {
-	Login string `json:"login" bson:"login"`
-	Rank  *Rank  `json:"rank,omitempty" bson:"rank,omitempty"`
+	AvatarURL string `json:"avatarUrl" bson:"avatar_url"`
+	Login     string `json:"login" bson:"login"`
+	Rank      *Rank  `json:"rank" bson:"rank"`
+}
+
+type OwnerRankRecord struct {
+	ID         string `bson:"_id"`
+	AvatarURL  string `json:"avatarUrl" bson:"avatar_url"`
+	TotalCount int    `bson:"total_count"`
 }
 
 type OwnerRankModel struct {
@@ -69,16 +76,14 @@ func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) {
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
-		rec := struct {
-			ID         string `bson:"_id"`
-			TotalCount int    `bson:"total_count"`
-		}{}
+		rec := OwnerRankRecord{}
 		if err := cursor.Decode(&rec); err != nil {
 			log.Fatalln(err.Error())
 		}
 
 		doc := OwnerRank{
-			Login: rec.ID,
+			Login:     rec.ID,
+			AvatarURL: rec.AvatarURL,
 			Rank: &Rank{
 				Rank:       i + 1,
 				Last:       last,

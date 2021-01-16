@@ -27,7 +27,7 @@ type ownerWorker struct {
 func (o *ownerWorker) Init() {
 	logger.Info("Initializing owner collection...")
 	o.OwnerRankModel.CreateIndexes()
-	logger.Success("ownerWorker collection initialized!")
+	logger.Success("Owner collection initialized!")
 }
 
 func (o *ownerWorker) Collect() error {
@@ -114,7 +114,6 @@ func (o *ownerWorker) Update() error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -129,7 +128,6 @@ func (o *ownerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
 	}
 	o.OwnerModel.UpdateGists(owner, gists)
 	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), owner.Type()))
-
 	return nil
 }
 
@@ -142,7 +140,6 @@ func (o *ownerWorker) UpdateRepositories(owner model.Owner, q *model.Query) erro
 	}
 	o.OwnerModel.UpdateRepositories(owner, repositories)
 	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), owner.Type()))
-
 	return nil
 }
 
@@ -278,6 +275,7 @@ func (o *ownerWorker) newRankPipeline(field string, tags ...string) *model.Pipel
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
+					{"avatar_url", "$avatar_url"},
 					{"total_count", bson.D{
 						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},
