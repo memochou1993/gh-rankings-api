@@ -3,13 +3,12 @@ package handler
 import (
 	"context"
 	"github.com/gorilla/mux"
+	"github.com/memochou1993/github-rankings/app/handler/request"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/app/worker"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 )
 
 var (
@@ -19,26 +18,15 @@ var (
 func ListOwners(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
-	login := r.URL.Query().Get("login")
-	tags := strings.Split(r.URL.Query().Get("tags"), ",")
-	timestamp := worker.OwnerWorker.Timestamp
-	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
-	if page < 0 || err != nil {
-		page = 1
-	}
+	req := request.NewOwnerRequest(r)
+	req.CreatedAt = worker.OwnerWorker.Timestamp
 
 	var owners []model.OwnerRank
-	if timestamp == nil {
-		response(w, http.StatusOK, owners)
+	if req.CreatedAt == nil {
+		response(w, http.StatusAccepted, owners)
 		return
 	}
-	args := model.OwnerRankArguments{
-		Login:     login,
-		Tags:      tags,
-		CreatedAt: *timestamp,
-		Page:      int(page),
-	}
-	cursor := model.NewOwnerRankModel().List(args)
+	cursor := model.NewOwnerRankModel().List(req)
 	if err := cursor.All(context.Background(), &owners); err != nil {
 		log.Fatalln(err.Error())
 	}

@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"github.com/memochou1993/github-rankings/app/handler/request"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,13 +27,6 @@ type OwnerRankModel struct {
 	*Model
 }
 
-type OwnerRankArguments struct {
-	Login     string
-	Tags      []string
-	CreatedAt time.Time
-	Page      int
-}
-
 func (o *OwnerRankModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
 		"login",
@@ -40,15 +34,14 @@ func (o *OwnerRankModel) CreateIndexes() {
 	})
 }
 
-func (o *OwnerRankModel) List(args OwnerRankArguments) *mongo.Cursor {
+func (o *OwnerRankModel) List(req *request.OwnerRequest) *mongo.Cursor {
 	ctx := context.Background()
-	limit := 10
-	match := mongo.Pipeline{bson.D{{"rank.created_at", args.CreatedAt}}}
-	if args.Login != "" {
-		match = append(match, bson.D{{"login", args.Login}})
+	match := mongo.Pipeline{bson.D{{"rank.created_at", req.CreatedAt}}}
+	if req.Login != "" {
+		match = append(match, bson.D{{"login", req.Login}})
 	}
-	if strings.Join(args.Tags, "") != "" {
-		match = append(match, bson.D{{"rank.tags", args.Tags}})
+	if strings.Join(req.Tags, "") != "" {
+		match = append(match, bson.D{{"rank.tags", req.Tags}})
 	}
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -57,10 +50,10 @@ func (o *OwnerRankModel) List(args OwnerRankArguments) *mongo.Cursor {
 			}},
 		},
 		bson.D{
-			{"$skip", (args.Page - 1) * limit},
+			{"$skip", (req.Page - 1) * req.Limit},
 		},
 		bson.D{
-			{"$limit", limit},
+			{"$limit", req.Limit},
 		},
 	}
 	return database.Aggregate(ctx, NewOwnerRankModel().Name(), pipeline)
