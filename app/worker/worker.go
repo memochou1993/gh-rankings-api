@@ -13,7 +13,6 @@ var (
 func Init() {
 	OwnerWorker.Init()
 	go collectOwners()
-	go updateOwners()
 	go rankOwners()
 
 	RepositoryWorker.Init()
@@ -25,15 +24,6 @@ func collectOwners() {
 	t := time.NewTicker(10 * time.Second)
 	for ; true; <-t.C {
 		if err := OwnerWorker.Collect(); err != nil {
-			logger.Error(err.Error())
-		}
-	}
-}
-
-func updateOwners() {
-	t := time.NewTicker(10 * time.Minute)
-	for ; true; <-t.C {
-		if err := OwnerWorker.Update(); err != nil {
 			logger.Error(err.Error())
 		}
 	}

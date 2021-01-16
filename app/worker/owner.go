@@ -6,12 +6,10 @@ import (
 	"github.com/memochou1993/github-rankings/app"
 	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/app/resource"
-	"github.com/memochou1993/github-rankings/database"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/memochou1993/github-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -58,6 +56,11 @@ func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 			logger.Success(fmt.Sprintf("Inserted %d owners!", res.UpsertedCount))
 		}
 	}
+	for _, owner := range owners {
+		if err := o.Update(owner); err != nil {
+			return err
+		}
+	}
 	*from = from.AddDate(0, 0, 7)
 
 	return o.Travel(from, q)
@@ -81,38 +84,14 @@ func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	return o.FetchOwners(q, owners)
 }
 
-func (o *ownerWorker) Update() error {
-	logger.Info("Updating owner gists...")
-	logger.Info("Updating owner repositories...")
-	ctx := context.Background()
-	stop := false
-	limit := 100
+func (o *ownerWorker) Update(owner model.Owner) error {
 	gistsQuery := model.NewOwnerGistsQuery()
 	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	for i := 0; !stop; i++ {
-		err := func() error {
-			cursor := database.All(ctx, o.OwnerModel.Name(), i*limit, limit)
-			defer database.CloseCursor(ctx, cursor)
-			if cursor.RemainingBatchLength() == 0 {
-				stop = true
-			}
-			for cursor.Next(context.Background()) {
-				owner := model.Owner{}
-				if err := cursor.Decode(&owner); err != nil {
-					log.Fatalln(err.Error())
-				}
-				if err := o.UpdateGists(owner, gistsQuery); err != nil {
-					return err
-				}
-				if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
-					return err
-				}
-			}
-			return nil
-		}()
-		if err != nil {
-			return err
-		}
+	if err := o.UpdateGists(owner, gistsQuery); err != nil {
+		return err
+	}
+	if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
+		return err
 	}
 	return nil
 }
