@@ -19,6 +19,7 @@ var (
 func ListOwners(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
+	login := r.URL.Query().Get("login")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
 	timestamp := worker.OwnerWorker.Timestamp
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
@@ -31,7 +32,13 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 		response(w, http.StatusOK, owners)
 		return
 	}
-	cursor := model.NewRankModel().List(model.NewOwnerRankModel(), tags, *timestamp, int(page))
+	args := model.OwnerRankArguments{
+		Login:     login,
+		Tags:      tags,
+		CreatedAt: *timestamp,
+		Page:      int(page),
+	}
+	cursor := model.NewOwnerRankModel().List(args)
 	if err := cursor.All(context.Background(), &owners); err != nil {
 		log.Fatalln(err.Error())
 	}

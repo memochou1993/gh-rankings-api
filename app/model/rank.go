@@ -19,28 +19,6 @@ type Rank struct {
 
 type RankModel struct{}
 
-func (r *RankModel) List(model Interface, tags []string, createdAt time.Time, page int) *mongo.Cursor {
-	ctx := context.Background()
-	limit := 10
-	pipeline := mongo.Pipeline{
-		bson.D{
-			{"$match", bson.D{
-				{"$and", []bson.D{{
-					{"rank.tags", tags},
-					{"rank.created_at", createdAt},
-				}}},
-			}},
-		},
-		bson.D{
-			{"$skip", (page - 1) * limit},
-		},
-		bson.D{
-			{"$limit", limit},
-		},
-	}
-	return database.Aggregate(ctx, model.Name(), pipeline)
-}
-
 type Pipeline struct {
 	Pipeline *mongo.Pipeline
 	Tags     []string
@@ -59,8 +37,4 @@ func (p *Pipeline) Count(model Interface) int {
 		}
 	}
 	return r.Count
-}
-
-func NewRankModel() *RankModel {
-	return &RankModel{}
 }

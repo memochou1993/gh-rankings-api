@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -18,11 +19,44 @@ type RepositoryRankModel struct {
 	*Model
 }
 
+type RepositoryRankArguments struct {
+	NameWithOwner string
+	Tags          []string
+	CreatedAt     time.Time
+	Page          int
+}
+
 func (r *RepositoryRankModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
-		"rank.nameWithOwner",
+		"nameWithOwner",
 		"rank.tags",
 	})
+}
+
+func (r *RepositoryRankModel) List(args RepositoryRankArguments) *mongo.Cursor {
+	ctx := context.Background()
+	limit := 10
+	match := mongo.Pipeline{bson.D{{"rank.created_at", args.CreatedAt}}}
+	if args.NameWithOwner != "" {
+		match = append(match, bson.D{{"nameWithOwner", args.NameWithOwner}})
+	}
+	if strings.Join(args.Tags, "") != "" {
+		match = append(match, bson.D{{"rank.tags", args.Tags}})
+	}
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$match", bson.D{
+				{"$and", match},
+			}},
+		},
+		bson.D{
+			{"$skip", (args.Page - 1) * limit},
+		},
+		bson.D{
+			{"$limit", limit},
+		},
+	}
+	return database.Aggregate(ctx, NewRepositoryRankModel().Name(), pipeline)
 }
 
 func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) {

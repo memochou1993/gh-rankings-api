@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -18,11 +19,44 @@ type OwnerRankModel struct {
 	*Model
 }
 
+type OwnerRankArguments struct {
+	Login     string
+	Tags      []string
+	CreatedAt time.Time
+	Page      int
+}
+
 func (o *OwnerRankModel) CreateIndexes() {
 	database.CreateIndexes(o.Name(), []string{
-		"rank.login",
+		"login",
 		"rank.tags",
 	})
+}
+
+func (o *OwnerRankModel) List(args OwnerRankArguments) *mongo.Cursor {
+	ctx := context.Background()
+	limit := 10
+	match := mongo.Pipeline{bson.D{{"rank.created_at", args.CreatedAt}}}
+	if args.Login != "" {
+		match = append(match, bson.D{{"login", args.Login}})
+	}
+	if strings.Join(args.Tags, "") != "" {
+		match = append(match, bson.D{{"rank.tags", args.Tags}})
+	}
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$match", bson.D{
+				{"$and", match},
+			}},
+		},
+		bson.D{
+			{"$skip", (args.Page - 1) * limit},
+		},
+		bson.D{
+			{"$limit", limit},
+		},
+	}
+	return database.Aggregate(ctx, NewOwnerRankModel().Name(), pipeline)
 }
 
 func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) {

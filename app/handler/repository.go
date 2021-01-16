@@ -13,6 +13,7 @@ import (
 func ListRepositories(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
+	nameWithOwner := r.URL.Query().Get("nameWithOwner")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
 	timestamp := worker.RepositoryWorker.Timestamp
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
@@ -25,7 +26,13 @@ func ListRepositories(w http.ResponseWriter, r *http.Request) {
 		response(w, http.StatusOK, repositories)
 		return
 	}
-	cursor := model.NewRankModel().List(model.NewRepositoryRankModel(), tags, *timestamp, int(page))
+	args := model.RepositoryRankArguments{
+		NameWithOwner: nameWithOwner,
+		Tags:          tags,
+		CreatedAt:     *timestamp,
+		Page:          int(page),
+	}
+	cursor := model.NewRepositoryRankModel().List(args)
 	if err := cursor.All(context.Background(), &repositories); err != nil {
 		log.Fatalln(err.Error())
 	}
