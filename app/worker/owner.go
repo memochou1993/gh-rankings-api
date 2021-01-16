@@ -23,9 +23,7 @@ type ownerWorker struct {
 }
 
 func (o *ownerWorker) Init() {
-	logger.Info("Initializing owner collection...")
 	o.OwnerRankModel.CreateIndexes()
-	logger.Success("Owner collection initialized!")
 }
 
 func (o *ownerWorker) Collect() error {
@@ -302,6 +300,9 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 				bson.D{
 					{"$group", bson.D{
 						{"_id", "$_id"},
+						{"avatar_url", bson.D{
+							{"$first", "$avatar_url"},
+						}},
 						{"total_count", bson.D{
 							{"$sum", fmt.Sprintf("$repositories.%s.total_count", field)},
 						}},

@@ -10,44 +10,33 @@ var (
 	RepositoryWorker = NewRepositoryWorker()
 )
 
+type Interface interface {
+	Collect() error
+	Rank()
+}
+
 func Init() {
 	OwnerWorker.Init()
-	go collectOwners()
-	go rankOwners()
+	go Collect(OwnerWorker)
+	go Rank(OwnerWorker)
 
 	RepositoryWorker.Init()
-	go collectRepositories()
-	go rankRepositories()
+	go Collect(RepositoryWorker)
+	go Rank(RepositoryWorker)
 }
 
-func collectOwners() {
-	t := time.NewTicker(10 * time.Second)
+func Collect(worker Interface) {
+	t := time.NewTicker(time.Hour)
 	for ; true; <-t.C {
-		if err := OwnerWorker.Collect(); err != nil {
+		if err := worker.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 	}
 }
 
-func rankOwners() {
-	t := time.NewTicker(24 * time.Hour)
+func Rank(worker Interface) {
+	t := time.NewTicker(time.Hour)
 	for ; true; <-t.C {
-		OwnerWorker.Rank()
-	}
-}
-
-func collectRepositories() {
-	t := time.NewTicker(10 * time.Minute)
-	for ; true; <-t.C {
-		if err := RepositoryWorker.Collect(); err != nil {
-			logger.Error(err.Error())
-		}
-	}
-}
-
-func rankRepositories() {
-	t := time.NewTicker(24 * time.Hour)
-	for ; true; <-t.C {
-		RepositoryWorker.Rank()
+		worker.Rank()
 	}
 }
