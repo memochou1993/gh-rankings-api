@@ -13,13 +13,13 @@ import (
 
 type OwnerRank struct {
 	AvatarURL string `json:"avatarUrl" bson:"avatar_url"`
-	Login     string `json:"login" bson:"login"`
+	Login     string `json:"id" bson:"login"`
 	Rank      *Rank  `json:"rank" bson:"rank"`
 }
 
 type OwnerRankRecord struct {
 	ID         string `bson:"_id"`
-	AvatarURL  string `json:"avatarUrl" bson:"avatar_url"`
+	AvatarURL  string `bson:"avatar_url"`
 	TotalCount int    `bson:"total_count"`
 }
 

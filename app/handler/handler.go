@@ -6,12 +6,16 @@ import (
 	"net/http"
 )
 
+type Payload struct {
+	Data interface{} `json:"data"`
+}
+
 func response(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", http.MethodGet)
 	w.WriteHeader(code)
 
-	if err := json.NewEncoder(w).Encode(payload); err != nil {
+	if err := json.NewEncoder(w).Encode(Payload{Data: payload}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
