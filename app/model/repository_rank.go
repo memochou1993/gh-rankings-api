@@ -13,7 +13,7 @@ import (
 
 type RepositoryRank struct {
 	NameWithOwner     string `json:"id" bson:"name_with_owner"`
-	OpenGraphImageUrl string `json:"openGraphImageUrl" bson:"open_graph_image_url"`
+	OpenGraphImageUrl string `json:"image" bson:"open_graph_image_url"`
 	Rank              *Rank  `json:"rank" bson:"rank"`
 }
 

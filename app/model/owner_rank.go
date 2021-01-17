@@ -12,7 +12,7 @@ import (
 )
 
 type OwnerRank struct {
-	AvatarURL string `json:"avatarUrl" bson:"avatar_url"`
+	AvatarURL string `json:"image" bson:"avatar_url"`
 	Login     string `json:"id" bson:"login"`
 	Rank      *Rank  `json:"rank" bson:"rank"`
 }
