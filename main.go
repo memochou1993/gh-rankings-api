@@ -22,7 +22,7 @@ func init() {
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/ranking/owners", handler.ListOwners)
-	r.HandleFunc("/ranking/repositories", handler.ListRepositories)
+	r.HandleFunc("/owners", handler.ListOwners).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/repositories", handler.ListRepositories).Methods(http.MethodGet, http.MethodOptions)
 	log.Fatalln(http.ListenAndServe(":80", r))
 }
