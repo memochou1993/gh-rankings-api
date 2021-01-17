@@ -174,7 +174,7 @@ func (o *ownerWorker) Rank() {
 			count += o.OwnerRankModel.Store(timestamp, *p)
 			<-ch
 		}(p)
-		if (i+1)%1000 == 0 || (i+1) == len(pipelines) {
+		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
 			logger.Success(fmt.Sprintf("Executed %d of %d owner rank pipelines!", i+1, len(pipelines)))
 		}
 	}
