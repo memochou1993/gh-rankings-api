@@ -59,13 +59,13 @@ func (o *OwnerRankModel) List(req *request.OwnerRequest) *mongo.Cursor {
 	return database.Aggregate(ctx, NewOwnerRankModel().Name(), pipeline)
 }
 
-func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) {
+func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) int {
 	ctx := context.Background()
 	model := NewOwnerModel()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	last := p.Count(model)
+	count := p.Count(model)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -79,7 +79,7 @@ func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) {
 			AvatarURL: rec.AvatarURL,
 			Rank: &Rank{
 				Rank:       i + 1,
-				Last:       last,
+				Last:       count,
 				TotalCount: rec.TotalCount,
 				Tags:       p.Tags,
 				CreatedAt:  createdAt,
@@ -91,6 +91,7 @@ func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) {
 			models = models[:0]
 		}
 	}
+	return count
 }
 
 func (o *OwnerRankModel) Delete(createdAt time.Time) {

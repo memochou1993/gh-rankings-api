@@ -166,18 +166,22 @@ func (o *ownerWorker) Rank() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
 	timestamp := time.Now()
-	for _, p := range pipelines {
+	count := 0
+	for i, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			o.OwnerRankModel.Store(timestamp, *p)
+			count += o.OwnerRankModel.Store(timestamp, *p)
 			<-ch
 		}(p)
+		if (i+1)%1000 == 0 || (i+1) == len(pipelines) {
+			logger.Success(fmt.Sprintf("Executed %d of %d owner rank pipelines!", i+1, len(pipelines)))
+		}
 	}
 	wg.Wait()
+	logger.Success(fmt.Sprintf("Inserted %d owner ranks!", count))
 	o.Timestamp = &timestamp
 	o.OwnerRankModel.Delete(timestamp)
-	logger.Success(fmt.Sprintf("Executed %d owner rank pipelines!", len(pipelines)))
 }
 
 func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {

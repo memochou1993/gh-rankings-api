@@ -59,13 +59,13 @@ func (r *RepositoryRankModel) List(req *request.RepositoryRequest) *mongo.Cursor
 	return database.Aggregate(ctx, NewRepositoryRankModel().Name(), pipeline)
 }
 
-func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) {
+func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) int {
 	ctx := context.Background()
 	model := NewRepositoryModel()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	last := p.Count(model)
+	count := p.Count(model)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -79,7 +79,7 @@ func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) {
 			OpenGraphImageUrl: rec.OpenGraphImageUrl,
 			Rank: &Rank{
 				Rank:       i + 1,
-				Last:       last,
+				Last:       count,
 				TotalCount: rec.TotalCount,
 				Tags:       p.Tags,
 				CreatedAt:  createdAt,
@@ -91,6 +91,7 @@ func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) {
 			models = models[:0]
 		}
 	}
+	return count
 }
 
 func (r *RepositoryRankModel) Delete(createdAt time.Time) {
