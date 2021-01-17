@@ -12,9 +12,9 @@ import (
 type Rank struct {
 	Rank       int       `json:"rank" bson:"rank"`
 	Last       int       `json:"last" bson:"last"`
-	TotalCount int       `json:"total_count" bson:"total_count"`
+	TotalCount int       `json:"totalCount" bson:"total_count"`
 	Tags       []string  `json:"tags" bson:"tags"`
-	CreatedAt  time.Time `json:"created_at" bson:"created_at"`
+	CreatedAt  time.Time `json:"createdAt" bson:"created_at"`
 }
 
 type RankModel struct{}
