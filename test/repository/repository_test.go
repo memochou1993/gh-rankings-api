@@ -1,4 +1,4 @@
-package owner
+package repository
 
 import (
 	"github.com/memochou1993/github-rankings/app/model"
