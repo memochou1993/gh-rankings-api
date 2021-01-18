@@ -26,13 +26,13 @@ type Pipeline struct {
 
 func (p *Pipeline) Count(model Interface) int {
 	ctx := context.Background()
-	r := struct {
+	rec := struct {
 		Count int `bson:"count"`
 	}{}
 	cursor := database.Aggregate(ctx, model.Name(), append(*p.Pipeline, bson.D{{"$count", "count"}}))
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
-		if err := cursor.Decode(&r); err != nil {
+		if err := cursor.Decode(&rec); err != nil {
 			log.Fatalln(err.Error())
 		}
 	}
