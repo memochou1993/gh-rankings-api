@@ -36,5 +36,5 @@ func (p *Pipeline) Count(model Interface) int {
 			log.Fatalln(err.Error())
 		}
 	}
-	return r.Count
+	return rec.Count
 }
