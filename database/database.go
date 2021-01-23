@@ -20,7 +20,7 @@ func Init() {
 	opts := options.Client().ApplyURI(viper.GetString("DB_HOST"))
 	client, err = mongo.Connect(ctx, opts)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
@@ -35,7 +35,7 @@ func Collection(name string) *mongo.Collection {
 func Count(collection string) int64 {
 	count, err := Collection(collection).CountDocuments(context.Background(), bson.D{})
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return count
 }
@@ -43,7 +43,7 @@ func Count(collection string) int64 {
 func BulkWrite(collection string, models []mongo.WriteModel) *mongo.BulkWriteResult {
 	res, err := Collection(collection).BulkWrite(context.Background(), models)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return res
 }
@@ -54,19 +54,19 @@ func FindOne(collection string, filter bson.D, opts ...*options.FindOneOptions) 
 
 func UpdateOne(collection string, filter bson.D, update bson.D, opts ...*options.UpdateOptions) {
 	if _, err := Collection(collection).UpdateOne(context.Background(), filter, update, opts...); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
 func UpdateMany(collection string, filter bson.D, update bson.D, opts ...*options.UpdateOptions) {
 	if _, err := Collection(collection).UpdateMany(context.Background(), filter, update, opts...); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
 func DeleteMany(collection string, filter bson.D, opts ...*options.DeleteOptions) {
 	if _, err := Collection(collection).DeleteMany(context.Background(), filter, opts...); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
@@ -74,7 +74,7 @@ func All(ctx context.Context, collection string, skip int, limit int) *mongo.Cur
 	opts := options.Find().SetBatchSize(1000).SetSkip(int64(skip)).SetLimit(int64(limit))
 	cursor, err := Collection(collection).Find(ctx, bson.D{}, opts)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return cursor
 }
@@ -83,14 +83,14 @@ func Aggregate(ctx context.Context, collection string, pipeline []bson.D) *mongo
 	opts := options.Aggregate().SetBatchSize(1000).SetAllowDiskUse(true)
 	cursor, err := Collection(collection).Aggregate(ctx, pipeline, opts)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return cursor
 }
 
 func CloseCursor(ctx context.Context, cursor *mongo.Cursor) {
 	if err := cursor.Close(ctx); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
@@ -98,11 +98,11 @@ func Indexes(collection string) (indexes []bson.D) {
 	ctx := context.Background()
 	cursor, err := Collection(collection).Indexes().List(ctx)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	defer CloseCursor(ctx, cursor)
 	if err := cursor.All(ctx, &indexes); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return
 }
@@ -119,7 +119,7 @@ func CreateIndexes(collection string, keys []string) {
 		})
 	}
 	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
@@ -135,6 +135,6 @@ func CreateUniqueIndexes(collection string, keys []string) {
 		})
 	}
 	if _, err := Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }

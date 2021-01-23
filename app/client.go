@@ -33,7 +33,7 @@ func Fetch(ctx context.Context, q string, v interface{}) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Fatalln(err.Error())
+			log.Fatal(err.Error())
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {

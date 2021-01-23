@@ -15,17 +15,17 @@ func LoadEnv() {
 	viper.AddConfigPath("./")
 	viper.SetConfigName(os.Getenv("APP_ENV"))
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
 func LoadAsset(name string, v interface{}) {
 	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s.json", name))
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	if err = json.Unmarshal(b, &v); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return
 }
@@ -35,7 +35,7 @@ func ParseStruct(v interface{}, sep string) string {
 	encoder := json.NewEncoder(&b)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(v); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	s := b.String()

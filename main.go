@@ -23,5 +23,5 @@ func init() {
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", handler.Index).Methods(http.MethodGet)
-	log.Fatalln(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":80", r))
 }

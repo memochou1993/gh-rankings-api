@@ -46,6 +46,6 @@ func response(w http.ResponseWriter, code int, payload interface{}) {
 
 func closeBody(r *http.Request) {
 	if err := r.Body.Close(); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }

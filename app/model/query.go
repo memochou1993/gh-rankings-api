@@ -33,7 +33,7 @@ func (q Query) String() string {
 	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 	b, err := json.Marshal(Payload{Query: query})
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return string(b)
 }
@@ -97,7 +97,7 @@ func (r RateLimit) Break() {
 	}
 	resetAt, err := time.Parse(time.RFC3339, r.ResetAt)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	logger.Warning("Take a break...")
 	time.Sleep(resetAt.Add(time.Second).Sub(time.Now().UTC()))
@@ -160,7 +160,7 @@ func NewOwnerRepositoriesQuery() *Query {
 func ReadQuery(filename string) string {
 	b, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 	return string(b)
 }

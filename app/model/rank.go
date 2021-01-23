@@ -62,7 +62,7 @@ func (r *RankModel) List(req *request.Request, ranks *[]Rank) {
 	}
 	cursor := database.Aggregate(ctx, NewRankModel().Name(), pipeline)
 	if err := cursor.All(context.Background(), ranks); err != nil {
-		log.Fatalln(err.Error())
+		log.Fatal(err.Error())
 	}
 }
 
@@ -77,7 +77,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 	for i := 0; cursor.Next(ctx); i++ {
 		rec := RankRecord{}
 		if err := cursor.Decode(&rec); err != nil {
-			log.Fatalln(err.Error())
+			log.Fatal(err.Error())
 		}
 
 		doc := Rank{
@@ -126,7 +126,7 @@ func (p *Pipeline) Count(model Interface) int {
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&rec); err != nil {
-			log.Fatalln(err.Error())
+			log.Fatal(err.Error())
 		}
 	}
 	return rec.Count
