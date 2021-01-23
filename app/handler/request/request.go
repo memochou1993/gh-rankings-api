@@ -8,7 +8,7 @@ import (
 )
 
 type Request struct {
-	Title     string
+	Name      string
 	Tags      []string
 	Timestamp time.Time
 	Page      int64
@@ -16,7 +16,7 @@ type Request struct {
 }
 
 func Parse(r *http.Request) *Request {
-	title := r.URL.Query().Get("title")
+	name := r.URL.Query().Get("name")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if err != nil || page < 0 {
@@ -26,11 +26,11 @@ func Parse(r *http.Request) *Request {
 	if err != nil || limit < 0 {
 		limit = 10
 	}
-	if title == "" && limit > 100 {
+	if name == "" && limit > 1000 {
 		limit = 1000
 	}
 	return &Request{
-		Title: title,
+		Name:  name,
 		Tags:  tags,
 		Page:  page,
 		Limit: limit,

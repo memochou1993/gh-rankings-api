@@ -7,12 +7,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
-	"strings"
 	"time"
 )
 
 type Rank struct {
-	Title      string    `json:"title" bson:"title"`
+	Name       string    `json:"name" bson:"name"`
 	ImageUrl   string    `json:"imageUrl" bson:"image_url"`
 	Rank       int       `json:"rank" bson:"rank"`
 	Last       int       `json:"last" bson:"last"`
@@ -33,7 +32,7 @@ type RankModel struct {
 
 func (r *RankModel) CreateIndexes() {
 	database.CreateIndexes(r.Name(), []string{
-		"title",
+		"name",
 		"tags",
 	})
 }
@@ -41,10 +40,10 @@ func (r *RankModel) CreateIndexes() {
 func (r *RankModel) List(req *request.Request, ranks *[]Rank) {
 	ctx := context.Background()
 	cond := mongo.Pipeline{bson.D{{"created_at", req.Timestamp}}}
-	if req.Title != "" {
-		cond = append(cond, bson.D{{"title", req.Title}})
+	if req.Name != "" {
+		cond = append(cond, bson.D{{"name", req.Name}})
 	}
-	if strings.Join(req.Tags, "") != "" {
+	if len(req.Tags) > 1 {
 		cond = append(cond, bson.D{{"tags", req.Tags}})
 	}
 	pipeline := mongo.Pipeline{
@@ -61,7 +60,7 @@ func (r *RankModel) List(req *request.Request, ranks *[]Rank) {
 		},
 	}
 	cursor := database.Aggregate(ctx, NewRankModel().Name(), pipeline)
-	if err := cursor.All(context.Background(), ranks); err != nil {
+	if err := cursor.All(ctx, ranks); err != nil {
 		log.Fatal(err.Error())
 	}
 }
@@ -81,7 +80,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 		}
 
 		doc := Rank{
-			Title:      rec.ID,
+			Name:       rec.ID,
 			ImageUrl:   rec.ImageUrl,
 			Rank:       i + 1,
 			Last:       count,
