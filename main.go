@@ -22,7 +22,6 @@ func init() {
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/owners", handler.ListOwners).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/repositories", handler.ListRepositories).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/", handler.Index).Methods(http.MethodGet)
 	log.Fatalln(http.ListenAndServe(":80", r))
 }

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/logger"
 	"github.com/spf13/viper"
 	"log"
@@ -13,6 +14,7 @@ const (
 )
 
 var (
+	RankModel        = model.NewRankModel()
 	OwnerWorker      = NewOwnerWorker()
 	RepositoryWorker = NewRepositoryWorker()
 )
@@ -42,6 +44,8 @@ func (w *Worker) saveTimestamp(key string, t time.Time) {
 }
 
 func Init() {
+	RankModel.CreateIndexes()
+
 	OwnerWorker.Init()
 	go Collect(OwnerWorker)
 	go Rank(OwnerWorker)

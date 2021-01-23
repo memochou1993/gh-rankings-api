@@ -12,6 +12,7 @@ import (
 const (
 	TypeUser         = "user"
 	TypeOrganization = "organization"
+	TypeRepository   = "repository"
 )
 
 type Owner struct {

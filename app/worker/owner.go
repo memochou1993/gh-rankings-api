@@ -18,12 +18,10 @@ import (
 
 type ownerWorker struct {
 	*Worker
-	OwnerModel     *model.OwnerModel
-	OwnerRankModel *model.OwnerRankModel
+	OwnerModel *model.OwnerModel
 }
 
 func (o *ownerWorker) Init() {
-	o.OwnerRankModel.CreateIndexes()
 	o.Worker.loadTimestamp(timestampOwnerRanks)
 }
 
@@ -173,7 +171,7 @@ func (o *ownerWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += o.OwnerRankModel.Store(*p, now)
+			count += RankModel.Store(o.OwnerModel, *p, now)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -183,7 +181,7 @@ func (o *ownerWorker) Rank() {
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Inserted %d owner ranks!", count))
 	o.Worker.saveTimestamp(timestampOwnerRanks, now)
-	o.OwnerRankModel.Delete(now)
+	RankModel.Delete(now, model.TypeUser, model.TypeOrganization)
 }
 
 func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
@@ -258,7 +256,7 @@ func (o *ownerWorker) newRankPipeline(field string, tags ...string) *model.Pipel
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
-					{"avatar_url", "$avatar_url"},
+					{"image_url", "$avatar_url"},
 					{"total_count", bson.D{
 						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},
@@ -306,7 +304,7 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 				bson.D{
 					{"$group", bson.D{
 						{"_id", "$_id"},
-						{"avatar_url", bson.D{
+						{"image_url", bson.D{
 							{"$first", "$avatar_url"},
 						}},
 						{"total_count", bson.D{
@@ -335,8 +333,7 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 
 func NewOwnerWorker() *ownerWorker {
 	return &ownerWorker{
-		Worker:         NewWorker(),
-		OwnerModel:     model.NewOwnerModel(),
-		OwnerRankModel: model.NewOwnerRankModel(),
+		Worker:     NewWorker(),
+		OwnerModel: model.NewOwnerModel(),
 	}
 }

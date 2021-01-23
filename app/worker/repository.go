@@ -18,12 +18,10 @@ import (
 
 type repositoryWorker struct {
 	*Worker
-	RepositoryModel     *model.RepositoryModel
-	RepositoryRankModel *model.RepositoryRankModel
+	RepositoryModel *model.RepositoryModel
 }
 
 func (r *repositoryWorker) Init() {
-	r.RepositoryRankModel.CreateIndexes()
 	r.Worker.loadTimestamp(timestampRepositoryRanks)
 }
 
@@ -99,7 +97,7 @@ func (r *repositoryWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += r.RepositoryRankModel.Store(*p, timestamp)
+			count += RankModel.Store(r.RepositoryModel, *p, timestamp)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -109,7 +107,7 @@ func (r *repositoryWorker) Rank() {
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Inserted %d repository ranks!", count))
 	r.Worker.saveTimestamp(timestampRepositoryRanks, timestamp)
-	r.RepositoryRankModel.Delete(timestamp)
+	RankModel.Delete(timestamp, model.TypeRepository)
 }
 
 func (r *repositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
@@ -136,12 +134,13 @@ func (r *repositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 }
 
 func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
+	tag := model.TypeRepository
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
 				{"$project", bson.D{
 					{"_id", "$_id"},
-					{"open_graph_image_url", "$open_graph_image_url"},
+					{"image_url", "$open_graph_image_url"},
 					{"total_count", bson.D{
 						{"$sum", fmt.Sprintf("$%s.total_count", field)},
 					}},
@@ -153,11 +152,12 @@ func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
 				}},
 			},
 		},
-		Tags: []string{field},
+		Tags: []string{tag, field},
 	}
 }
 
 func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
+	tag := model.TypeRepository
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -169,7 +169,7 @@ func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 				bson.D{
 					{"$project", bson.D{
 						{"_id", "$_id"},
-						{"open_graph_image_url", "$open_graph_image_url"},
+						{"image_url", "$open_graph_image_url"},
 						{"total_count", bson.D{
 							{"$sum", fmt.Sprintf("$%s.total_count", field)},
 						}},
@@ -181,7 +181,7 @@ func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 					}},
 				},
 			},
-			Tags: []string{field, language.Name},
+			Tags: []string{tag, field, language.Name},
 		})
 	}
 	return
@@ -189,8 +189,7 @@ func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 
 func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
-		Worker:              NewWorker(),
-		RepositoryModel:     model.NewRepositoryModel(),
-		RepositoryRankModel: model.NewRepositoryRankModel(),
+		Worker:          NewWorker(),
+		RepositoryModel: model.NewRepositoryModel(),
 	}
 }
