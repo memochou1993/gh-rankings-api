@@ -37,7 +37,7 @@ func (r *RankModel) CreateIndexes() {
 	})
 }
 
-func (r *RankModel) List(req *request.Request, ranks *[]Rank) {
+func (r *RankModel) List(req *request.Request) []Rank {
 	ctx := context.Background()
 	cond := mongo.Pipeline{bson.D{{"created_at", req.Timestamp}}}
 	if req.Name != "" {
@@ -60,9 +60,11 @@ func (r *RankModel) List(req *request.Request, ranks *[]Rank) {
 		},
 	}
 	cursor := database.Aggregate(ctx, NewRankModel().Name(), pipeline)
-	if err := cursor.All(ctx, ranks); err != nil {
+	ranks := make([]Rank, req.Limit)
+	if err := cursor.All(ctx, &ranks); err != nil {
 		log.Fatal(err.Error())
 	}
+	return ranks
 }
 
 func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int {
