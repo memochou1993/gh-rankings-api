@@ -17,13 +17,14 @@ import (
 )
 
 type ownerWorker struct {
+	*Worker
 	OwnerModel     *model.OwnerModel
 	OwnerRankModel *model.OwnerRankModel
-	Timestamp      *time.Time
 }
 
 func (o *ownerWorker) Init() {
 	o.OwnerRankModel.CreateIndexes()
+	o.Worker.loadTimestamp(timestampOwnerRanks)
 }
 
 func (o *ownerWorker) Collect() error {
@@ -165,13 +166,14 @@ func (o *ownerWorker) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
-	timestamp := time.Now()
+
+	now := time.Now()
 	count := 0
 	for i, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += o.OwnerRankModel.Store(timestamp, *p)
+			count += o.OwnerRankModel.Store(*p, now)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -180,8 +182,8 @@ func (o *ownerWorker) Rank() {
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Inserted %d owner ranks!", count))
-	o.Timestamp = &timestamp
-	o.OwnerRankModel.Delete(timestamp)
+	o.Worker.saveTimestamp(timestampOwnerRanks, now)
+	o.OwnerRankModel.Delete(now)
 }
 
 func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
@@ -333,6 +335,7 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 
 func NewOwnerWorker() *ownerWorker {
 	return &ownerWorker{
+		Worker:         NewWorker(),
 		OwnerModel:     model.NewOwnerModel(),
 		OwnerRankModel: model.NewOwnerRankModel(),
 	}

@@ -59,7 +59,7 @@ func (r *RepositoryRankModel) List(req *request.RepositoryRequest) *mongo.Cursor
 	return database.Aggregate(ctx, NewRepositoryRankModel().Name(), pipeline)
 }
 
-func (r *RepositoryRankModel) Store(createdAt time.Time, p Pipeline) int {
+func (r *RepositoryRankModel) Store(p Pipeline, createdAt time.Time) int {
 	ctx := context.Background()
 	model := NewRepositoryModel()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)

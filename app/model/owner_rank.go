@@ -59,7 +59,7 @@ func (o *OwnerRankModel) List(req *request.OwnerRequest) *mongo.Cursor {
 	return database.Aggregate(ctx, NewOwnerRankModel().Name(), pipeline)
 }
 
-func (o *OwnerRankModel) Store(createdAt time.Time, p Pipeline) int {
+func (o *OwnerRankModel) Store(p Pipeline, createdAt time.Time) int {
 	ctx := context.Background()
 	model := NewOwnerModel()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)

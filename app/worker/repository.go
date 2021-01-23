@@ -17,13 +17,14 @@ import (
 )
 
 type repositoryWorker struct {
+	*Worker
 	RepositoryModel     *model.RepositoryModel
 	RepositoryRankModel *model.RepositoryRankModel
-	Timestamp           *time.Time
 }
 
 func (r *repositoryWorker) Init() {
 	r.RepositoryRankModel.CreateIndexes()
+	r.Worker.loadTimestamp(timestampRepositoryRanks)
 }
 
 func (r *repositoryWorker) Collect() error {
@@ -91,13 +92,14 @@ func (r *repositoryWorker) Rank() {
 	ch := make(chan struct{}, 4)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
+
 	timestamp := time.Now()
 	count := 0
 	for i, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += r.RepositoryRankModel.Store(timestamp, *p)
+			count += r.RepositoryRankModel.Store(*p, timestamp)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -106,7 +108,7 @@ func (r *repositoryWorker) Rank() {
 	}
 	wg.Wait()
 	logger.Success(fmt.Sprintf("Inserted %d repository ranks!", count))
-	r.Timestamp = &timestamp
+	r.Worker.saveTimestamp(timestampRepositoryRanks, timestamp)
 	r.RepositoryRankModel.Delete(timestamp)
 }
 
@@ -187,6 +189,7 @@ func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines [
 
 func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
+		Worker:              NewWorker(),
 		RepositoryModel:     model.NewRepositoryModel(),
 		RepositoryRankModel: model.NewRepositoryRankModel(),
 	}

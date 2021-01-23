@@ -10,7 +10,7 @@ import (
 type OwnerRequest struct {
 	Login     string
 	Tags      []string
-	CreatedAt *time.Time
+	CreatedAt time.Time
 	Page      int64
 	Limit     int64
 }

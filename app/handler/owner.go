@@ -16,10 +16,6 @@ func ListOwners(w http.ResponseWriter, r *http.Request) {
 	req.CreatedAt = worker.OwnerWorker.Timestamp
 
 	var owners []model.OwnerRank
-	if req.CreatedAt == nil {
-		response(w, http.StatusAccepted, owners)
-		return
-	}
 	cursor := model.NewOwnerRankModel().List(req)
 	if err := cursor.All(context.Background(), &owners); err != nil {
 		log.Fatalln(err.Error())

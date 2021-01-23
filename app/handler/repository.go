@@ -16,10 +16,6 @@ func ListRepositories(w http.ResponseWriter, r *http.Request) {
 	req.CreatedAt = worker.RepositoryWorker.Timestamp
 
 	var repositories []model.RepositoryRank
-	if req.CreatedAt == nil {
-		response(w, http.StatusAccepted, repositories)
-		return
-	}
 	cursor := model.NewRepositoryRankModel().List(req)
 	if err := cursor.All(context.Background(), &repositories); err != nil {
 		log.Fatalln(err.Error())
