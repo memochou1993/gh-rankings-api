@@ -17,15 +17,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
 	req := request.Parse(r)
-	for _, tag := range req.Tags {
-		if tag == model.TypeUser || tag == model.TypeOrganization {
-			req.Timestamp = worker.OwnerWorker.Timestamp
-			break
-		}
-		if tag == model.TypeRepository {
-			req.Timestamp = worker.RepositoryWorker.Timestamp
-			break
-		}
+	switch {
+	case req.HasTag(model.TypeUser):
+		req.Timestamp = worker.OwnerWorker.Timestamp
+	case req.HasTag(model.TypeOrganization):
+		req.Timestamp = worker.OwnerWorker.Timestamp
+	case req.HasTag(model.TypeRepository):
+		req.Timestamp = worker.RepositoryWorker.Timestamp
 	}
 
 	var ranks []model.Rank

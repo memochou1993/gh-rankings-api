@@ -15,6 +15,15 @@ type Request struct {
 	Limit     int64
 }
 
+func (r *Request) HasTag(tag string) bool {
+	for _, t := range r.Tags {
+		if t == tag {
+			return true
+		}
+	}
+	return false
+}
+
 func Parse(r *http.Request) *Request {
 	name := r.URL.Query().Get("name")
 	tags := strings.Split(r.URL.Query().Get("tags"), ",")
