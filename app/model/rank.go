@@ -72,7 +72,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	count := p.Count(model)
+	last := p.Count(model)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -85,7 +85,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 			Name:       rec.ID,
 			ImageUrl:   rec.ImageUrl,
 			Rank:       i + 1,
-			Last:       count,
+			Last:       last,
 			TotalCount: rec.TotalCount,
 			Tags:       p.Tags,
 			CreatedAt:  createdAt,
@@ -96,7 +96,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 			models = models[:0]
 		}
 	}
-	return count
+	return last
 }
 
 func (r *RankModel) Delete(createdAt time.Time, tags ...string) {

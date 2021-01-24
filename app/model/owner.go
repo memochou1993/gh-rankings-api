@@ -5,14 +5,7 @@ import (
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
-)
-
-const (
-	TypeUser         = "user"
-	TypeOrganization = "organization"
-	TypeRepository   = "repository"
 )
 
 type Owner struct {
@@ -31,16 +24,16 @@ func (o *Owner) ID() string {
 	return o.Login
 }
 
-func (o *Owner) HasFollowers() bool {
-	return o.Followers != nil
+func (o *Owner) IsFollowersEmpty() bool {
+	return o.Followers == nil
 }
 
 func (o *Owner) IsUser() bool {
-	return o.HasFollowers()
+	return !o.IsFollowersEmpty()
 }
 
 func (o *Owner) IsOrganization() bool {
-	return !o.HasFollowers()
+	return o.IsFollowersEmpty()
 }
 
 func (o *Owner) TagType() {
@@ -97,15 +90,6 @@ type OwnerResponse struct {
 
 type OwnerModel struct {
 	*Model
-}
-
-func (o *OwnerModel) Find(id string) *mongo.SingleResult {
-	projection := bson.D{
-		{"gists", 0},
-		{"repositories", 0},
-	}
-	opts := options.FindOne().SetProjection(projection)
-	return database.FindOne(o.Name(), bson.D{{"_id", id}}, opts)
 }
 
 func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
