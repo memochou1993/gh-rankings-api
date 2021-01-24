@@ -37,13 +37,13 @@ func (r *RankModel) CreateIndexes() {
 	})
 }
 
-func (r *RankModel) List(req *request.Request) []Rank {
+func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
 	ctx := context.Background()
-	cond := mongo.Pipeline{bson.D{{"created_at", req.Timestamp}}}
-	if req.Name != "" {
+	cond := mongo.Pipeline{bson.D{{"created_at", bson.D{{"$in", timestamps}}}}}
+	if !req.IsNameEmpty() {
 		cond = append(cond, bson.D{{"name", req.Name}})
 	}
-	if len(req.Tags) > 1 {
+	if !req.IsTagsEmpty() {
 		cond = append(cond, bson.D{{"tags", req.Tags}})
 	}
 	pipeline := mongo.Pipeline{

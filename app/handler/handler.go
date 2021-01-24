@@ -3,10 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"github.com/memochou1993/github-rankings/app/handler/request"
-	"github.com/memochou1993/github-rankings/app/model"
 	"github.com/memochou1993/github-rankings/app/worker"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Payload struct {
@@ -17,16 +17,18 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
 	req := request.Parse(r)
-	switch {
-	case req.HasTag(model.TypeUser):
-		req.Timestamp = worker.OwnerWorker.Timestamp
-	case req.HasTag(model.TypeOrganization):
-		req.Timestamp = worker.OwnerWorker.Timestamp
-	case req.HasTag(model.TypeRepository):
-		req.Timestamp = worker.RepositoryWorker.Timestamp
+
+	if req.IsEmpty() {
+		response(w, http.StatusBadRequest, Payload{})
+		return
 	}
 
-	ranks := model.NewRankModel().List(req)
+	timestamps := []time.Time{
+		worker.OwnerWorker.Timestamp,
+		worker.RepositoryWorker.Timestamp,
+	}
+
+	ranks := worker.RankModel.List(req, timestamps)
 
 	response(w, http.StatusOK, Payload{ranks})
 }

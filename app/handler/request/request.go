@@ -4,15 +4,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Request struct {
-	Name      string
-	Tags      []string
-	Timestamp time.Time
-	Page      int64
-	Limit     int64
+	Name  string
+	Tags  []string
+	Page  int64
+	Limit int64
 }
 
 func (r *Request) HasTag(tag string) bool {
@@ -24,9 +22,26 @@ func (r *Request) HasTag(tag string) bool {
 	return false
 }
 
+func (r *Request) IsNameEmpty() bool {
+	return r.Name == ""
+}
+
+func (r *Request) IsTagsEmpty() bool {
+	return len(r.Tags) == 0
+}
+
+func (r *Request) IsEmpty() bool {
+	return r.IsNameEmpty() && r.IsTagsEmpty()
+}
+
 func Parse(r *http.Request) *Request {
 	name := r.URL.Query().Get("name")
-	tags := strings.Split(r.URL.Query().Get("tags"), ",")
+	var tags []string
+	for _, tag := range strings.Split(r.URL.Query().Get("tags"), ",") {
+		if tag != "" {
+			tags = append(tags, tag)
+		}
+	}
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if err != nil || page < 0 {
 		page = 1
