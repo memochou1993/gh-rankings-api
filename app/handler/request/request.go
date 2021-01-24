@@ -3,7 +3,6 @@ package request
 import (
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type Request struct {
@@ -36,12 +35,7 @@ func (r *Request) IsEmpty() bool {
 
 func Parse(r *http.Request) *Request {
 	name := r.URL.Query().Get("name")
-	var tags []string
-	for _, tag := range strings.Split(r.URL.Query().Get("tags"), ",") {
-		if tag != "" {
-			tags = append(tags, tag)
-		}
-	}
+	tags := r.URL.Query()["tags[]"]
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if err != nil || page < 0 {
 		page = 1
