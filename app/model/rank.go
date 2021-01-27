@@ -67,7 +67,7 @@ func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
 	return ranks
 }
 
-func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int {
+func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
@@ -96,7 +96,6 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) int 
 			models = models[:0]
 		}
 	}
-	return last
 }
 
 func (r *RankModel) Delete(createdAt time.Time, tags ...string) {
@@ -123,7 +122,9 @@ func (p *Pipeline) Count(model Interface) int {
 	rec := struct {
 		Count int `bson:"count"`
 	}{}
-	cursor := database.Aggregate(ctx, model.Name(), append(*p.Pipeline, bson.D{{"$count", "count"}}))
+	pipeline := append(*p.Pipeline, bson.D{{"$match", bson.D{{"total_count", bson.D{{"$gt", 0}}}}}})
+	pipeline = append(pipeline, bson.D{{"$count", "count"}})
+	cursor := database.Aggregate(ctx, model.Name(), pipeline)
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&rec); err != nil {

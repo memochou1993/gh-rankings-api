@@ -92,12 +92,11 @@ func (r *repositoryWorker) Rank() {
 	wg.Add(len(pipelines))
 
 	timestamp := time.Now()
-	count := 0
 	for i, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += RankModel.Store(r.RepositoryModel, *p, timestamp)
+			RankModel.Store(r.RepositoryModel, *p, timestamp)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -105,7 +104,6 @@ func (r *repositoryWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	logger.Success(fmt.Sprintf("Inserted %d repository ranks!", count))
 	r.Worker.saveTimestamp(timestampRepositoryRanks, timestamp)
 	RankModel.Delete(timestamp, model.TypeRepository)
 }

@@ -166,12 +166,11 @@ func (o *ownerWorker) Rank() {
 	wg.Add(len(pipelines))
 
 	now := time.Now()
-	count := 0
 	for i, p := range pipelines {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			count += RankModel.Store(o.OwnerModel, *p, now)
+			RankModel.Store(o.OwnerModel, *p, now)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
@@ -179,7 +178,6 @@ func (o *ownerWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	logger.Success(fmt.Sprintf("Inserted %d owner ranks!", count))
 	o.Worker.saveTimestamp(timestampOwnerRanks, now)
 	RankModel.Delete(now, model.TypeUser, model.TypeOrganization)
 }
