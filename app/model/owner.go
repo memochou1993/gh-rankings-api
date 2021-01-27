@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"github.com/memochou1993/github-rankings/app/resource"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,11 +38,13 @@ func (o *Owner) IsOrganization() bool {
 }
 
 func (o *Owner) TagType() {
-	o.Tags = append(o.Tags, o.Type())
+	o.Tags = append(o.Tags, fmt.Sprintf("type:%s", o.Type()))
 }
 
 func (o *Owner) TagLocations() {
-	o.Tags = append(o.Tags, resource.Locate(o.Location)...)
+	for _, location := range resource.Locate(o.Location) {
+		o.Tags = append(o.Tags, fmt.Sprintf("location:%s", location))
+	}
 }
 
 func (o *Owner) Type() (t string) {

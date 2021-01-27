@@ -205,7 +205,7 @@ func (o *ownerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
 }
 
 func (o *ownerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
-	tag := model.TypeUser
+	tag := fmt.Sprintf("type:%s", model.TypeUser)
 	fields := []string{
 		"followers",
 		"gists.forks",
@@ -225,7 +225,7 @@ func (o *ownerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
 }
 
 func (o *ownerWorker) newOrganizationRankPipelines() (pipelines []*model.Pipeline) {
-	tag := model.TypeOrganization
+	tag := fmt.Sprintf("type:%s", model.TypeOrganization)
 	fields := []string{
 		"repositories.forks",
 		"repositories.stargazers",
@@ -266,15 +266,15 @@ func (o *ownerWorker) newRankPipeline(field string, tags ...string) *model.Pipel
 				}},
 			},
 		},
-		Tags: append(tags, field),
+		Tags: append(tags, fmt.Sprintf("field:%s", field)),
 	}
 }
 
 func (o *ownerWorker) newRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
-		pipelines = append(pipelines, o.newRankPipeline(field, append(tags, location.Name)...))
+		pipelines = append(pipelines, o.newRankPipeline(field, append(tags, fmt.Sprintf("location:%s", location.Name))...))
 		for _, city := range location.Cities {
-			pipelines = append(pipelines, o.newRankPipeline(field, append(tags, city.Name)...))
+			pipelines = append(pipelines, o.newRankPipeline(field, append(tags, fmt.Sprintf("location:%s", city.Name))...))
 		}
 	}
 	return
@@ -316,7 +316,7 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 					}},
 				},
 			},
-			Tags: append(tags, fmt.Sprintf("repositories.%s", field), language.Name),
+			Tags: append(tags, fmt.Sprintf("field:repositories.%s", field), fmt.Sprintf("language:%s", language.Name)),
 		})
 	}
 	return
