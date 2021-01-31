@@ -37,11 +37,11 @@ func Parse(r *http.Request) *Request {
 	name := r.URL.Query().Get("name")
 	tags := r.URL.Query()["tags[]"]
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
-	if err != nil || page < 0 {
+	if err != nil || page <= 0 {
 		page = 1
 	}
 	limit, err := strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
-	if err != nil || limit < 0 {
+	if err != nil || limit <= 0 {
 		limit = 10
 	}
 	if name == "" && limit > 1000 {
