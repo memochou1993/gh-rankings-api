@@ -3,54 +3,58 @@ package request
 import (
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
+)
+
+var (
+	validate *validator.Validate
 )
 
 type Request struct {
-	Name  string
-	Tags  []string
-	Page  int64
-	Limit int64
+	Name  string `json:"name" validate:"omitempty,alphanum"`
+	Type  string `json:"type" validate:"omitempty,alphanum"`
+	Field string `json:"field" validate:"omitempty,alphanum"`
+	Page  int64  `json:"page" validate:"omitempty,numeric"`
+	Limit int64  `json:"limit" validate:"omitempty,numeric"`
 }
 
-func (r *Request) HasTag(tag string) bool {
-	for _, t := range r.Tags {
-		if t == tag {
-			return true
-		}
-	}
-	return false
+func init() {
+	validate = validator.New()
 }
 
 func (r *Request) IsNameEmpty() bool {
 	return r.Name == ""
 }
 
-func (r *Request) IsTagsEmpty() bool {
-	return len(r.Tags) == 0
+func (r *Request) IsTypeEmpty() bool {
+	return r.Type == ""
+}
+
+func (r *Request) IsFieldEmpty() bool {
+	return r.Field == ""
 }
 
 func (r *Request) IsEmpty() bool {
-	return r.IsNameEmpty() && r.IsTagsEmpty()
+	return r.IsNameEmpty() && r.IsTypeEmpty() && r.IsFieldEmpty()
 }
 
-func Parse(r *http.Request) *Request {
-	name := r.URL.Query().Get("name")
-	tags := r.URL.Query()["tags[]"]
+func Validate(r *http.Request) (req *Request, err error) {
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
-	if err != nil || page <= 0 {
+	if err != nil || page < 1 {
 		page = 1
 	}
 	limit, err := strconv.ParseInt(r.URL.Query().Get("limit"), 10, 64)
-	if err != nil || limit <= 0 {
+	if err != nil || limit < 1 || limit > 1000 {
 		limit = 10
 	}
-	if name == "" && limit > 1000 {
-		limit = 1000
-	}
-	return &Request{
-		Name:  name,
-		Tags:  tags,
+	req = &Request{
+		Name:  r.URL.Query().Get("name"),
+		Field: r.URL.Query().Get("field"),
+		Type:  r.URL.Query().Get("type"),
 		Page:  page,
 		Limit: limit,
 	}
+	err = validate.Struct(req)
+	return req, err
 }

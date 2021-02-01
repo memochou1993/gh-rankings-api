@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"github.com/memochou1993/github-rankings/app/handler/request"
 	"github.com/memochou1993/github-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -43,9 +44,14 @@ func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
 	if !req.IsNameEmpty() {
 		cond = append(cond, bson.D{{"name", req.Name}})
 	}
-	if !req.IsTagsEmpty() {
-		cond = append(cond, bson.D{{"tags", req.Tags}})
+	var tags []string
+	if !req.IsTypeEmpty() {
+		tags = append(tags, fmt.Sprintf("type:%s", req.Type))
 	}
+	if !req.IsFieldEmpty() {
+		tags = append(tags, fmt.Sprintf("field:%s", req.Field))
+	}
+	cond = append(cond, bson.D{{"tags", tags}})
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{
