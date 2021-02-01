@@ -57,7 +57,10 @@ func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
 	if req.Language != "" {
 		tags = append(tags, fmt.Sprintf("language:%s", req.Language))
 	}
-	cond = append(cond, bson.D{{"tags", tags}})
+	if len(tags) > 0 {
+		cond = append(cond, bson.D{{"tags", tags}})
+	}
+	log.Println(cond)
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{
