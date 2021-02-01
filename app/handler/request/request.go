@@ -1,10 +1,10 @@
 package request
 
 import (
+	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strconv"
-
-	"github.com/go-playground/validator/v10"
+	"strings"
 )
 
 var (
@@ -12,34 +12,36 @@ var (
 )
 
 type Request struct {
-	Name  string `json:"name" validate:"omitempty,alphanum"`
-	Type  string `json:"type" validate:"omitempty,alphanum"`
-	Field string `json:"field" validate:"omitempty,alphanum"`
-	Page  int64  `json:"page" validate:"omitempty,numeric"`
-	Limit int64  `json:"limit" validate:"omitempty,numeric"`
+	Name     string `json:"name" validate:"omitempty,alphanum"`
+	Field    string `json:"field" validate:"omitempty"`
+	Type     string `json:"type" validate:"omitempty,alpha"`
+	Language string `json:"language" validate:"omitempty"`
+	Location string `json:"location" validate:"omitempty"`
+	Page     int64  `json:"page" validate:"omitempty,numeric"`
+	Limit    int64  `json:"limit" validate:"omitempty,numeric"`
 }
 
 func init() {
 	validate = validator.New()
 }
 
-func (r *Request) IsNameEmpty() bool {
-	return r.Name == ""
-}
-
-func (r *Request) IsTypeEmpty() bool {
-	return r.Type == ""
-}
-
-func (r *Request) IsFieldEmpty() bool {
-	return r.Field == ""
-}
-
-func (r *Request) IsEmpty() bool {
-	return r.IsNameEmpty() && r.IsTypeEmpty() && r.IsFieldEmpty()
-}
-
 func Validate(r *http.Request) (req *Request, err error) {
+	for _, f := range strings.Split(r.URL.Query().Get("field"), ".") {
+		if err = validate.Var(f, "omitempty,alpha"); err != nil {
+			return
+		}
+	}
+	for _, f := range strings.Split(r.URL.Query().Get("language"), " ") {
+		if err = validate.Var(f, "omitempty,alpha"); err != nil {
+			return
+		}
+	}
+	for _, f := range strings.Split(r.URL.Query().Get("location"), " ") {
+		if err = validate.Var(f, "omitempty,alpha"); err != nil {
+			return
+		}
+	}
+
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if err != nil || page < 1 {
 		page = 1
@@ -48,13 +50,17 @@ func Validate(r *http.Request) (req *Request, err error) {
 	if err != nil || limit < 1 || limit > 1000 {
 		limit = 10
 	}
+
 	req = &Request{
-		Name:  r.URL.Query().Get("name"),
-		Field: r.URL.Query().Get("field"),
-		Type:  r.URL.Query().Get("type"),
-		Page:  page,
-		Limit: limit,
+		Name:     r.URL.Query().Get("name"),
+		Type:     r.URL.Query().Get("type"),
+		Field:    r.URL.Query().Get("field"),
+		Language: r.URL.Query().Get("language"),
+		Location: r.URL.Query().Get("location"),
+		Page:     page,
+		Limit:    limit,
 	}
 	err = validate.Struct(req)
+
 	return req, err
 }

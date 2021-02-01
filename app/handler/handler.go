@@ -18,12 +18,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	defer closeBody(r)
 
 	req, err := request.Validate(r)
-	if req.IsEmpty() {
-		response(w, http.StatusBadRequest, Payload{})
-		return
-	}
 	if err != nil {
 		response(w, http.StatusUnprocessableEntity, Payload{Error: err.Error()})
+		return
+	}
+	if req.Name == "" && req.Type == "" {
+		response(w, http.StatusBadRequest, Payload{})
 		return
 	}
 	timestamps := []time.Time{
