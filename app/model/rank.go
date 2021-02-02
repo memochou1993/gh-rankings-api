@@ -60,7 +60,6 @@ func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
 	if len(tags) > 0 {
 		cond = append(cond, bson.D{{"tags", tags}})
 	}
-	log.Println(cond)
 	pipeline := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{

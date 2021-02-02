@@ -27,8 +27,10 @@ func init() {
 
 func Validate(r *http.Request) (req *Request, err error) {
 	for _, f := range strings.Split(r.URL.Query().Get("name"), "/") {
-		if err = validate.Var(f, "omitempty,alpha"); err != nil {
-			return
+		for _, f := range strings.Split(f, "-") {
+			if err = validate.Var(f, "omitempty,alpha"); err != nil {
+				return
+			}
 		}
 	}
 	for _, f := range strings.Split(r.URL.Query().Get("field"), ".") {
