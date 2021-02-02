@@ -12,7 +12,7 @@ var (
 )
 
 type Request struct {
-	Name     string `json:"name" validate:"omitempty,alphanum"`
+	Name     string `json:"name" validate:"omitempty"`
 	Field    string `json:"field" validate:"omitempty"`
 	Type     string `json:"type" validate:"omitempty,alpha"`
 	Language string `json:"language" validate:"omitempty"`
@@ -26,6 +26,11 @@ func init() {
 }
 
 func Validate(r *http.Request) (req *Request, err error) {
+	for _, f := range strings.Split(r.URL.Query().Get("name"), "/") {
+		if err = validate.Var(f, "omitempty,alpha"); err != nil {
+			return
+		}
+	}
 	for _, f := range strings.Split(r.URL.Query().Get("field"), ".") {
 		if err = validate.Var(f, "omitempty,alpha"); err != nil {
 			return
