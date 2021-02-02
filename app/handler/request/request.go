@@ -26,29 +26,6 @@ func init() {
 }
 
 func Validate(r *http.Request) (req *Request, err error) {
-	for _, f := range strings.Split(r.URL.Query().Get("name"), "/") {
-		for _, f := range strings.Split(f, "-") {
-			if err = validate.Var(f, "omitempty,alpha"); err != nil {
-				return
-			}
-		}
-	}
-	for _, f := range strings.Split(r.URL.Query().Get("field"), ".") {
-		if err = validate.Var(f, "omitempty,alpha"); err != nil {
-			return
-		}
-	}
-	for _, f := range strings.Split(r.URL.Query().Get("language"), " ") {
-		if err = validate.Var(f, "omitempty,alpha"); err != nil {
-			return
-		}
-	}
-	for _, f := range strings.Split(r.URL.Query().Get("location"), " ") {
-		if err = validate.Var(f, "omitempty,alpha"); err != nil {
-			return
-		}
-	}
-
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 64)
 	if err != nil || page < 1 {
 		page = 1
@@ -57,17 +34,23 @@ func Validate(r *http.Request) (req *Request, err error) {
 	if err != nil || limit < 1 || limit > 1000 {
 		limit = 10
 	}
-
 	req = &Request{
-		Name:     r.URL.Query().Get("name"),
-		Type:     r.URL.Query().Get("type"),
-		Field:    r.URL.Query().Get("field"),
-		Language: r.URL.Query().Get("language"),
-		Location: r.URL.Query().Get("location"),
+		Name:     sanitize(r.URL.Query().Get("name")),
+		Type:     sanitize(r.URL.Query().Get("type")),
+		Field:    sanitize(r.URL.Query().Get("field")),
+		Language: sanitize(r.URL.Query().Get("language")),
+		Location: sanitize(r.URL.Query().Get("location")),
 		Page:     page,
 		Limit:    limit,
 	}
 	err = validate.Struct(req)
-
 	return req, err
+}
+
+func sanitize(text string) string {
+	symbols := []string{"@", "#", "$", "%", "^", "&", "*", "(", ")", "[", "]", "{", "}", "<", ">"}
+	for _, symbol := range symbols {
+		text = strings.Trim(text, symbol)
+	}
+	return text
 }
