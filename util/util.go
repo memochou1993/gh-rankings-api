@@ -20,7 +20,7 @@ func LoadEnv() {
 }
 
 func LoadAsset(name string, v interface{}) {
-	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s.json", name))
+	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s/index.json", name))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

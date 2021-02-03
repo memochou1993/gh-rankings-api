@@ -34,8 +34,8 @@ func (l Location) isUnique() bool {
 }
 
 func Init() {
-	util.LoadAsset("languages", &Languages)
-	util.LoadAsset("locations", &Locations)
+	util.LoadAsset("language", &Languages)
+	util.LoadAsset("location", &Locations)
 }
 
 func Locate(text string) (locations []string) {

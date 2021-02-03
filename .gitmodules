@@ -1,3 +1,6 @@
-[submodule "assets"]
-	path = assets
-	url = git@github.com:memochou1993/gh-rankings-assets.git
+[submodule "assets/language"]
+	path = assets/language
+	url = git@github.com:memochou1993/gh-rankings-language.git
+[submodule "assets/location"]
+	path = assets/location
+	url = git@github.com:memochou1993/gh-rankings-location.git
