@@ -1,4 +1,4 @@
-module github.com/memochou1993/github-rankings
+module github.com/memochou1993/gh-rankings
 
 go 1.15
 

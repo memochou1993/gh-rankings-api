@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"

@@ -1,12 +1,12 @@
 package repository
 
 import (
-	"github.com/memochou1993/github-rankings/app/model"
-	"github.com/memochou1993/github-rankings/app/worker"
-	"github.com/memochou1993/github-rankings/database"
-	"github.com/memochou1993/github-rankings/logger"
-	"github.com/memochou1993/github-rankings/test"
-	"github.com/memochou1993/github-rankings/util"
+	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/worker"
+	"github.com/memochou1993/gh-rankings/database"
+	"github.com/memochou1993/gh-rankings/logger"
+	"github.com/memochou1993/gh-rankings/test"
+	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"os"
@@ -54,7 +54,7 @@ func TestFetchRepositories(t *testing.T) {
 func TestStoreRepositories(t *testing.T) {
 	r := worker.RepositoryWorker
 
-	repository := model.Repository{NameWithOwner: "memochou1993/github-rankings"}
+	repository := model.Repository{NameWithOwner: "memochou1993/gh-rankings"}
 	repositories := []model.Repository{repository}
 	r.RepositoryModel.Store(repositories)
 	res := database.FindOne(r.RepositoryModel.Name(), bson.D{{"_id", repository.ID()}})

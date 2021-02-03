@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/memochou1993/github-rankings/app/handler/request"
-	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"

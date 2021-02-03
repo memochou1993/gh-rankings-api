@@ -1,8 +1,8 @@
 package worker
 
 import (
-	"github.com/memochou1993/github-rankings/app/model"
-	"github.com/memochou1993/github-rankings/logger"
+	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
 	"log"
 	"time"

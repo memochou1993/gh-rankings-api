@@ -2,8 +2,8 @@ package language
 
 import (
 	"fmt"
-	"github.com/memochou1993/github-rankings/app/resource"
-	"github.com/memochou1993/github-rankings/test"
+	"github.com/memochou1993/gh-rankings/app/resource"
+	"github.com/memochou1993/gh-rankings/test"
 	"os"
 	"reflect"
 	"strconv"

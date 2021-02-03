@@ -3,8 +3,8 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/memochou1993/github-rankings/logger"
-	"github.com/memochou1993/github-rankings/util"
+	"github.com/memochou1993/gh-rankings/logger"
+	"github.com/memochou1993/gh-rankings/util"
 	"io/ioutil"
 	"log"
 	"strings"

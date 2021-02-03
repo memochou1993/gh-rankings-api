@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/memochou1993/github-rankings/app/handler/request"
-	"github.com/memochou1993/github-rankings/app/worker"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/worker"
 	"log"
 	"net/http"
 	"time"

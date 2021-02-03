@@ -2,8 +2,8 @@ package test
 
 import (
 	"context"
-	"github.com/memochou1993/github-rankings/app/model"
-	"github.com/memochou1993/github-rankings/database"
+	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/database"
 	"log"
 	"os"
 	"path"

@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/memochou1993/github-rankings/util"
+	"github.com/memochou1993/gh-rankings/util"
 	"log"
 	"os"
 	"reflect"
