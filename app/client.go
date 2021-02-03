@@ -37,7 +37,7 @@ func Fetch(ctx context.Context, q string, v interface{}) error {
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("Received unexpected status code: %d", resp.StatusCode))
+		return errors.New(fmt.Sprintf("Request failed with status code %d", resp.StatusCode))
 	}
 	return json.NewDecoder(resp.Body).Decode(v)
 }
