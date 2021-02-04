@@ -179,7 +179,7 @@ func (o *ownerWorker) Rank() {
 	}
 	wg.Wait()
 	o.Worker.saveTimestamp(timestampOwnerRanks, now)
-	RankModel.Delete(now, model.TypeUser, model.TypeOrganization)
+	RankModel.Delete(now, model.TypeUser, fmt.Sprintf("type:%s", model.TypeOrganization))
 }
 
 func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error) {
