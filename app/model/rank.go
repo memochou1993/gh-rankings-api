@@ -15,7 +15,7 @@ type Rank struct {
 	Name       string    `json:"name" bson:"name"`
 	ImageUrl   string    `json:"imageUrl" bson:"image_url"`
 	Rank       int       `json:"rank" bson:"rank"`
-	Last       int       `json:"last" bson:"last"`
+	TotalRank  int       `json:"totalRank" bson:"total_rank"`
 	TotalCount int       `json:"totalCount" bson:"total_count"`
 	Tags       []string  `json:"tags" bson:"tags"`
 	CreatedAt  time.Time `json:"createdAt" bson:"created_at"`
@@ -86,7 +86,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	last := p.Count(model)
+	count := p.Count(model)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -99,7 +99,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 			Name:       rec.ID,
 			ImageUrl:   rec.ImageUrl,
 			Rank:       i + 1,
-			Last:       last,
+			TotalRank:  count,
 			TotalCount: rec.TotalCount,
 			Tags:       p.Tags,
 			CreatedAt:  createdAt,
