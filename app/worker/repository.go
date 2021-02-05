@@ -105,7 +105,9 @@ func (r *repositoryWorker) Rank() {
 	}
 	wg.Wait()
 	r.Worker.saveTimestamp(timestampRepositoryRanks, timestamp)
-	RankModel.Delete(timestamp, fmt.Sprintf("type:%s", model.TypeRepository))
+
+	tag := fmt.Sprintf("type:%s", model.TypeRepository)
+	RankModel.Delete(timestamp, tag)
 }
 
 func (r *repositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {

@@ -27,7 +27,6 @@ func LoadAsset(name string, v interface{}) {
 	if err = json.Unmarshal(b, &v); err != nil {
 		log.Fatal(err.Error())
 	}
-	return
 }
 
 func ParseStruct(v interface{}, sep string) string {
