@@ -2,10 +2,8 @@ package model
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"io/ioutil"
 	"log"
 	"strings"
 	"time"
@@ -118,7 +116,7 @@ func (e Error) Error() string {
 
 func NewRepositoriesQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("search_repositories"),
+		Schema: util.ReadQuery("search_repositories"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "REPOSITORY",
@@ -128,7 +126,7 @@ func NewRepositoriesQuery() *Query {
 
 func NewOwnersQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("search_owners"),
+		Schema: util.ReadQuery("search_owners"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -138,7 +136,7 @@ func NewOwnersQuery() *Query {
 
 func NewOwnerGistsQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("owner_gists"),
+		Schema: util.ReadQuery("owner_gists"),
 		GistsArguments: GistsArguments{
 			First:   100,
 			OrderBy: "{field:CREATED_AT,direction:ASC}",
@@ -148,19 +146,11 @@ func NewOwnerGistsQuery() *Query {
 
 func NewOwnerRepositoriesQuery() *Query {
 	return &Query{
-		Schema: ReadQuery("owner_repositories"),
+		Schema: util.ReadQuery("owner_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:ASC}",
 			OwnerAffiliations: "OWNER",
 		},
 	}
-}
-
-func ReadQuery(filename string) string {
-	b, err := ioutil.ReadFile(fmt.Sprintf("./app/query/%s.graphql", filename))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return string(b)
 }

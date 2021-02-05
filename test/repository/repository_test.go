@@ -32,7 +32,7 @@ func TestFetchRepositories(t *testing.T) {
 	r := worker.RepositoryWorker
 
 	q := model.Query{
-		Schema: model.ReadQuery("search_repositories"),
+		Schema: util.ReadQuery("search_repositories"),
 		SearchArguments: model.SearchArguments{
 			First: 100,
 			Query: strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100"),

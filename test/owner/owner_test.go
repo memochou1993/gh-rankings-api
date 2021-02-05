@@ -32,7 +32,7 @@ func TestFetchOwners(t *testing.T) {
 	o := worker.OwnerWorker
 
 	q := model.Query{
-		Schema: model.ReadQuery("search_owners"),
+		Schema: util.ReadQuery("search_owners"),
 		SearchArguments: model.SearchArguments{
 			First: 100,
 			Query: strconv.Quote("created:2020-01-01..2020-01-01 followers:>=5 repos:>=10 sort:joined-asc"),
@@ -99,7 +99,7 @@ func TestFetchUserRepositories(t *testing.T) {
 	o := worker.OwnerWorker
 
 	q := model.Query{
-		Schema: model.ReadQuery("owner_repositories"),
+		Schema: util.ReadQuery("owner_repositories"),
 		Field:  model.TypeUser,
 		OwnerArguments: model.OwnerArguments{
 			Login: strconv.Quote("memochou1993"),
@@ -126,7 +126,7 @@ func TestFetchOrganizationRepositories(t *testing.T) {
 	o := worker.OwnerWorker
 
 	q := model.Query{
-		Schema: model.ReadQuery("owner_repositories"),
+		Schema: util.ReadQuery("owner_repositories"),
 		Field:  model.TypeOrganization,
 		OwnerArguments: model.OwnerArguments{
 			Login: strconv.Quote("golang"),

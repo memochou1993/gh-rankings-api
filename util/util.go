@@ -29,6 +29,14 @@ func LoadAsset(name string, v interface{}) {
 	}
 }
 
+func ReadQuery(name string) string {
+	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/query/%s.graphql", name))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return string(b)
+}
+
 func ParseStruct(v interface{}, sep string) string {
 	b := bytes.Buffer{}
 	encoder := json.NewEncoder(&b)
