@@ -12,19 +12,13 @@ import (
 )
 
 type Rank struct {
-	Name       string    `json:"name" bson:"name"`
-	ImageUrl   string    `json:"imageUrl" bson:"image_url"`
-	Rank       int       `json:"rank" bson:"rank"`
-	TotalRank  int       `json:"totalRank" bson:"total_rank"`
-	TotalCount int       `json:"totalCount" bson:"total_count"`
-	Tags       []string  `json:"tags" bson:"tags"`
-	CreatedAt  time.Time `json:"createdAt" bson:"created_at"`
-}
-
-type RankRecord struct {
-	ID         string `bson:"_id"`
-	ImageUrl   string `bson:"image_url"`
-	TotalCount int    `bson:"total_count"`
+	Name      string    `json:"name" bson:"name"`
+	ImageUrl  string    `json:"imageUrl" bson:"image_url"`
+	Rank      int       `json:"rank" bson:"rank"`
+	RankCount int       `json:"rankCount" bson:"rank_count"`
+	ItemCount int       `json:"itemCount" bson:"item_count"`
+	Tags      []string  `json:"tags" bson:"tags"`
+	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 }
 
 type RankModel struct {
@@ -90,21 +84,25 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
-		rec := RankRecord{}
+		rec := struct {
+			ID         string `bson:"_id"`
+			ImageUrl   string `bson:"image_url"`
+			TotalCount int    `bson:"total_count"`
+		}{}
 		if err := cursor.Decode(&rec); err != nil {
 			log.Fatal(err.Error())
 		}
 
-		doc := Rank{
-			Name:       rec.ID,
-			ImageUrl:   rec.ImageUrl,
-			Rank:       i + 1,
-			TotalRank:  count,
-			TotalCount: rec.TotalCount,
-			Tags:       p.Tags,
-			CreatedAt:  createdAt,
+		rank := Rank{
+			Name:      rec.ID,
+			ImageUrl:  rec.ImageUrl,
+			Rank:      i + 1,
+			RankCount: count,
+			ItemCount: rec.TotalCount,
+			Tags:      p.Tags,
+			CreatedAt: createdAt,
 		}
-		models = append(models, mongo.NewInsertOneModel().SetDocument(doc))
+		models = append(models, mongo.NewInsertOneModel().SetDocument(rank))
 		if cursor.RemainingBatchLength() == 0 {
 			database.BulkWrite(r.Name(), models)
 			models = models[:0]
