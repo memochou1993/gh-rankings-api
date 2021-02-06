@@ -276,7 +276,7 @@ func (o *ownerWorker) newRankPipelinesByLocation(field string, tags ...string) (
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, o.newRankPipeline(field, append(tags, fmt.Sprintf("location:%s", location.Name))...))
 		for _, city := range location.Cities {
-			pipelines = append(pipelines, o.newRankPipeline(field, append(tags, fmt.Sprintf("location:%s", city.Name))...))
+			pipelines = append(pipelines, o.newRankPipeline(field, append(tags, fmt.Sprintf("location:%s, %s", city.Name, location.Name))...))
 		}
 	}
 	return

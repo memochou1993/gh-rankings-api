@@ -30,17 +30,17 @@ func TestLocate(t *testing.T) {
 	}{
 		{
 			name:     "Taipei, Taiwan",
-			expected: []string{"Taiwan", "Taipei"},
+			expected: []string{"Taiwan", "Taipei, Taiwan"},
 			actual:   resource.Locate("Taipei, Taiwan"),
 		},
 		{
 			name:     "taipei, taiwan",
-			expected: []string{"Taiwan", "Taipei"},
+			expected: []string{"Taiwan", "Taipei, Taiwan"},
 			actual:   resource.Locate("taipei, taiwan"),
 		},
 		{
 			name:     "TAIPEI, TAIWAN",
-			expected: []string{"Taiwan", "Taipei"},
+			expected: []string{"Taiwan", "Taipei, Taiwan"},
 			actual:   resource.Locate("TAIPEI, TAIWAN"),
 		},
 		{
@@ -50,7 +50,7 @@ func TestLocate(t *testing.T) {
 		},
 		{
 			name:     "Taipei",
-			expected: []string{"Taiwan", "Taipei"},
+			expected: []string{"Taiwan", "Taipei, Taiwan"},
 			actual:   resource.Locate("Taipei"),
 		},
 		{
@@ -85,7 +85,7 @@ func TestLocate(t *testing.T) {
 		},
 		{
 			name:     "Lagos, Nigeria",
-			expected: []string{"Nigeria", "Lagos"},
+			expected: []string{"Nigeria", "Lagos, Nigeria"},
 			actual:   resource.Locate("Lagos, Nigeria"),
 		},
 		{
@@ -105,12 +105,12 @@ func TestLocate(t *testing.T) {
 		},
 		{
 			name:     "Taipei, Formosa",
-			expected: []string{"Taiwan", "Taipei"},
+			expected: []string{"Taiwan", "Taipei, Taiwan"},
 			actual:   resource.Locate("Taipei, Formosa"),
 		},
 		{
 			name:     "Formosa, Argentina",
-			expected: []string{"Argentina", "Formosa"},
+			expected: []string{"Argentina", "Formosa, Argentina"},
 			actual:   resource.Locate("Formosa, Argentina"),
 		},
 		{
@@ -120,7 +120,7 @@ func TestLocate(t *testing.T) {
 		},
 		{
 			name:     "Ilan, Taiwan",
-			expected: []string{"Taiwan", "Ilan"},
+			expected: []string{"Taiwan", "Ilan, Taiwan"},
 			actual:   resource.Locate("Ilan, Taiwan"),
 		},
 		{
@@ -130,12 +130,12 @@ func TestLocate(t *testing.T) {
 		},
 		{
 			name:     "Taioan, Taiwan",
-			expected: []string{"Taiwan", "Tainan"},
+			expected: []string{"Taiwan", "Tainan, Taiwan"},
 			actual:   resource.Locate("Taioan, Taiwan"),
 		},
 		{
 			name:     "Taioan",
-			expected: []string{"Taiwan", "Tainan"},
+			expected: []string{"Taiwan", "Tainan, Taiwan"},
 			actual:   resource.Locate("Taioan"),
 		},
 		{

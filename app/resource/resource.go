@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"github.com/memochou1993/gh-rankings/util"
 	"strings"
 )
@@ -54,11 +55,11 @@ func Locate(text string) (locations []string) {
 			locations = append(locations, location.Name)
 			for _, city := range location.Cities {
 				if city.isSimilar(text) {
-					return append(locations, city.Name)
+					return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
 				}
 				for _, alias := range city.Aliases {
 					if alias.isSimilar(text) {
-						return append(locations, city.Name)
+						return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
 					}
 				}
 			}
@@ -69,11 +70,11 @@ func Locate(text string) (locations []string) {
 				locations = append(locations, location.Name)
 				for _, city := range location.Cities {
 					if city.isSimilar(text) {
-						return append(locations, city.Name)
+						return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
 					}
 					for _, alias := range city.Aliases {
 						if alias.isSimilar(text) {
-							return append(locations, city.Name)
+							return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
 						}
 					}
 				}
@@ -87,11 +88,11 @@ func Locate(text string) (locations []string) {
 				continue
 			}
 			if city.isSimilar(text) && city.isUnique() {
-				return append(locations, location.Name, city.Name)
+				return append(locations, location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name))
 			}
 			for _, alias := range city.Aliases {
 				if alias.isSimilar(text) {
-					return append(locations, location.Name, city.Name)
+					return append(locations, location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name))
 				}
 			}
 		}
