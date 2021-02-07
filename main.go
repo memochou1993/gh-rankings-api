@@ -22,6 +22,6 @@ func init() {
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", handler.Index).Methods(http.MethodGet)
+	r.HandleFunc("/api", handler.Index).Methods(http.MethodGet)
 	log.Fatal(http.ListenAndServe(":80", r))
 }
