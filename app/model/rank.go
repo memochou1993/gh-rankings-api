@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/database"
+	"github.com/memochou1993/gh-rankings/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -26,10 +27,9 @@ type RankModel struct {
 }
 
 func (r *RankModel) CreateIndexes() {
-	database.CreateIndexes(r.Name(), []string{
-		"name",
-		"tags",
-	})
+	indexes := []string{"name", "tags"}
+	database.CreateIndexes(r.Name(), indexes)
+	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }
 
 func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
