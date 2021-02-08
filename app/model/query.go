@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"log"
@@ -88,7 +89,8 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (r RateLimit) Break() {
+func (r RateLimit) Check() {
+	logger.Debug(fmt.Sprintf("Rate limit: \"%s\"", util.ParseStruct(r, " ")))
 	buffer := 10
 	if r.Remaining > buffer {
 		return

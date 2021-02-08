@@ -40,6 +40,7 @@ func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
 	}
 
 	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(r.newSearchQuery(*from), " "))
+	logger.Debug(fmt.Sprintf("Repository search arguments: %s", q.SearchArguments.Query))
 
 	var repositories []model.Repository
 	if err := r.FetchRepositories(q, &repositories); err != nil {
@@ -59,7 +60,6 @@ func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
 }
 
 func (r *repositoryWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
-	logger.Debug(fmt.Sprintf("Fetching repositories: \"%s\"", util.ParseStruct(q.SearchArguments, ", ")))
 	res := model.RepositoryResponse{}
 	if err := r.fetch(*q, &res); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (r *repositoryWorker) FetchRepositories(q *model.Query, repositories *[]mod
 	for _, edge := range res.Data.Search.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
 		q.SearchArguments.After = ""
 		return nil

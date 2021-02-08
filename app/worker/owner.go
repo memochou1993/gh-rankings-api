@@ -40,6 +40,7 @@ func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 	}
 
 	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newSearchQuery(*from), " "))
+	logger.Debug(fmt.Sprintf("Owner search arguments: %s", q.SearchArguments.Query))
 
 	var owners []model.Owner
 	if err := o.FetchOwners(q, &owners); err != nil {
@@ -64,7 +65,6 @@ func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 }
 
 func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
-	logger.Debug(fmt.Sprintf("Fetching owners: \"%s\"", util.ParseStruct(q.SearchArguments, ", ")))
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
@@ -72,7 +72,7 @@ func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
 	for _, edge := range res.Data.Search.Edges {
 		*owners = append(*owners, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
 		q.SearchArguments.After = ""
 		return nil
@@ -128,7 +128,7 @@ func (o *ownerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	for _, edge := range res.Data.Owner.Gists.Edges {
 		*gists = append(*gists, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Check()
 	if !res.Data.Owner.Gists.PageInfo.HasNextPage {
 		q.GistsArguments.After = ""
 		return nil
@@ -146,7 +146,7 @@ func (o *ownerWorker) FetchRepositories(q *model.Query, repositories *[]model.Re
 	for _, edge := range res.Data.Owner.Repositories.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Check()
 	if !res.Data.Owner.Repositories.PageInfo.HasNextPage {
 		q.RepositoriesArguments.After = ""
 		return nil
