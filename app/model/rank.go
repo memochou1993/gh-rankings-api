@@ -27,7 +27,7 @@ type RankModel struct {
 }
 
 func (r *RankModel) CreateIndexes() {
-	indexes := []string{"name", "tags"}
+	indexes := []string{"name", "tags", "created_at"}
 	database.CreateIndexes(r.Name(), indexes)
 	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }

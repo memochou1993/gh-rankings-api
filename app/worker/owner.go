@@ -161,7 +161,7 @@ func (o *ownerWorker) Rank() {
 	pipelines = append(pipelines, o.newUserRankPipelines()...)
 	pipelines = append(pipelines, o.newOrganizationRankPipelines()...)
 
-	ch := make(chan struct{}, 4)
+	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
 

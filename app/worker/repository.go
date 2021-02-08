@@ -87,7 +87,7 @@ func (r *repositoryWorker) Rank() {
 	pipelines = append(pipelines, r.newRankPipelinesByLanguage("stargazers")...)
 	pipelines = append(pipelines, r.newRankPipelinesByLanguage("watchers")...)
 
-	ch := make(chan struct{}, 4)
+	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
 	wg.Add(len(pipelines))
 

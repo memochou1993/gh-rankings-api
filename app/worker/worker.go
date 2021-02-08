@@ -48,25 +48,17 @@ func Init() {
 
 	OwnerWorker.Init()
 	go Collect(OwnerWorker)
-	go Rank(OwnerWorker)
 
 	RepositoryWorker.Init()
 	go Collect(RepositoryWorker)
-	go Rank(RepositoryWorker)
 }
 
 func Collect(worker Interface) {
-	t := time.NewTicker(time.Hour)
+	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		if err := worker.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
-	}
-}
-
-func Rank(worker Interface) {
-	t := time.NewTicker(time.Hour)
-	for ; true; <-t.C {
 		worker.Rank()
 	}
 }
