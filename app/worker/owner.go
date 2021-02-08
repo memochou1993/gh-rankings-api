@@ -64,7 +64,7 @@ func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 }
 
 func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
-	logger.Debug(fmt.Sprintf("Fetching owners...(%s)", util.ParseStruct(q.SearchArguments, ", ")))
+	logger.Debug(fmt.Sprintf("Fetching owners: \"%s\"", util.ParseStruct(q.SearchArguments, ", ")))
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
