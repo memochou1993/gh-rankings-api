@@ -59,6 +59,7 @@ func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
 }
 
 func (r *repositoryWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+	logger.Debug(fmt.Sprintf("Fetching repositories...(%s)", util.ParseStruct(q.SearchArguments, ", ")))
 	res := model.RepositoryResponse{}
 	if err := r.fetch(*q, &res); err != nil {
 		return err
