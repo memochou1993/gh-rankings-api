@@ -20,6 +20,7 @@ var (
 )
 
 type Interface interface {
+	Init()
 	Collect() error
 	Rank()
 }
@@ -45,16 +46,13 @@ func (w *Worker) saveTimestamp(key string, t time.Time) {
 
 func Init() {
 	RankModel.CreateIndexes()
-
-	OwnerWorker.Init()
-	go Collect(OwnerWorker)
-
-	RepositoryWorker.Init()
-	go Collect(RepositoryWorker)
+	go Run(OwnerWorker)
+	go Run(RepositoryWorker)
 }
 
-func Collect(worker Interface) {
-	t := time.NewTicker(24 * time.Hour)
+func Run(worker Interface) {
+	worker.Init()
+	t := time.NewTicker(7 * 24 * time.Hour)
 	for ; true; <-t.C {
 		if err := worker.Collect(); err != nil {
 			logger.Error(err.Error())
