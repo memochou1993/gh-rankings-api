@@ -18,7 +18,10 @@ import (
 
 type repositoryWorker struct {
 	*Worker
+	From            time.Time
+	To              time.Time
 	RepositoryModel *model.RepositoryModel
+	RepositoryQuery *model.Query
 }
 
 func (r *repositoryWorker) Init() {
@@ -27,23 +30,23 @@ func (r *repositoryWorker) Init() {
 
 func (r *repositoryWorker) Collect() error {
 	logger.Info("Collecting repositories...")
-	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.NewRepositoryQuery()
+	r.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
+	r.To = time.Now()
 
-	return r.Travel(&from, q)
+	return r.Travel()
 }
 
-func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
-	to := time.Now()
-	if from.After(to) {
+func (r *repositoryWorker) Travel() error {
+	if r.From.After(r.To) {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(r.newSearchQuery(*from), " "))
-	logger.Debug(fmt.Sprintf("Repository search arguments: %s", q.SearchArguments.Query))
+	repositories := map[string]model.Repository{}
 
-	var repositories []model.Repository
-	if err := r.FetchRepositories(q, &repositories); err != nil {
+	r.RepositoryQuery.SearchArguments.Query = r.buildSearchQuery()
+	logger.Debug(fmt.Sprintf("Repository Query: %s", r.RepositoryQuery.SearchArguments.Query))
+
+	if err := r.FetchRepositories(repositories); err != nil {
 		return err
 	}
 	if res := r.RepositoryModel.Store(repositories); res != nil {
@@ -54,39 +57,39 @@ func (r *repositoryWorker) Travel(from *time.Time, q *model.Query) error {
 			logger.Success(fmt.Sprintf("Inserted %d repositories!", res.UpsertedCount))
 		}
 	}
-	*from = from.AddDate(0, 0, 7)
+	r.From = r.From.AddDate(0, 0, 7)
 
-	return r.Travel(from, q)
+	return r.Travel()
 }
 
-func (r *repositoryWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+func (r *repositoryWorker) FetchRepositories(repositories map[string]model.Repository) error {
 	res := model.RepositoryResponse{}
-	if err := r.fetch(*q, &res); err != nil {
+	if err := r.fetch(*r.RepositoryQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		*repositories = append(*repositories, edge.Node)
+		repositories[edge.Node.NameWithOwner] = edge.Node
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
-		q.SearchArguments.After = ""
+		r.RepositoryQuery.SearchArguments.After = ""
 		return nil
 	}
-	q.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
+	r.RepositoryQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return r.FetchRepositories(q, repositories)
+	return r.FetchRepositories(repositories)
 }
 
 func (r *repositoryWorker) Rank() {
 	logger.Info("Executing repository rank pipelines...")
 	pipelines := []*model.Pipeline{
-		r.newRankPipeline("forks"),
-		r.newRankPipeline("stargazers"),
-		r.newRankPipeline("watchers"),
+		r.buildRankPipeline("forks"),
+		r.buildRankPipeline("stargazers"),
+		r.buildRankPipeline("watchers"),
 	}
-	pipelines = append(pipelines, r.newRankPipelinesByLanguage("forks")...)
-	pipelines = append(pipelines, r.newRankPipelinesByLanguage("stargazers")...)
-	pipelines = append(pipelines, r.newRankPipelinesByLanguage("watchers")...)
+	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("forks")...)
+	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("stargazers")...)
+	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("watchers")...)
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -125,16 +128,19 @@ func (r *repositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (
 	return
 }
 
-func (r *repositoryWorker) newSearchQuery(from time.Time) *model.SearchQuery {
-	return &model.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
+func (r *repositoryWorker) buildSearchQuery() string {
+	from := r.From.Format(time.RFC3339)
+	to := r.From.AddDate(0, 0, 7).Format(time.RFC3339)
+	q := model.SearchQuery{
+		Created: fmt.Sprintf("%s..%s", from, to),
 		Fork:    "true",
 		Sort:    "stars",
 		Stars:   ">=100",
 	}
+	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
+func (r *repositoryWorker) buildRankPipeline(field string) *model.Pipeline {
 	tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
@@ -157,7 +163,7 @@ func (r *repositoryWorker) newRankPipeline(field string) *model.Pipeline {
 	}
 }
 
-func (r *repositoryWorker) newRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
+func (r *repositoryWorker) buildRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
 	tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
@@ -192,5 +198,6 @@ func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
 		Worker:          NewWorker(),
 		RepositoryModel: model.NewRepositoryModel(),
+		RepositoryQuery: model.NewRepositoryQuery(),
 	}
 }

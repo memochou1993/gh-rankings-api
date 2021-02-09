@@ -14,8 +14,12 @@ const (
 )
 
 var (
-	RankModel        = model.NewRankModel()
-	RepositoryWorker = NewRepositoryWorker()
+	RankModel = model.NewRankModel()
+)
+
+var (
+	OwnerWorker      *ownerWorker
+	RepositoryWorker *repositoryWorker
 )
 
 type Interface interface {
@@ -45,10 +49,12 @@ func (w *Worker) saveTimestamp(key string, t time.Time) {
 
 func Init() {
 	RankModel.CreateIndexes()
+
 	OwnerWorker = NewOwnerWorker()
 	go Run(OwnerWorker)
-	// FIXME: should refactor
-	// go Run(RepositoryWorker)
+
+	RepositoryWorker = NewRepositoryWorker()
+	go Run(RepositoryWorker)
 }
 
 func Run(worker Interface) {

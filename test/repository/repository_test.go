@@ -29,19 +29,13 @@ func setUp() {
 }
 
 func TestFetchRepositories(t *testing.T) {
-	r := worker.RepositoryWorker
+	r := worker.NewRepositoryWorker()
 
-	q := model.Query{
-		Schema: util.ReadQuery("search_repositories"),
-		SearchArguments: model.SearchArguments{
-			First: 100,
-			Query: strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100"),
-			Type:  "REPOSITORY",
-		},
-	}
+	r.RepositoryQuery = model.NewRepositoryQuery()
+	r.RepositoryQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
 
-	var repositories []model.Repository
-	if err := r.FetchRepositories(&q, &repositories); err != nil {
+	repositories := map[string]model.Repository{}
+	if err := r.FetchRepositories(repositories); err != nil {
 		t.Error(err.Error())
 	}
 	if len(repositories) == 0 {
@@ -52,10 +46,12 @@ func TestFetchRepositories(t *testing.T) {
 }
 
 func TestStoreRepositories(t *testing.T) {
-	r := worker.RepositoryWorker
+	r := worker.NewRepositoryWorker()
 
 	repository := model.Repository{NameWithOwner: "memochou1993/gh-rankings"}
-	repositories := []model.Repository{repository}
+	repositories := map[string]model.Repository{}
+	repositories[repository.NameWithOwner] = repository
+
 	r.RepositoryModel.Store(repositories)
 	res := database.FindOne(r.RepositoryModel.Name(), bson.D{{"_id", repository.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
