@@ -95,7 +95,7 @@ type OwnerModel struct {
 	*Model
 }
 
-func (o *OwnerModel) Store(owners []Owner) *mongo.BulkWriteResult {
+func (o *OwnerModel) Store(owners map[string]Owner) *mongo.BulkWriteResult {
 	if len(owners) == 0 {
 		return nil
 	}

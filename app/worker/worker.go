@@ -15,7 +15,6 @@ const (
 
 var (
 	RankModel        = model.NewRankModel()
-	OwnerWorker      = NewOwnerWorker()
 	RepositoryWorker = NewRepositoryWorker()
 )
 

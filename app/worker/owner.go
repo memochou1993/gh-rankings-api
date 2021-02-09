@@ -16,9 +16,17 @@ import (
 	"time"
 )
 
+var (
+	OwnerWorker = NewOwnerWorker()
+)
+
 type ownerWorker struct {
 	*Worker
-	OwnerModel *model.OwnerModel
+	OwnerModel        *model.OwnerModel
+	From              time.Time
+	To                time.Time
+	UserQuery         *model.Query
+	OrganizationQuery *model.Query
 }
 
 func (o *ownerWorker) Init() {
@@ -27,23 +35,27 @@ func (o *ownerWorker) Init() {
 
 func (o *ownerWorker) Collect() error {
 	logger.Info("Collecting owners...")
-	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.NewOwnersQuery()
+	o.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
+	o.To = time.Now()
 
-	return o.Travel(&from, q)
+	return o.Travel()
 }
 
-func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
-	to := time.Now()
-	if from.After(to) {
+func (o *ownerWorker) Travel() error {
+	if o.From.After(o.To) {
 		return nil
 	}
 
-	q.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newSearchQuery(*from), " "))
-	logger.Debug(fmt.Sprintf("Owner search arguments: %s", q.SearchArguments.Query))
+	o.UserQuery.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newUserQuery(), " "))
+	o.OrganizationQuery.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newOrganizationQuery(), " "))
+	logger.Debug(fmt.Sprintf("User query: %s", o.UserQuery.SearchArguments.Query))
+	logger.Debug(fmt.Sprintf("Organization query: %s", o.OrganizationQuery.SearchArguments.Query))
 
-	var owners []model.Owner
-	if err := o.FetchOwners(q, &owners); err != nil {
+	owners := map[string]model.Owner{}
+	if err := o.FetchOwners(o.UserQuery, owners); err != nil {
+		return err
+	}
+	if err := o.FetchOwners(o.OrganizationQuery, owners); err != nil {
 		return err
 	}
 	if res := o.OwnerModel.Store(owners); res != nil {
@@ -59,18 +71,18 @@ func (o *ownerWorker) Travel(from *time.Time, q *model.Query) error {
 			return err
 		}
 	}
-	*from = from.AddDate(0, 0, 7)
+	o.From = o.From.AddDate(0, 0, 7)
 
-	return o.Travel(from, q)
+	return o.Travel()
 }
 
-func (o *ownerWorker) FetchOwners(q *model.Query, owners *[]model.Owner) error {
+func (o *ownerWorker) FetchOwners(q *model.Query, owners map[string]model.Owner) error {
 	res := model.OwnerResponse{}
 	if err := o.fetch(*q, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		*owners = append(*owners, edge.Node)
+		owners[edge.Node.Name] = edge.Node
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
@@ -199,9 +211,17 @@ func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error)
 	return
 }
 
-func (o *ownerWorker) newSearchQuery(from time.Time) *model.SearchQuery {
+func (o *ownerWorker) newUserQuery() *model.SearchQuery {
 	return &model.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), from.AddDate(0, 0, 7).Format(time.RFC3339)),
+		Created:   fmt.Sprintf("%s..%s", o.From.Format(time.RFC3339), o.From.AddDate(0, 0, 7).Format(time.RFC3339)),
+		Followers: ">=100",
+		Sort:      "joined-asc",
+	}
+}
+
+func (o *ownerWorker) newOrganizationQuery() *model.SearchQuery {
+	return &model.SearchQuery{
+		Created: fmt.Sprintf("%s..%s", o.From.Format(time.RFC3339), o.From.AddDate(0, 0, 7).Format(time.RFC3339)),
 		Repos:   ">=5",
 		Sort:    "joined-asc",
 	}
@@ -327,7 +347,9 @@ func (o *ownerWorker) newRepositoryRankPipelinesByLanguage(field string, tags ..
 
 func NewOwnerWorker() *ownerWorker {
 	return &ownerWorker{
-		Worker:     NewWorker(),
-		OwnerModel: model.NewOwnerModel(),
+		Worker:            NewWorker(),
+		OwnerModel:        model.NewOwnerModel(),
+		UserQuery:         model.NewOwnersQuery(),
+		OrganizationQuery: model.NewOwnersQuery(),
 	}
 }
