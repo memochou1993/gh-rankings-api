@@ -28,7 +28,7 @@ func (r *repositoryWorker) Init() {
 func (r *repositoryWorker) Collect() error {
 	logger.Info("Collecting repositories...")
 	from := time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
-	q := model.NewRepositoriesQuery()
+	q := model.NewRepositoryQuery()
 
 	return r.Travel(&from, q)
 }

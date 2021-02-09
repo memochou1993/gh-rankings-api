@@ -116,17 +116,7 @@ func (e Error) Error() string {
 	return e.Message
 }
 
-func NewRepositoriesQuery() *Query {
-	return &Query{
-		Schema: util.ReadQuery("search_repositories"),
-		SearchArguments: SearchArguments{
-			First: 100,
-			Type:  "REPOSITORY",
-		},
-	}
-}
-
-func NewOwnersQuery() *Query {
+func NewOwnerQuery() *Query {
 	return &Query{
 		Schema: util.ReadQuery("search_owners"),
 		SearchArguments: SearchArguments{
@@ -136,7 +126,7 @@ func NewOwnersQuery() *Query {
 	}
 }
 
-func NewOwnerGistsQuery() *Query {
+func NewOwnerGistQuery() *Query {
 	return &Query{
 		Schema: util.ReadQuery("owner_gists"),
 		GistsArguments: GistsArguments{
@@ -146,13 +136,23 @@ func NewOwnerGistsQuery() *Query {
 	}
 }
 
-func NewOwnerRepositoriesQuery() *Query {
+func NewOwnerRepositoryQuery() *Query {
 	return &Query{
 		Schema: util.ReadQuery("owner_repositories"),
 		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:ASC}",
 			OwnerAffiliations: "OWNER",
+		},
+	}
+}
+
+func NewRepositoryQuery() *Query {
+	return &Query{
+		Schema: util.ReadQuery("search_repositories"),
+		SearchArguments: SearchArguments{
+			First: 100,
+			Type:  "REPOSITORY",
 		},
 	}
 }

@@ -17,16 +17,18 @@ import (
 )
 
 var (
-	OwnerWorker = NewOwnerWorker()
+	OwnerWorker *ownerWorker
 )
 
 type ownerWorker struct {
 	*Worker
-	OwnerModel        *model.OwnerModel
 	From              time.Time
 	To                time.Time
+	OwnerModel        *model.OwnerModel
 	UserQuery         *model.Query
 	OrganizationQuery *model.Query
+	GistQuery         *model.Query
+	RepositoryQuery   *model.Query
 }
 
 func (o *ownerWorker) Init() {
@@ -46,18 +48,20 @@ func (o *ownerWorker) Travel() error {
 		return nil
 	}
 
-	o.UserQuery.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newUserQuery(), " "))
-	o.OrganizationQuery.SearchArguments.Query = strconv.Quote(util.ParseStruct(o.newOrganizationQuery(), " "))
-	logger.Debug(fmt.Sprintf("User query: %s", o.UserQuery.SearchArguments.Query))
-	logger.Debug(fmt.Sprintf("Organization query: %s", o.OrganizationQuery.SearchArguments.Query))
-
 	owners := map[string]model.Owner{}
-	if err := o.FetchOwners(o.UserQuery, owners); err != nil {
+
+	o.UserQuery.SearchArguments.Query = o.buildUserSearchQuery()
+	logger.Debug(fmt.Sprintf("User Query: %s", o.UserQuery.SearchArguments.Query))
+	if err := o.FetchUsers(owners); err != nil {
 		return err
 	}
-	if err := o.FetchOwners(o.OrganizationQuery, owners); err != nil {
+
+	o.OrganizationQuery.SearchArguments.Query = o.buildOrganizationSearchQuery()
+	logger.Debug(fmt.Sprintf("Organization Query: %s", o.OrganizationQuery.SearchArguments.Query))
+	if err := o.FetchOrganizations(owners); err != nil {
 		return err
 	}
+
 	if res := o.OwnerModel.Store(owners); res != nil {
 		if res.ModifiedCount > 0 {
 			logger.Success(fmt.Sprintf("Updated %d owners!", res.ModifiedCount))
@@ -76,43 +80,63 @@ func (o *ownerWorker) Travel() error {
 	return o.Travel()
 }
 
-func (o *ownerWorker) FetchOwners(q *model.Query, owners map[string]model.Owner) error {
+func (o *ownerWorker) FetchUsers(users map[string]model.Owner) error {
 	res := model.OwnerResponse{}
-	if err := o.fetch(*q, &res); err != nil {
+	if err := o.fetch(*o.UserQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		owners[edge.Node.Name] = edge.Node
+		users[edge.Node.Login] = edge.Node
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
-		q.SearchArguments.After = ""
+		o.UserQuery.SearchArguments.After = ""
 		return nil
 	}
-	q.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
+	o.UserQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return o.FetchOwners(q, owners)
+	return o.FetchUsers(users)
+}
+
+func (o *ownerWorker) FetchOrganizations(organizations map[string]model.Owner) error {
+	res := model.OwnerResponse{}
+	if err := o.fetch(*o.OrganizationQuery, &res); err != nil {
+		return err
+	}
+	for _, edge := range res.Data.Search.Edges {
+		organizations[edge.Node.Login] = edge.Node
+	}
+	res.Data.RateLimit.Check()
+	if !res.Data.Search.PageInfo.HasNextPage {
+		o.OrganizationQuery.SearchArguments.After = ""
+		return nil
+	}
+	o.OrganizationQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
+
+	return o.FetchOrganizations(organizations)
 }
 
 func (o *ownerWorker) Update(owner model.Owner) error {
-	gistsQuery := model.NewOwnerGistsQuery()
-	repositoriesQuery := model.NewOwnerRepositoriesQuery()
-	if err := o.UpdateGists(owner, gistsQuery); err != nil {
+	o.GistQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
+	if err := o.UpdateGists(owner); err != nil {
 		return err
 	}
-	if err := o.UpdateRepositories(owner, repositoriesQuery); err != nil {
+
+	o.RepositoryQuery.Field = owner.Type()
+	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
+	if err := o.UpdateRepositories(owner); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (o *ownerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
+func (o *ownerWorker) UpdateGists(owner model.Owner) error {
 	if !owner.IsUser() {
 		return nil
 	}
 	var gists []model.Gist
-	q.OwnerArguments.Login = strconv.Quote(owner.ID())
-	if err := o.FetchGists(q, &gists); err != nil {
+	if err := o.FetchGists(&gists); err != nil {
 		return err
 	}
 	o.OwnerModel.UpdateGists(owner, gists)
@@ -120,11 +144,9 @@ func (o *ownerWorker) UpdateGists(owner model.Owner, q *model.Query) error {
 	return nil
 }
 
-func (o *ownerWorker) UpdateRepositories(owner model.Owner, q *model.Query) error {
+func (o *ownerWorker) UpdateRepositories(owner model.Owner) error {
 	var repositories []model.Repository
-	q.Field = owner.Type()
-	q.OwnerArguments.Login = strconv.Quote(owner.ID())
-	if err := o.FetchRepositories(q, &repositories); err != nil {
+	if err := o.FetchRepositories(&repositories); err != nil {
 		return err
 	}
 	o.OwnerModel.UpdateRepositories(owner, repositories)
@@ -132,9 +154,9 @@ func (o *ownerWorker) UpdateRepositories(owner model.Owner, q *model.Query) erro
 	return nil
 }
 
-func (o *ownerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
+func (o *ownerWorker) FetchGists(gists *[]model.Gist) error {
 	res := model.OwnerResponse{}
-	if err := o.fetch(*q, &res); err != nil {
+	if err := o.fetch(*o.GistQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Owner.Gists.Edges {
@@ -142,17 +164,17 @@ func (o *ownerWorker) FetchGists(q *model.Query, gists *[]model.Gist) error {
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Owner.Gists.PageInfo.HasNextPage {
-		q.GistsArguments.After = ""
+		o.GistQuery.GistsArguments.After = ""
 		return nil
 	}
-	q.GistsArguments.After = strconv.Quote(res.Data.Owner.Gists.PageInfo.EndCursor)
+	o.GistQuery.GistsArguments.After = strconv.Quote(res.Data.Owner.Gists.PageInfo.EndCursor)
 
-	return o.FetchGists(q, gists)
+	return o.FetchGists(gists)
 }
 
-func (o *ownerWorker) FetchRepositories(q *model.Query, repositories *[]model.Repository) error {
+func (o *ownerWorker) FetchRepositories(repositories *[]model.Repository) error {
 	res := model.OwnerResponse{}
-	if err := o.fetch(*q, &res); err != nil {
+	if err := o.fetch(*o.RepositoryQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Owner.Repositories.Edges {
@@ -160,12 +182,12 @@ func (o *ownerWorker) FetchRepositories(q *model.Query, repositories *[]model.Re
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Owner.Repositories.PageInfo.HasNextPage {
-		q.RepositoriesArguments.After = ""
+		o.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil
 	}
-	q.RepositoriesArguments.After = strconv.Quote(res.Data.Owner.Repositories.PageInfo.EndCursor)
+	o.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.Owner.Repositories.PageInfo.EndCursor)
 
-	return o.FetchRepositories(q, repositories)
+	return o.FetchRepositories(repositories)
 }
 
 func (o *ownerWorker) Rank() {
@@ -211,20 +233,26 @@ func (o *ownerWorker) fetch(q model.Query, res *model.OwnerResponse) (err error)
 	return
 }
 
-func (o *ownerWorker) newUserQuery() *model.SearchQuery {
-	return &model.SearchQuery{
-		Created:   fmt.Sprintf("%s..%s", o.From.Format(time.RFC3339), o.From.AddDate(0, 0, 7).Format(time.RFC3339)),
+func (o *ownerWorker) buildUserSearchQuery() string {
+	from := o.From.Format(time.RFC3339)
+	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
+	q := model.SearchQuery{
+		Created:   fmt.Sprintf("%s..%s", from, to),
 		Followers: ">=100",
 		Sort:      "joined-asc",
 	}
+	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (o *ownerWorker) newOrganizationQuery() *model.SearchQuery {
-	return &model.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", o.From.Format(time.RFC3339), o.From.AddDate(0, 0, 7).Format(time.RFC3339)),
+func (o *ownerWorker) buildOrganizationSearchQuery() string {
+	from := o.From.Format(time.RFC3339)
+	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
+	q := model.SearchQuery{
+		Created: fmt.Sprintf("%s..%s", from, to),
 		Repos:   ">=5",
 		Sort:    "joined-asc",
 	}
+	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
 func (o *ownerWorker) newUserRankPipelines() (pipelines []*model.Pipeline) {
@@ -349,7 +377,9 @@ func NewOwnerWorker() *ownerWorker {
 	return &ownerWorker{
 		Worker:            NewWorker(),
 		OwnerModel:        model.NewOwnerModel(),
-		UserQuery:         model.NewOwnersQuery(),
-		OrganizationQuery: model.NewOwnersQuery(),
+		UserQuery:         model.NewOwnerQuery(),
+		OrganizationQuery: model.NewOwnerQuery(),
+		GistQuery:         model.NewOwnerGistQuery(),
+		RepositoryQuery:   model.NewOwnerRepositoryQuery(),
 	}
 }

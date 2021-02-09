@@ -12,7 +12,7 @@ import (
 
 func ChangeDirectory() {
 	_, file, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(file), "..")
+	dir := path.Join(path.Dir(file), "../")
 	if err := os.Chdir(dir); err != nil {
 		log.Fatal(err.Error())
 	}

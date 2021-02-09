@@ -45,8 +45,10 @@ func (w *Worker) saveTimestamp(key string, t time.Time) {
 
 func Init() {
 	RankModel.CreateIndexes()
+	OwnerWorker = NewOwnerWorker()
 	go Run(OwnerWorker)
-	go Run(RepositoryWorker)
+	// FIXME: should refactor
+	// go Run(RepositoryWorker)
 }
 
 func Run(worker Interface) {

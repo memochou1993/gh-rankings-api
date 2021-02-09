@@ -28,23 +28,48 @@ func setUp() {
 	logger.Init()
 }
 
-func TestFetchOwners(t *testing.T) {
-	o := worker.OwnerWorker
+func TestFetchUsers(t *testing.T) {
+	o := worker.NewOwnerWorker()
 
-	q := model.Query{
-		Schema: util.ReadQuery("search_owners"),
-		SearchArguments: model.SearchArguments{
-			First: 100,
-			Query: strconv.Quote("created:2020-01-01..2020-01-01 followers:>=5 repos:>=10 sort:joined-asc"),
-			Type:  "USER",
-		},
-	}
+	o.UserQuery = model.NewOwnerQuery()
+	o.UserQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:>=50 repos:>=5 sort:joined-asc")
 
-	var owners []model.Owner
-	if err := o.FetchOwners(&q, &owners); err != nil {
+	owners := map[string]model.Owner{}
+	if err := o.FetchUsers(owners); err != nil {
 		t.Error(err.Error())
 	}
-	if len(owners) == 0 {
+
+	users := map[string]model.Owner{}
+	for _, owner := range owners {
+		if owner.IsUser() {
+			users[owner.Login] = owner
+		}
+	}
+	if len(users) == 0 {
+		t.Fail()
+	}
+
+	test.DropCollection(o.OwnerModel)
+}
+
+func TestFetchOrganizations(t *testing.T) {
+	o := worker.NewOwnerWorker()
+
+	o.OrganizationQuery = model.NewOwnerQuery()
+	o.OrganizationQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:>=50 sort:joined-asc")
+
+	owners := map[string]model.Owner{}
+	if err := o.FetchOrganizations(owners); err != nil {
+		t.Error(err.Error())
+	}
+
+	organizations := map[string]model.Owner{}
+	for _, owner := range owners {
+		if owner.IsOrganization() {
+			organizations[owner.Login] = owner
+		}
+	}
+	if len(organizations) == 0 {
 		t.Fail()
 	}
 
@@ -52,10 +77,12 @@ func TestFetchOwners(t *testing.T) {
 }
 
 func TestStoreUsers(t *testing.T) {
-	o := worker.OwnerWorker
+	o := worker.NewOwnerWorker()
 
 	owner := model.Owner{Login: "memochou1993", Followers: &model.Directory{TotalCount: 1}}
-	owners := []model.Owner{owner}
+	owners := map[string]model.Owner{}
+	owners["memochou1993"] = owner
+
 	o.OwnerModel.Store(owners)
 	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", owner.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
@@ -74,10 +101,12 @@ func TestStoreUsers(t *testing.T) {
 }
 
 func TestStoreOrganizations(t *testing.T) {
-	o := worker.OwnerWorker
+	o := worker.NewOwnerWorker()
 
 	owner := model.Owner{Login: "github"}
-	owners := []model.Owner{owner}
+	owners := map[string]model.Owner{}
+	owners[owner.Login] = owner
+
 	o.OwnerModel.Store(owners)
 	res := database.FindOne(o.OwnerModel.Name(), bson.D{{"_id", owner.ID()}})
 	if res.Err() == mongo.ErrNoDocuments {
@@ -95,51 +124,32 @@ func TestStoreOrganizations(t *testing.T) {
 	test.DropCollection(o.OwnerModel)
 }
 
-func TestFetchUserRepositories(t *testing.T) {
-	o := worker.OwnerWorker
+func TestFetchGists(t *testing.T) {
+	o := worker.NewOwnerWorker()
 
-	q := model.Query{
-		Schema: util.ReadQuery("owner_repositories"),
-		Field:  model.TypeUser,
-		OwnerArguments: model.OwnerArguments{
-			Login: strconv.Quote("memochou1993"),
-		},
-		RepositoriesArguments: model.RepositoriesArguments{
-			First:             100,
-			OrderBy:           "{field:CREATED_AT,direction:ASC}",
-			OwnerAffiliations: "OWNER",
-		},
-	}
+	o.GistQuery = model.NewOwnerGistQuery()
+	o.GistQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
-	var repositories []model.Repository
-	if err := o.FetchRepositories(&q, &repositories); err != nil {
+	var gists []model.Gist
+	if err := o.FetchGists(&gists); err != nil {
 		t.Error(err.Error())
 	}
-	if len(repositories) == 0 {
+	if len(gists) == 0 {
 		t.Fail()
 	}
 
 	test.DropCollection(o.OwnerModel)
 }
 
-func TestFetchOrganizationRepositories(t *testing.T) {
-	o := worker.OwnerWorker
+func TestFetchRepositories(t *testing.T) {
+	o := worker.NewOwnerWorker()
 
-	q := model.Query{
-		Schema: util.ReadQuery("owner_repositories"),
-		Field:  model.TypeOrganization,
-		OwnerArguments: model.OwnerArguments{
-			Login: strconv.Quote("golang"),
-		},
-		RepositoriesArguments: model.RepositoriesArguments{
-			First:             100,
-			OrderBy:           "{field:CREATED_AT,direction:ASC}",
-			OwnerAffiliations: "OWNER",
-		},
-	}
+	o.RepositoryQuery = model.NewOwnerRepositoryQuery()
+	o.RepositoryQuery.Field = model.TypeUser
+	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
 	var repositories []model.Repository
-	if err := o.FetchRepositories(&q, &repositories); err != nil {
+	if err := o.FetchRepositories(&repositories); err != nil {
 		t.Error(err.Error())
 	}
 	if len(repositories) == 0 {
