@@ -25,7 +25,6 @@ func (u *User) ID() string {
 	return u.Login
 }
 
-// TODO: should remove
 func (u *User) TagType() {
 	u.Tags = append(u.Tags, fmt.Sprintf("type:%s", TypeUser))
 }

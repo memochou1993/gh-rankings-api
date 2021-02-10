@@ -45,7 +45,7 @@ func (o *userWorker) Travel() error {
 
 	users := map[string]model.User{}
 
-	o.SearchQuery.SearchArguments.Query = o.buildUserSearchQuery()
+	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
 	logger.Debug(fmt.Sprintf("User query: %s", o.SearchQuery.SearchArguments.Query))
 	if err := o.FetchUsers(users); err != nil {
 		return err
@@ -162,7 +162,7 @@ func (o *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 func (o *userWorker) Rank() {
 	logger.Info("Executing user rank pipelines...")
 	var pipelines []*model.Pipeline
-	pipelines = append(pipelines, o.buildUserRankPipelines()...)
+	pipelines = append(pipelines, o.buildRankPipelines()...)
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -201,7 +201,7 @@ func (o *userWorker) fetch(q model.Query, res *model.UserResponse) (err error) {
 	return
 }
 
-func (o *userWorker) buildUserSearchQuery() string {
+func (o *userWorker) buildSearchQuery() string {
 	from := o.From.Format(time.RFC3339)
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := model.SearchQuery{
@@ -213,7 +213,7 @@ func (o *userWorker) buildUserSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (o *userWorker) buildUserRankPipelines() (pipelines []*model.Pipeline) {
+func (o *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
 	tag := fmt.Sprintf("type:%s", model.TypeUser)
 	fields := []string{
 		"followers",

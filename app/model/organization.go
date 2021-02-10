@@ -23,7 +23,6 @@ func (o *Organization) ID() string {
 	return o.Login
 }
 
-// TODO: should remove
 func (o *Organization) TagType() {
 	o.Tags = append(o.Tags, fmt.Sprintf("type:%s", TypeOrganization))
 }
