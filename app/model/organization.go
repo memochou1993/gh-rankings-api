@@ -24,11 +24,6 @@ func (o *Organization) ID() string {
 }
 
 // TODO: should remove
-func (o *Organization) Type() string {
-	return TypeOrganization
-}
-
-// TODO: should remove
 func (o *Organization) TagType() {
 	o.Tags = append(o.Tags, fmt.Sprintf("type:%s", TypeOrganization))
 }

@@ -88,13 +88,13 @@ func (o *userWorker) FetchUsers(users map[string]model.User) error {
 }
 
 func (o *userWorker) Update(user model.User) error {
-	o.GistQuery.Field = user.Type()
+	o.GistQuery.Field = model.TypeUser
 	o.GistQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := o.UpdateGists(user); err != nil {
 		return err
 	}
 
-	o.RepositoryQuery.Field = user.Type()
+	o.RepositoryQuery.Field = model.TypeUser
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := o.UpdateRepositories(user); err != nil {
 		return err
@@ -109,7 +109,7 @@ func (o *userWorker) UpdateGists(user model.User) error {
 		return err
 	}
 	o.UserModel.UpdateGists(user, gists)
-	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), user.Type()))
+	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), model.TypeUser))
 	return nil
 }
 
@@ -119,7 +119,7 @@ func (o *userWorker) UpdateRepositories(user model.User) error {
 		return err
 	}
 	o.UserModel.UpdateRepositories(user, repositories)
-	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), user.Type()))
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), model.TypeUser))
 	return nil
 }
 

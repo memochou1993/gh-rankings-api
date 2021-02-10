@@ -26,11 +26,6 @@ func (u *User) ID() string {
 }
 
 // TODO: should remove
-func (u *User) Type() string {
-	return TypeUser
-}
-
-// TODO: should remove
 func (u *User) TagType() {
 	u.Tags = append(u.Tags, fmt.Sprintf("type:%s", TypeUser))
 }

@@ -87,7 +87,7 @@ func (o *organizationWorker) FetchOrganizations(organizations map[string]model.O
 }
 
 func (o *organizationWorker) Update(organization model.Organization) error {
-	o.RepositoryQuery.Field = organization.Type()
+	o.RepositoryQuery.Field = model.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(organization.ID())
 	if err := o.UpdateRepositories(organization); err != nil {
 		return err
@@ -102,7 +102,7 @@ func (o *organizationWorker) UpdateRepositories(organization model.Organization)
 		return err
 	}
 	o.OrganizationModel.UpdateRepositories(organization, repositories)
-	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), organization.Type()))
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), model.TypeOrganization))
 	return nil
 }
 
