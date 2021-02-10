@@ -28,14 +28,14 @@ func setUp() {
 	logger.Init()
 }
 
-func TestFetchUsers(t *testing.T) {
+func TestFetch(t *testing.T) {
 	u := worker.NewUserWorker()
 
 	u.SearchQuery = model.NewOwnerQuery()
 	u.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:>=50 repos:>=5 sort:joined-asc")
 
-	users := map[string]model.User{}
-	if err := u.FetchUsers(users); err != nil {
+	var users []model.User
+	if err := u.Fetch(&users); err != nil {
 		t.Error(err.Error())
 	}
 	if len(users) == 0 {
@@ -45,12 +45,11 @@ func TestFetchUsers(t *testing.T) {
 	test.DropCollection(u.UserModel)
 }
 
-func TestStoreUsers(t *testing.T) {
+func TestStore(t *testing.T) {
 	u := worker.NewUserWorker()
 
 	user := model.User{Login: "memochou1993", Followers: &model.Items{TotalCount: 1}}
-	users := map[string]model.User{}
-	users["memochou1993"] = user
+	users := []model.User{user}
 
 	u.UserModel.Store(users)
 	res := database.FindOne(u.UserModel.Name(), bson.D{{"_id", user.ID()}})

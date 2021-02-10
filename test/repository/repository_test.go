@@ -28,14 +28,14 @@ func setUp() {
 	logger.Init()
 }
 
-func TestFetchRepositories(t *testing.T) {
+func TestFetch(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
 	r.SearchQuery = model.NewRepositoryQuery()
 	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
 
-	repositories := map[string]model.Repository{}
-	if err := r.FetchRepositories(repositories); err != nil {
+	var repositories []model.Repository
+	if err := r.Fetch(&repositories); err != nil {
 		t.Error(err.Error())
 	}
 	if len(repositories) == 0 {
@@ -45,12 +45,11 @@ func TestFetchRepositories(t *testing.T) {
 	test.DropCollection(r.RepositoryModel)
 }
 
-func TestStoreRepositories(t *testing.T) {
+func TestStore(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
 	repository := model.Repository{NameWithOwner: "memochou1993/gh-rankings"}
-	repositories := map[string]model.Repository{}
-	repositories[repository.NameWithOwner] = repository
+	repositories := []model.Repository{repository}
 
 	r.RepositoryModel.Store(repositories)
 	res := database.FindOne(r.RepositoryModel.Name(), bson.D{{"_id", repository.ID()}})

@@ -28,14 +28,14 @@ func setUp() {
 	logger.Init()
 }
 
-func TestFetchOrganizations(t *testing.T) {
+func TestFetch(t *testing.T) {
 	o := worker.NewOrganizationWorker()
 
 	o.SearchQuery = model.NewOwnerQuery()
 	o.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:>=50 sort:joined-asc")
 
-	organizations := map[string]model.Organization{}
-	if err := o.FetchOrganizations(organizations); err != nil {
+	var organizations []model.Organization
+	if err := o.Fetch(&organizations); err != nil {
 		t.Error(err.Error())
 	}
 	if len(organizations) == 0 {
@@ -45,12 +45,11 @@ func TestFetchOrganizations(t *testing.T) {
 	test.DropCollection(o.OrganizationModel)
 }
 
-func TestStoreOrganizations(t *testing.T) {
+func TestStore(t *testing.T) {
 	o := worker.NewOrganizationWorker()
 
 	organization := model.Organization{Login: "github"}
-	organizations := map[string]model.Organization{}
-	organizations[organization.Login] = organization
+	organizations := []model.Organization{organization}
 
 	o.OrganizationModel.Store(organizations)
 	res := database.FindOne(o.OrganizationModel.Name(), bson.D{{"_id", organization.ID()}})
