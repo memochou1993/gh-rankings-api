@@ -64,7 +64,7 @@ func Init() {
 
 func Run(worker Interface) {
 	worker.Init()
-	t := time.NewTicker(7 * 24 * time.Hour)
+	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		if err := worker.Collect(); err != nil {
 			logger.Error(err.Error())
