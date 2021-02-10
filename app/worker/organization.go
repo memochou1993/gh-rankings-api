@@ -44,7 +44,7 @@ func (o *organizationWorker) Travel() error {
 
 	var organizations []model.Organization
 	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
-	logger.Debug(fmt.Sprintf("Organization query: %s", o.SearchQuery.SearchArguments.Query))
+	logger.Debug(fmt.Sprintf("Organization Query: %s", o.SearchQuery.SearchArguments.Query))
 	if err := o.Fetch(&organizations); err != nil {
 		return err
 	}

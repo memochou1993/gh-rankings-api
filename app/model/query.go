@@ -90,7 +90,7 @@ type RateLimit struct {
 }
 
 func (r RateLimit) Check() {
-	logger.Debug(fmt.Sprintf("Rate limit: \"%s\"", util.ParseStruct(r, " ")))
+	logger.Debug(fmt.Sprintf("Rate Limit: \"%s\"", util.ParseStruct(r, " ")))
 	buffer := 10
 	if r.Remaining > buffer {
 		return

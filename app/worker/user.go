@@ -45,7 +45,7 @@ func (o *userWorker) Travel() error {
 
 	var users []model.User
 	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
-	logger.Debug(fmt.Sprintf("User query: %s", o.SearchQuery.SearchArguments.Query))
+	logger.Debug(fmt.Sprintf("User Query: %s", o.SearchQuery.SearchArguments.Query))
 	if err := o.Fetch(&users); err != nil {
 		return err
 	}
@@ -103,7 +103,6 @@ func (o *userWorker) Update(user model.User) error {
 }
 
 func (o *userWorker) UpdateGists(user model.User) error {
-	logger.Debug(fmt.Sprintf("User gist query: %s", o.GistQuery.SearchArguments.Query))
 	var gists []model.Gist
 	if err := o.FetchGists(&gists); err != nil {
 		return err
@@ -192,6 +191,9 @@ func (o *userWorker) query(q model.Query, res *model.UserResponse) (err error) {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
 			return o.query(q, res)
+		}
+		for _, err := range res.Errors {
+			logger.Error(fmt.Sprintf("Error Message: %s", err.Message))
 		}
 		return err
 	}
