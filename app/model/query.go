@@ -91,8 +91,8 @@ type RateLimit struct {
 }
 
 func (r RateLimit) Break() {
-	period := time.Duration(60 * 60 / 5000)
-	time.Sleep(period * 3 * time.Second)
+	period := 3600.0 / 5000.0
+	time.Sleep(time.Duration(period*3) * time.Second)
 	logger.Debug(fmt.Sprintf("Rate Limit: %s", strconv.Quote(util.ParseStruct(r, " "))))
 
 	buffer := 10
