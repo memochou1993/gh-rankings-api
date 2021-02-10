@@ -34,7 +34,8 @@ func (o *Organization) AddLocationTag() {
 }
 
 type OrganizationResponse struct {
-	Data struct {
+	Message string `json:"message"`
+	Data    struct {
 		Search struct {
 			Edges []struct {
 				Cursor string       `json:"cursor"`

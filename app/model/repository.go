@@ -28,7 +28,8 @@ func (r *Repository) ID() string {
 }
 
 type RepositoryResponse struct {
-	Data struct {
+	Message string `json:"message"`
+	Data    struct {
 		Search struct {
 			Edges []struct {
 				Cursor string     `json:"cursor"`

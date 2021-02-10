@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
@@ -10,6 +11,7 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -152,18 +154,23 @@ func (o *organizationWorker) Rank() {
 }
 
 func (o *organizationWorker) query(q model.Query, res *model.OrganizationResponse) (err error) {
-	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
+	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
-			logger.Error("Retrying...")
-			return o.query(q, res)
+			logger.Warning(err.Error())
 		}
-		for _, err := range res.Errors {
-			logger.Error(fmt.Sprintf("Error Message: %s", err.Message))
-		}
-		return err
+		log.Fatal(err.Error())
 	}
-	for _, err := range res.Errors {
-		return err
+	if res.Message != "" {
+		err = errors.New(res.Message)
+	}
+	for _, err = range res.Errors {
+		break
+	}
+	if err != nil {
+		logger.Error(err.Error())
+		logger.Warning("Retrying...")
+		time.Sleep(10 * time.Second)
+		return o.query(q, res)
 	}
 	return
 }

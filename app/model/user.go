@@ -36,7 +36,8 @@ func (u *User) AddLocationTag() {
 }
 
 type UserResponse struct {
-	Data struct {
+	Message string `json:"message"`
+	Data    struct {
 		Search struct {
 			Edges []struct {
 				Cursor string `json:"cursor"`
