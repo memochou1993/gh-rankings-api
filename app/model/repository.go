@@ -9,7 +9,7 @@ import (
 
 type Repository struct {
 	CreatedAt         *time.Time `json:"createdAt,omitempty" bson:"created_at,omitempty"`
-	Forks             *Directory `json:"forks,omitempty" bson:"forks,omitempty"`
+	Forks             *Items     `json:"forks,omitempty" bson:"forks,omitempty"`
 	Name              string     `json:"name,omitempty" bson:"name,omitempty"`
 	NameWithOwner     string     `json:"nameWithOwner" bson:"_id"`
 	OpenGraphImageUrl string     `json:"openGraphImageUrl,omitempty" bson:"open_graph_image_url,omitempty"`
@@ -19,8 +19,8 @@ type Repository struct {
 	PrimaryLanguage struct {
 		Name string `json:"name,omitempty" bson:"name,omitempty"`
 	} `json:"primaryLanguage,omitempty" bson:"primary_language,omitempty"`
-	Stargazers *Directory `json:"stargazers,omitempty" bson:"stargazers,omitempty"`
-	Watchers   *Directory `json:"watchers,omitempty" bson:"watchers,omitempty"`
+	Stargazers *Items `json:"stargazers,omitempty" bson:"stargazers,omitempty"`
+	Watchers   *Items `json:"watchers,omitempty" bson:"watchers,omitempty"`
 }
 
 func (r *Repository) ID() string {

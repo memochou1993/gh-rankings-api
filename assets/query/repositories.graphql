@@ -1,4 +1,4 @@
-query SearchRepositories {
+query Repositories {
   search(<SearchArguments>) {
     edges {
       cursor

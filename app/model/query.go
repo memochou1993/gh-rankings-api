@@ -71,7 +71,7 @@ type SearchQuery struct {
 	Type      string `json:"type,omitempty"`
 }
 
-type Directory struct {
+type Items struct {
 	TotalCount int `json:"totalCount,omitempty" bson:"total_count,omitempty"`
 }
 
@@ -118,7 +118,7 @@ func (e Error) Error() string {
 
 func NewOwnerQuery() *Query {
 	return &Query{
-		Schema: util.ReadQuery("search_owners"),
+		Schema: util.ReadQuery("owners"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -149,7 +149,7 @@ func NewOwnerRepositoryQuery() *Query {
 
 func NewRepositoryQuery() *Query {
 	return &Query{
-		Schema: util.ReadQuery("search_repositories"),
+		Schema: util.ReadQuery("repositories"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "REPOSITORY",

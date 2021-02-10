@@ -79,7 +79,7 @@ func TestFetchOrganizations(t *testing.T) {
 func TestStoreUsers(t *testing.T) {
 	o := worker.NewOwnerWorker()
 
-	owner := model.Owner{Login: "memochou1993", Followers: &model.Directory{TotalCount: 1}}
+	owner := model.Owner{Login: "memochou1993", Followers: &model.Items{TotalCount: 1}}
 	owners := map[string]model.Owner{}
 	owners["memochou1993"] = owner
 

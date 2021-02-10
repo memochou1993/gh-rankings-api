@@ -12,7 +12,7 @@ import (
 type Owner struct {
 	AvatarURL    string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
 	CreatedAt    *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
-	Followers    *Directory   `json:"followers,omitempty" bson:"followers,omitempty"`
+	Followers    *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
 	Location     string       `json:"location,omitempty" bson:"location,omitempty"`
 	Login        string       `json:"login" bson:"_id"`
 	Name         string       `json:"name,omitempty" bson:"name,omitempty"`
@@ -67,7 +67,7 @@ type OwnerResponse struct {
 		Owner struct {
 			AvatarURL string     `json:"avatarUrl"`
 			CreatedAt *time.Time `json:"createdAt"`
-			Followers *Directory `json:"followers"`
+			Followers *Items     `json:"followers"`
 			Gists     struct {
 				Edges []struct {
 					Cursor string `json:"cursor"`
