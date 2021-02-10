@@ -23,11 +23,11 @@ func (o *Organization) ID() string {
 	return o.Login
 }
 
-func (o *Organization) TagType() {
+func (o *Organization) AddTypeTag() {
 	o.Tags = append(o.Tags, fmt.Sprintf("type:%s", TypeOrganization))
 }
 
-func (o *Organization) TagLocations() {
+func (o *Organization) AddLocationTag() {
 	for _, location := range resource.Locate(o.Location) {
 		o.Tags = append(o.Tags, fmt.Sprintf("location:%s", location))
 	}
@@ -71,8 +71,8 @@ func (o *OrganizationModel) Store(organizations []Organization) *mongo.BulkWrite
 	}
 	var models []mongo.WriteModel
 	for _, organization := range organizations {
-		organization.TagType()
-		organization.TagLocations()
+		organization.AddTypeTag()
+		organization.AddLocationTag()
 		filter := bson.D{{"_id", organization.ID()}}
 		update := bson.D{{"$set", organization}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
