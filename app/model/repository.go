@@ -45,7 +45,7 @@ type RepositoryModel struct {
 	*Model
 }
 
-func (r *RepositoryModel) Store(repositories map[string]Repository) *mongo.BulkWriteResult {
+func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResult {
 	if len(repositories) == 0 {
 		return nil
 	}

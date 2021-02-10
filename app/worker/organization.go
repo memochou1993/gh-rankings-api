@@ -42,11 +42,10 @@ func (o *organizationWorker) Travel() error {
 		return nil
 	}
 
-	organizations := map[string]model.Organization{}
-
+	var organizations []model.Organization
 	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
 	logger.Debug(fmt.Sprintf("Organization query: %s", o.SearchQuery.SearchArguments.Query))
-	if err := o.FetchOrganizations(organizations); err != nil {
+	if err := o.Fetch(&organizations); err != nil {
 		return err
 	}
 
@@ -68,13 +67,13 @@ func (o *organizationWorker) Travel() error {
 	return o.Travel()
 }
 
-func (o *organizationWorker) FetchOrganizations(organizations map[string]model.Organization) error {
+func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
 	res := model.OrganizationResponse{}
-	if err := o.fetch(*o.SearchQuery, &res); err != nil {
+	if err := o.query(*o.SearchQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		organizations[edge.Node.Login] = edge.Node
+		*organizations = append(*organizations, edge.Node)
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
@@ -83,7 +82,7 @@ func (o *organizationWorker) FetchOrganizations(organizations map[string]model.O
 	}
 	o.SearchQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return o.FetchOrganizations(organizations)
+	return o.Fetch(organizations)
 }
 
 func (o *organizationWorker) Update(organization model.Organization) error {
@@ -108,7 +107,7 @@ func (o *organizationWorker) UpdateRepositories(organization model.Organization)
 
 func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository) error {
 	res := model.OrganizationResponse{}
-	if err := o.fetch(*o.RepositoryQuery, &res); err != nil {
+	if err := o.query(*o.RepositoryQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Organization.Repositories.Edges {
@@ -152,11 +151,11 @@ func (o *organizationWorker) Rank() {
 	RankModel.Delete(now, tags...)
 }
 
-func (o *organizationWorker) fetch(q model.Query, res *model.OrganizationResponse) (err error) {
+func (o *organizationWorker) query(q model.Query, res *model.OrganizationResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
-			return o.fetch(q, res)
+			return o.query(q, res)
 		}
 		return err
 	}

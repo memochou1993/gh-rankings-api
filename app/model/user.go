@@ -75,7 +75,7 @@ type UserModel struct {
 	*Model
 }
 
-func (u *UserModel) Store(users map[string]User) *mongo.BulkWriteResult {
+func (u *UserModel) Store(users []User) *mongo.BulkWriteResult {
 	if len(users) == 0 {
 		return nil
 	}

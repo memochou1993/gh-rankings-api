@@ -43,11 +43,10 @@ func (o *userWorker) Travel() error {
 		return nil
 	}
 
-	users := map[string]model.User{}
-
+	var users []model.User
 	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
 	logger.Debug(fmt.Sprintf("User query: %s", o.SearchQuery.SearchArguments.Query))
-	if err := o.FetchUsers(users); err != nil {
+	if err := o.Fetch(&users); err != nil {
 		return err
 	}
 
@@ -69,13 +68,13 @@ func (o *userWorker) Travel() error {
 	return o.Travel()
 }
 
-func (o *userWorker) FetchUsers(users map[string]model.User) error {
+func (o *userWorker) Fetch(users *[]model.User) error {
 	res := model.UserResponse{}
-	if err := o.fetch(*o.SearchQuery, &res); err != nil {
+	if err := o.query(*o.SearchQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		users[edge.Node.Login] = edge.Node
+		*users = append(*users, edge.Node)
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
@@ -84,7 +83,7 @@ func (o *userWorker) FetchUsers(users map[string]model.User) error {
 	}
 	o.SearchQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return o.FetchUsers(users)
+	return o.Fetch(users)
 }
 
 func (o *userWorker) Update(user model.User) error {
@@ -104,6 +103,7 @@ func (o *userWorker) Update(user model.User) error {
 }
 
 func (o *userWorker) UpdateGists(user model.User) error {
+	logger.Debug(fmt.Sprintf("User gist query: %s", o.GistQuery.SearchArguments.Query))
 	var gists []model.Gist
 	if err := o.FetchGists(&gists); err != nil {
 		return err
@@ -125,7 +125,7 @@ func (o *userWorker) UpdateRepositories(user model.User) error {
 
 func (o *userWorker) FetchGists(gists *[]model.Gist) error {
 	res := model.UserResponse{}
-	if err := o.fetch(*o.GistQuery, &res); err != nil {
+	if err := o.query(*o.GistQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.User.Gists.Edges {
@@ -143,7 +143,7 @@ func (o *userWorker) FetchGists(gists *[]model.Gist) error {
 
 func (o *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 	res := model.UserResponse{}
-	if err := o.fetch(*o.RepositoryQuery, &res); err != nil {
+	if err := o.query(*o.RepositoryQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.User.Repositories.Edges {
@@ -187,11 +187,11 @@ func (o *userWorker) Rank() {
 	RankModel.Delete(now, tags...)
 }
 
-func (o *userWorker) fetch(q model.Query, res *model.UserResponse) (err error) {
+func (o *userWorker) query(q model.Query, res *model.UserResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
-			return o.fetch(q, res)
+			return o.query(q, res)
 		}
 		return err
 	}

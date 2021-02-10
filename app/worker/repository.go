@@ -41,12 +41,11 @@ func (r *repositoryWorker) Travel() error {
 		return nil
 	}
 
-	repositories := map[string]model.Repository{}
-
+	var repositories []model.Repository
 	r.SearchQuery.SearchArguments.Query = r.buildSearchQuery()
 	logger.Debug(fmt.Sprintf("Repository Query: %s", r.SearchQuery.SearchArguments.Query))
 
-	if err := r.FetchRepositories(repositories); err != nil {
+	if err := r.Fetch(&repositories); err != nil {
 		return err
 	}
 	if res := r.RepositoryModel.Store(repositories); res != nil {
@@ -62,13 +61,13 @@ func (r *repositoryWorker) Travel() error {
 	return r.Travel()
 }
 
-func (r *repositoryWorker) FetchRepositories(repositories map[string]model.Repository) error {
+func (r *repositoryWorker) Fetch(repositories *[]model.Repository) error {
 	res := model.RepositoryResponse{}
-	if err := r.fetch(*r.SearchQuery, &res); err != nil {
+	if err := r.query(*r.SearchQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		repositories[edge.Node.NameWithOwner] = edge.Node
+		*repositories = append(*repositories, edge.Node)
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
@@ -77,7 +76,7 @@ func (r *repositoryWorker) FetchRepositories(repositories map[string]model.Repos
 	}
 	r.SearchQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return r.FetchRepositories(repositories)
+	return r.Fetch(repositories)
 }
 
 func (r *repositoryWorker) Rank() {
@@ -114,11 +113,11 @@ func (r *repositoryWorker) Rank() {
 	RankModel.Delete(timestamp, tag)
 }
 
-func (r *repositoryWorker) fetch(q model.Query, res *model.RepositoryResponse) (err error) {
+func (r *repositoryWorker) query(q model.Query, res *model.RepositoryResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
-			return r.fetch(q, res)
+			return r.query(q, res)
 		}
 		return err
 	}

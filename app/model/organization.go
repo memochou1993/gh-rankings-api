@@ -65,7 +65,7 @@ type OrganizationModel struct {
 	*Model
 }
 
-func (o *OrganizationModel) Store(organizations map[string]Organization) *mongo.BulkWriteResult {
+func (o *OrganizationModel) Store(organizations []Organization) *mongo.BulkWriteResult {
 	if len(organizations) == 0 {
 		return nil
 	}
