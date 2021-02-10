@@ -89,8 +89,9 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (r RateLimit) Check() {
+func (r RateLimit) Break() {
 	logger.Debug(fmt.Sprintf("Rate Limit: \"%s\"", util.ParseStruct(r, " ")))
+	time.Sleep(100 * time.Millisecond)
 	buffer := 10
 	if r.Remaining > buffer {
 		return
