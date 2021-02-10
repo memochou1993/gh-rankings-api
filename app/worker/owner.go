@@ -236,6 +236,7 @@ func (o *ownerWorker) buildUserSearchQuery() string {
 		Created:   fmt.Sprintf("%s..%s", from, to),
 		Followers: ">=100",
 		Sort:      "joined-asc",
+		Type:      model.TypeUser,
 	}
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
@@ -245,8 +246,9 @@ func (o *ownerWorker) buildOrganizationSearchQuery() string {
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := model.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from, to),
-		Repos:   ">=5",
+		Repos:   ">=25",
 		Sort:    "joined-asc",
+		Type:    model.TypeOrganization,
 	}
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
