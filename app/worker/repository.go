@@ -21,7 +21,7 @@ type repositoryWorker struct {
 	From            time.Time
 	To              time.Time
 	RepositoryModel *model.RepositoryModel
-	RepositoryQuery *model.Query
+	SearchQuery     *model.Query
 }
 
 func (r *repositoryWorker) Init() {
@@ -43,8 +43,8 @@ func (r *repositoryWorker) Travel() error {
 
 	repositories := map[string]model.Repository{}
 
-	r.RepositoryQuery.SearchArguments.Query = r.buildSearchQuery()
-	logger.Debug(fmt.Sprintf("Repository Query: %s", r.RepositoryQuery.SearchArguments.Query))
+	r.SearchQuery.SearchArguments.Query = r.buildSearchQuery()
+	logger.Debug(fmt.Sprintf("Repository Query: %s", r.SearchQuery.SearchArguments.Query))
 
 	if err := r.FetchRepositories(repositories); err != nil {
 		return err
@@ -64,7 +64,7 @@ func (r *repositoryWorker) Travel() error {
 
 func (r *repositoryWorker) FetchRepositories(repositories map[string]model.Repository) error {
 	res := model.RepositoryResponse{}
-	if err := r.fetch(*r.RepositoryQuery, &res); err != nil {
+	if err := r.fetch(*r.SearchQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
@@ -72,10 +72,10 @@ func (r *repositoryWorker) FetchRepositories(repositories map[string]model.Repos
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
-		r.RepositoryQuery.SearchArguments.After = ""
+		r.SearchQuery.SearchArguments.After = ""
 		return nil
 	}
-	r.RepositoryQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
+	r.SearchQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
 	return r.FetchRepositories(repositories)
 }
@@ -198,6 +198,6 @@ func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
 		Worker:          NewWorker(),
 		RepositoryModel: model.NewRepositoryModel(),
-		RepositoryQuery: model.NewRepositoryQuery(),
+		SearchQuery:     model.NewRepositoryQuery(),
 	}
 }

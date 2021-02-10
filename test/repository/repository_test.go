@@ -31,8 +31,8 @@ func setUp() {
 func TestFetchRepositories(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
-	r.RepositoryQuery = model.NewRepositoryQuery()
-	r.RepositoryQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
+	r.SearchQuery = model.NewRepositoryQuery()
+	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
 
 	repositories := map[string]model.Repository{}
 	if err := r.FetchRepositories(repositories); err != nil {

@@ -16,50 +16,51 @@ import (
 	"time"
 )
 
-type organizationWorker struct {
+type userWorker struct {
 	*Worker
-	From              time.Time
-	To                time.Time
-	OrganizationModel *model.OrganizationModel
-	SearchQuery       *model.Query
-	RepositoryQuery   *model.Query
+	From            time.Time
+	To              time.Time
+	UserModel       *model.UserModel
+	SearchQuery     *model.Query
+	GistQuery       *model.Query
+	RepositoryQuery *model.Query
 }
 
-func (o *organizationWorker) Init() {
-	o.Worker.loadTimestamp(timestampOrganizationRanks)
+func (o *userWorker) Init() {
+	o.Worker.loadTimestamp(timestampUserRanks)
 }
 
-func (o *organizationWorker) Collect() error {
-	logger.Info("Collecting organizations...")
+func (o *userWorker) Collect() error {
+	logger.Info("Collecting users...")
 	o.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	o.To = time.Now()
 
 	return o.Travel()
 }
 
-func (o *organizationWorker) Travel() error {
+func (o *userWorker) Travel() error {
 	if o.From.After(o.To) {
 		return nil
 	}
 
-	organizations := map[string]model.Organization{}
+	users := map[string]model.User{}
 
-	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
-	logger.Debug(fmt.Sprintf("Organization query: %s", o.SearchQuery.SearchArguments.Query))
-	if err := o.FetchOrganizations(organizations); err != nil {
+	o.SearchQuery.SearchArguments.Query = o.buildUserSearchQuery()
+	logger.Debug(fmt.Sprintf("User query: %s", o.SearchQuery.SearchArguments.Query))
+	if err := o.FetchUsers(users); err != nil {
 		return err
 	}
 
-	if res := o.OrganizationModel.Store(organizations); res != nil {
+	if res := o.UserModel.Store(users); res != nil {
 		if res.ModifiedCount > 0 {
-			logger.Success(fmt.Sprintf("Updated %d organizations!", res.ModifiedCount))
+			logger.Success(fmt.Sprintf("Updated %d users!", res.ModifiedCount))
 		}
 		if res.UpsertedCount > 0 {
-			logger.Success(fmt.Sprintf("Inserted %d organizations!", res.UpsertedCount))
+			logger.Success(fmt.Sprintf("Inserted %d users!", res.UpsertedCount))
 		}
 	}
-	for _, organization := range organizations {
-		if err := o.Update(organization); err != nil {
+	for _, user := range users {
+		if err := o.Update(user); err != nil {
 			return err
 		}
 	}
@@ -68,13 +69,13 @@ func (o *organizationWorker) Travel() error {
 	return o.Travel()
 }
 
-func (o *organizationWorker) FetchOrganizations(organizations map[string]model.Organization) error {
-	res := model.OrganizationResponse{}
+func (o *userWorker) FetchUsers(users map[string]model.User) error {
+	res := model.UserResponse{}
 	if err := o.fetch(*o.SearchQuery, &res); err != nil {
 		return err
 	}
 	for _, edge := range res.Data.Search.Edges {
-		organizations[edge.Node.Login] = edge.Node
+		users[edge.Node.Login] = edge.Node
 	}
 	res.Data.RateLimit.Check()
 	if !res.Data.Search.PageInfo.HasNextPage {
@@ -83,51 +84,85 @@ func (o *organizationWorker) FetchOrganizations(organizations map[string]model.O
 	}
 	o.SearchQuery.SearchArguments.After = strconv.Quote(res.Data.Search.PageInfo.EndCursor)
 
-	return o.FetchOrganizations(organizations)
+	return o.FetchUsers(users)
 }
 
-func (o *organizationWorker) Update(organization model.Organization) error {
-	o.RepositoryQuery.Field = organization.Type()
-	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(organization.ID())
-	if err := o.UpdateRepositories(organization); err != nil {
+func (o *userWorker) Update(user model.User) error {
+	o.GistQuery.Field = user.Type()
+	o.GistQuery.OwnerArguments.Login = strconv.Quote(user.ID())
+	if err := o.UpdateGists(user); err != nil {
+		return err
+	}
+
+	o.RepositoryQuery.Field = user.Type()
+	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(user.ID())
+	if err := o.UpdateRepositories(user); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (o *organizationWorker) UpdateRepositories(organization model.Organization) error {
+func (o *userWorker) UpdateGists(user model.User) error {
+	var gists []model.Gist
+	if err := o.FetchGists(&gists); err != nil {
+		return err
+	}
+	o.UserModel.UpdateGists(user, gists)
+	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), user.Type()))
+	return nil
+}
+
+func (o *userWorker) UpdateRepositories(user model.User) error {
 	var repositories []model.Repository
 	if err := o.FetchRepositories(&repositories); err != nil {
 		return err
 	}
-	o.OrganizationModel.UpdateRepositories(organization, repositories)
-	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), organization.Type()))
+	o.UserModel.UpdateRepositories(user, repositories)
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), user.Type()))
 	return nil
 }
 
-func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository) error {
-	res := model.OrganizationResponse{}
+func (o *userWorker) FetchGists(gists *[]model.Gist) error {
+	res := model.UserResponse{}
+	if err := o.fetch(*o.GistQuery, &res); err != nil {
+		return err
+	}
+	for _, edge := range res.Data.User.Gists.Edges {
+		*gists = append(*gists, edge.Node)
+	}
+	res.Data.RateLimit.Check()
+	if !res.Data.User.Gists.PageInfo.HasNextPage {
+		o.GistQuery.GistsArguments.After = ""
+		return nil
+	}
+	o.GistQuery.GistsArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
+
+	return o.FetchGists(gists)
+}
+
+func (o *userWorker) FetchRepositories(repositories *[]model.Repository) error {
+	res := model.UserResponse{}
 	if err := o.fetch(*o.RepositoryQuery, &res); err != nil {
 		return err
 	}
-	for _, edge := range res.Data.Organization.Repositories.Edges {
+	for _, edge := range res.Data.User.Repositories.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
 	res.Data.RateLimit.Check()
-	if !res.Data.Organization.Repositories.PageInfo.HasNextPage {
+	if !res.Data.User.Repositories.PageInfo.HasNextPage {
 		o.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil
 	}
-	o.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.Organization.Repositories.PageInfo.EndCursor)
+	o.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
 
 	return o.FetchRepositories(repositories)
 }
 
-func (o *organizationWorker) Rank() {
-	logger.Info("Executing organization rank pipelines...")
+func (o *userWorker) Rank() {
+	logger.Info("Executing user rank pipelines...")
 	var pipelines []*model.Pipeline
-	pipelines = append(pipelines, o.buildRankPipelines()...)
+	pipelines = append(pipelines, o.buildUserRankPipelines()...)
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -138,21 +173,21 @@ func (o *organizationWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *model.Pipeline) {
 			defer wg.Done()
-			RankModel.Store(o.OrganizationModel, *p, now)
+			RankModel.Store(o.UserModel, *p, now)
 			<-ch
 		}(p)
 		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
-			logger.Success(fmt.Sprintf("Executed %d of %d organization rank pipelines!", i+1, len(pipelines)))
+			logger.Success(fmt.Sprintf("Executed %d of %d user rank pipelines!", i+1, len(pipelines)))
 		}
 	}
 	wg.Wait()
-	o.Worker.saveTimestamp(timestampOrganizationRanks, now)
+	o.Worker.saveTimestamp(timestampUserRanks, now)
 
-	tags := []string{fmt.Sprintf("type:%s", model.TypeOrganization)}
+	tags := []string{fmt.Sprintf("type:%s", model.TypeUser), fmt.Sprintf("type:%s", model.TypeOrganization)}
 	RankModel.Delete(now, tags...)
 }
 
-func (o *organizationWorker) fetch(q model.Query, res *model.OrganizationResponse) (err error) {
+func (o *userWorker) fetch(q model.Query, res *model.UserResponse) (err error) {
 	if err := app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Error("Retrying...")
@@ -166,21 +201,24 @@ func (o *organizationWorker) fetch(q model.Query, res *model.OrganizationRespons
 	return
 }
 
-func (o *organizationWorker) buildSearchQuery() string {
+func (o *userWorker) buildUserSearchQuery() string {
 	from := o.From.Format(time.RFC3339)
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := model.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", from, to),
-		Repos:   ">=25",
-		Sort:    "joined-asc",
-		Type:    model.TypeOrganization,
+		Created:   fmt.Sprintf("%s..%s", from, to),
+		Followers: ">=100",
+		Sort:      "joined-asc",
+		Type:      model.TypeUser,
 	}
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (o *organizationWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
-	tag := fmt.Sprintf("type:%s", model.TypeOrganization)
+func (o *userWorker) buildUserRankPipelines() (pipelines []*model.Pipeline) {
+	tag := fmt.Sprintf("type:%s", model.TypeUser)
 	fields := []string{
+		"followers",
+		"gists.forks",
+		"gists.stargazers",
 		"repositories.forks",
 		"repositories.stargazers",
 		"repositories.watchers",
@@ -195,7 +233,7 @@ func (o *organizationWorker) buildRankPipelines() (pipelines []*model.Pipeline) 
 	return
 }
 
-func (o *organizationWorker) buildRankPipeline(field string, tags ...string) *model.Pipeline {
+func (o *userWorker) buildRankPipeline(field string, tags ...string) *model.Pipeline {
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
@@ -224,7 +262,7 @@ func (o *organizationWorker) buildRankPipeline(field string, tags ...string) *mo
 	}
 }
 
-func (o *organizationWorker) buildRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
+func (o *userWorker) buildRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, o.buildRankPipeline(field, append(tags, fmt.Sprintf("location:%s", location.Name))...))
 		for _, city := range location.Cities {
@@ -234,7 +272,7 @@ func (o *organizationWorker) buildRankPipelinesByLocation(field string, tags ...
 	return
 }
 
-func (o *organizationWorker) buildRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
+func (o *userWorker) buildRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -276,11 +314,12 @@ func (o *organizationWorker) buildRepositoryRankPipelinesByLanguage(field string
 	return
 }
 
-func NewOrganizationWorker() *organizationWorker {
-	return &organizationWorker{
-		Worker:            NewWorker(),
-		OrganizationModel: model.NewOrganizationModel(),
-		SearchQuery:       model.NewOwnerQuery(),
-		RepositoryQuery:   model.NewOwnerRepositoryQuery(),
+func NewUserWorker() *userWorker {
+	return &userWorker{
+		Worker:          NewWorker(),
+		UserModel:       model.NewUserModel(),
+		SearchQuery:     model.NewOwnerQuery(),
+		GistQuery:       model.NewOwnerGistQuery(),
+		RepositoryQuery: model.NewOwnerRepositoryQuery(),
 	}
 }

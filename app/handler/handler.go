@@ -27,7 +27,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	timestamps := []time.Time{
-		worker.OwnerWorker.Timestamp,
+		worker.UserWorker.Timestamp,
+		worker.OrganizationWorker.Timestamp,
 		worker.RepositoryWorker.Timestamp,
 	}
 	ranks := worker.RankModel.List(req, timestamps)

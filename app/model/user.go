@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Owner struct {
+type User struct {
 	AvatarURL    string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
 	CreatedAt    *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
 	Followers    *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
@@ -21,50 +21,36 @@ type Owner struct {
 	Tags         []string     `json:"tags,omitempty" bson:"tags,omitempty"`
 }
 
-func (o *Owner) ID() string {
-	return o.Login
+func (u *User) ID() string {
+	return u.Login
 }
 
-func (o *Owner) IsFollowersEmpty() bool {
-	return o.Followers == nil
+// TODO: should remove
+func (u *User) Type() string {
+	return TypeUser
 }
 
-func (o *Owner) IsUser() bool {
-	return !o.IsFollowersEmpty()
+// TODO: should remove
+func (u *User) TagType() {
+	u.Tags = append(u.Tags, fmt.Sprintf("type:%s", TypeUser))
 }
 
-func (o *Owner) IsOrganization() bool {
-	return o.IsFollowersEmpty()
-}
-
-func (o *Owner) TagType() {
-	o.Tags = append(o.Tags, fmt.Sprintf("type:%s", o.Type()))
-}
-
-func (o *Owner) TagLocations() {
-	for _, location := range resource.Locate(o.Location) {
-		o.Tags = append(o.Tags, fmt.Sprintf("location:%s", location))
+func (u *User) TagLocations() {
+	for _, location := range resource.Locate(u.Location) {
+		u.Tags = append(u.Tags, fmt.Sprintf("location:%s", location))
 	}
 }
 
-func (o *Owner) Type() (t string) {
-	t = TypeUser
-	if o.IsOrganization() {
-		t = TypeOrganization
-	}
-	return
-}
-
-type OwnerResponse struct {
+type UserResponse struct {
 	Data struct {
 		Search struct {
 			Edges []struct {
 				Cursor string `json:"cursor"`
-				Node   Owner  `json:"node"`
+				Node   User   `json:"node"`
 			} `json:"edges"`
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
-		Owner struct {
+		User struct {
 			AvatarURL string     `json:"avatarUrl"`
 			CreatedAt *time.Time `json:"createdAt"`
 			Followers *Items     `json:"followers"`
@@ -91,41 +77,41 @@ type OwnerResponse struct {
 	Errors []Error `json:"errors"`
 }
 
-type OwnerModel struct {
+type UserModel struct {
 	*Model
 }
 
-func (o *OwnerModel) Store(owners map[string]Owner) *mongo.BulkWriteResult {
-	if len(owners) == 0 {
+func (u *UserModel) Store(users map[string]User) *mongo.BulkWriteResult {
+	if len(users) == 0 {
 		return nil
 	}
 	var models []mongo.WriteModel
-	for _, owner := range owners {
-		owner.TagType()
-		owner.TagLocations()
-		filter := bson.D{{"_id", owner.ID()}}
-		update := bson.D{{"$set", owner}}
+	for _, user := range users {
+		user.TagType()
+		user.TagLocations()
+		filter := bson.D{{"_id", user.ID()}}
+		update := bson.D{{"$set", user}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))
 	}
-	return database.BulkWrite(o.Name(), models)
+	return database.BulkWrite(u.Name(), models)
 }
 
-func (o *OwnerModel) UpdateGists(owner Owner, gists []Gist) {
-	filter := bson.D{{"_id", owner.ID()}}
+func (u *UserModel) UpdateGists(user User, gists []Gist) {
+	filter := bson.D{{"_id", user.ID()}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
-	database.UpdateOne(o.Name(), filter, update)
+	database.UpdateOne(u.Name(), filter, update)
 }
 
-func (o *OwnerModel) UpdateRepositories(owner Owner, repositories []Repository) {
-	filter := bson.D{{"_id", owner.ID()}}
+func (u *UserModel) UpdateRepositories(user User, repositories []Repository) {
+	filter := bson.D{{"_id", user.ID()}}
 	update := bson.D{{"$set", bson.D{{"repositories", repositories}}}}
-	database.UpdateOne(o.Name(), filter, update)
+	database.UpdateOne(u.Name(), filter, update)
 }
 
-func NewOwnerModel() *OwnerModel {
-	return &OwnerModel{
+func NewUserModel() *UserModel {
+	return &UserModel{
 		&Model{
-			name: "owners",
+			name: "users",
 		},
 	}
 }
