@@ -157,6 +157,9 @@ func (o *organizationWorker) query(q model.Query, res *model.OrganizationRespons
 			logger.Error("Retrying...")
 			return o.query(q, res)
 		}
+		for _, err := range res.Errors {
+			logger.Error(fmt.Sprintf("Error Message: %s", err.Message))
+		}
 		return err
 	}
 	for _, err := range res.Errors {

@@ -119,6 +119,9 @@ func (r *repositoryWorker) query(q model.Query, res *model.RepositoryResponse) (
 			logger.Error("Retrying...")
 			return r.query(q, res)
 		}
+		for _, err := range res.Errors {
+			logger.Error(fmt.Sprintf("Error Message: %s", err.Message))
+		}
 		return err
 	}
 	for _, err := range res.Errors {
