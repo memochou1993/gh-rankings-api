@@ -47,13 +47,13 @@ func (o *ownerWorker) Travel() error {
 	owners := map[string]model.Owner{}
 
 	o.UserQuery.SearchArguments.Query = o.buildUserSearchQuery()
-	logger.Debug(fmt.Sprintf("User Query: %s", o.UserQuery.SearchArguments.Query))
+	logger.Debug(fmt.Sprintf("User query: %s", o.UserQuery.SearchArguments.Query))
 	if err := o.FetchUsers(owners); err != nil {
 		return err
 	}
 
 	o.OrganizationQuery.SearchArguments.Query = o.buildOrganizationSearchQuery()
-	logger.Debug(fmt.Sprintf("Organization Query: %s", o.OrganizationQuery.SearchArguments.Query))
+	logger.Debug(fmt.Sprintf("Organization query: %s", o.OrganizationQuery.SearchArguments.Query))
 	if err := o.FetchOrganizations(owners); err != nil {
 		return err
 	}
