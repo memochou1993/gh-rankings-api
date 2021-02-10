@@ -46,7 +46,6 @@ func (r *repositoryWorker) Travel() error {
 	var repositories []model.Repository
 	r.SearchQuery.SearchArguments.Query = r.buildSearchQuery()
 	logger.Debug(fmt.Sprintf("Repository Query: %s", r.SearchQuery.SearchArguments.Query))
-
 	if err := r.Fetch(&repositories); err != nil {
 		return err
 	}

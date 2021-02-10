@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -90,8 +91,10 @@ type RateLimit struct {
 }
 
 func (r RateLimit) Break() {
-	logger.Debug(fmt.Sprintf("Rate Limit: \"%s\"", util.ParseStruct(r, " ")))
-	time.Sleep(5000 / 60 / 60 * 3 * time.Second)
+	period := time.Duration(60 * 60 / 5000)
+	time.Sleep(period * 3 * time.Second)
+	logger.Debug(fmt.Sprintf("Rate Limit: %s", strconv.Quote(util.ParseStruct(r, " "))))
+
 	buffer := 10
 	if r.Remaining > buffer {
 		return
@@ -100,6 +103,7 @@ func (r RateLimit) Break() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
 	logger.Warning("Take a break...")
 	time.Sleep(resetAt.Add(time.Second).Sub(time.Now().UTC()))
 }
