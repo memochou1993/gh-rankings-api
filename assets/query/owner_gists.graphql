@@ -1,5 +1,5 @@
 query OwnerGists {
-  owner: user(<OwnerArguments>) {
+  owner: <Field>(<OwnerArguments>) {
     gists(<GistsArguments>) {
       edges {
         cursor

@@ -113,6 +113,7 @@ func (o *ownerWorker) FetchOrganizations(organizations map[string]model.Owner) e
 }
 
 func (o *ownerWorker) Update(owner model.Owner) error {
+	o.GistQuery.Field = owner.Type()
 	o.GistQuery.OwnerArguments.Login = strconv.Quote(owner.ID())
 	if err := o.UpdateGists(owner); err != nil {
 		return err

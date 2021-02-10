@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	timestampRepositoryRanks = "TIMESTAMP_REPOSITORY_RANKS"
-	timestampOwnerRanks      = "TIMESTAMP_OWNER_RANKS"
+	timestampOwnerRanks        = "TIMESTAMP_OWNER_RANKS"
+	timestampOrganizationRanks = "TIMESTAMP_ORGANIZATION_RANKS"
+	timestampRepositoryRanks   = "TIMESTAMP_REPOSITORY_RANKS"
 )
 
 var (
@@ -18,8 +19,9 @@ var (
 )
 
 var (
-	OwnerWorker      *ownerWorker
-	RepositoryWorker *repositoryWorker
+	OwnerWorker        *ownerWorker
+	OrganizationWorker *organizationWorker
+	RepositoryWorker   *repositoryWorker
 )
 
 type Interface interface {
@@ -50,8 +52,12 @@ func (w *Worker) saveTimestamp(key string, t time.Time) {
 func Init() {
 	RankModel.CreateIndexes()
 
-	OwnerWorker = NewOwnerWorker()
-	go Run(OwnerWorker)
+	// FIXME: should refactor
+	// OwnerWorker = NewOwnerWorker()
+	// go Run(OwnerWorker)
+
+	OrganizationWorker = NewOrganizationWorker()
+	go Run(OrganizationWorker)
 
 	RepositoryWorker = NewRepositoryWorker()
 	go Run(RepositoryWorker)
