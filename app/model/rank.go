@@ -18,7 +18,10 @@ type Rank struct {
 	Rank      int       `json:"rank" bson:"rank"`
 	RankCount int       `json:"rankCount" bson:"rank_count"`
 	ItemCount int       `json:"itemCount" bson:"item_count"`
-	Tags      []string  `json:"tags" bson:"tags"`
+	Type      string    `json:"type" bson:"type"`
+	Field     string    `json:"field" bson:"field"`
+	Language  string    `json:"language" bson:"language"`
+	Location  string    `json:"location" bson:"location"`
 	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 }
 
@@ -27,32 +30,28 @@ type RankModel struct {
 }
 
 func (r *RankModel) CreateIndexes() {
-	indexes := []string{"name", "tags", "created_at"}
+	indexes := []string{"name", "type", "field", "language", "location", "created_at"}
 	database.CreateIndexes(r.Name(), indexes)
 	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }
 
-func (r *RankModel) List(req *request.Request, timestamp time.Time) []Rank {
+func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 	ctx := context.Background()
-	cond := mongo.Pipeline{bson.D{{"created_at", timestamp}}}
+	cond := mongo.Pipeline{bson.D{{"created_at", createdAt}}}
 	if req.Name != "" {
 		cond = append(cond, bson.D{{"name", req.Name}})
 	}
-	var tags []string
 	if req.Type != "" {
-		tags = append(tags, fmt.Sprintf("type:%s", req.Type))
-	}
-	if req.Location != "" {
-		tags = append(tags, fmt.Sprintf("location:%s", req.Location))
+		cond = append(cond, bson.D{{"type", req.Type}})
 	}
 	if req.Field != "" {
-		tags = append(tags, fmt.Sprintf("field:%s", req.Field))
+		cond = append(cond, bson.D{{"field", req.Field}})
 	}
 	if req.Language != "" {
-		tags = append(tags, fmt.Sprintf("language:%s", req.Language))
+		cond = append(cond, bson.D{{"language", req.Language}})
 	}
-	if len(tags) > 0 {
-		cond = append(cond, bson.D{{"tags", tags}})
+	if req.Location != "" {
+		cond = append(cond, bson.D{{"location", req.Location}})
 	}
 	pipeline := mongo.Pipeline{
 		bson.D{
@@ -99,7 +98,11 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 			Rank:      i + 1,
 			RankCount: count,
 			ItemCount: rec.TotalCount,
-			Tags:      p.Tags,
+			Type:      p.Type,
+			Field:     p.Field,
+			Language:  p.Language,
+			Location:  p.Location,
+			// Tags:      p.Tags,
 			CreatedAt: createdAt,
 		}
 		models = append(models, mongo.NewInsertOneModel().SetDocument(rank))
@@ -110,12 +113,10 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 	}
 }
 
-func (r *RankModel) Delete(createdAt time.Time, tags ...string) {
+func (r *RankModel) Delete(createdAt time.Time, t string) {
 	filter := bson.D{
 		{"$and", []bson.D{{
-			{"tags", bson.D{
-				{"$in", tags},
-			}},
+			{"type", t},
 			{"created_at", bson.D{
 				{"$lt", createdAt},
 			}},
@@ -126,7 +127,10 @@ func (r *RankModel) Delete(createdAt time.Time, tags ...string) {
 
 type Pipeline struct {
 	Pipeline *mongo.Pipeline
-	Tags     []string
+	Type     string
+	Field    string
+	Language string
+	Location string
 }
 
 func (p *Pipeline) Count(model Interface) int {

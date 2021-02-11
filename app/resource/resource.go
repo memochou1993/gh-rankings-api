@@ -39,46 +39,44 @@ func Init() {
 	util.LoadAsset("location", &Locations)
 }
 
-func Locate(text string) (locations []string) {
+func Locate(text string) (location string, city string) {
 	for _, location := range Locations {
 		if location.is(text) {
-			return append(locations, location.Name)
+			return location.Name, ""
 		}
 		for _, alias := range location.Aliases {
 			if alias.is(text) && alias.isUnique() {
-				return append(locations, location.Name)
+				return location.Name, ""
 			}
 		}
 	}
 	for _, location := range Locations {
 		if location.isSimilar(text) {
-			locations = append(locations, location.Name)
 			for _, city := range location.Cities {
 				if city.isSimilar(text) {
-					return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
+					return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 				}
 				for _, alias := range city.Aliases {
 					if alias.isSimilar(text) {
-						return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
+						return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 					}
 				}
 			}
-			return
+			return location.Name, ""
 		}
 		for _, alias := range location.Aliases {
 			if alias.isSimilar(text) && alias.isUnique() {
-				locations = append(locations, location.Name)
 				for _, city := range location.Cities {
 					if city.isSimilar(text) {
-						return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
+						return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 					}
 					for _, alias := range city.Aliases {
 						if alias.isSimilar(text) {
-							return append(locations, fmt.Sprintf("%s, %s", city.Name, location.Name))
+							return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 						}
 					}
 				}
-				return
+				return location.Name, ""
 			}
 		}
 	}
@@ -88,11 +86,11 @@ func Locate(text string) (locations []string) {
 				continue
 			}
 			if city.isSimilar(text) && city.isUnique() {
-				return append(locations, location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name))
+				return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 			}
 			for _, alias := range city.Aliases {
 				if alias.isSimilar(text) {
-					return append(locations, location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name))
+					return location.Name, fmt.Sprintf("%s, %s", city.Name, location.Name)
 				}
 			}
 		}

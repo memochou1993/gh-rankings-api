@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
-	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/app/response"
+	"github.com/memochou1993/gh-rankings/app/worker/pipeline"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"os"
 	"strconv"
 	"sync"
@@ -164,8 +162,7 @@ func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 
 func (u *userWorker) Rank() {
 	logger.Info("Executing user rank pipelines...")
-	var pipelines []*model.Pipeline
-	pipelines = append(pipelines, u.buildRankPipelines()...)
+	pipelines := u.buildRankPipelines()
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -186,8 +183,7 @@ func (u *userWorker) Rank() {
 	wg.Wait()
 	u.Worker.seal(TimestampUserRanks, now)
 
-	tags := []string{fmt.Sprintf("type:%s", model.TypeUser), fmt.Sprintf("type:%s", model.TypeOrganization)}
-	RankModel.Delete(now, tags...)
+	RankModel.Delete(now, model.TypeUser)
 }
 
 func (u *userWorker) query(q model.Query, res *response.User) (err error) {
@@ -224,7 +220,7 @@ func (u *userWorker) buildSearchQuery() string {
 }
 
 func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
-	tag := fmt.Sprintf("type:%s", model.TypeUser)
+	ownerType := model.TypeUser
 	fields := []string{
 		"followers",
 		"gists.forks",
@@ -234,93 +230,12 @@ func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
 		"repositories.watchers",
 	}
 	for _, field := range fields {
-		pipelines = append(pipelines, u.buildRankPipeline(field, tag))
-		pipelines = append(pipelines, u.buildRankPipelinesByLocation(field, tag)...)
+		pipelines = append(pipelines, pipeline.RankPipeline(ownerType, field))
+		pipelines = append(pipelines, pipeline.RankPipelinesByLocation(ownerType, field)...)
 	}
-	pipelines = append(pipelines, u.buildRepositoryRankPipelinesByLanguage("forks", tag)...)
-	pipelines = append(pipelines, u.buildRepositoryRankPipelinesByLanguage("stargazers", tag)...)
-	pipelines = append(pipelines, u.buildRepositoryRankPipelinesByLanguage("watchers", tag)...)
-	return
-}
-
-func (u *userWorker) buildRankPipeline(field string, tags ...string) *model.Pipeline {
-	return &model.Pipeline{
-		Pipeline: &mongo.Pipeline{
-			bson.D{
-				{"$match", bson.D{
-					{"tags", bson.D{
-						{"$all", tags},
-					}},
-				}},
-			},
-			bson.D{
-				{"$project", bson.D{
-					{"_id", "$_id"},
-					{"image_url", "$avatar_url"},
-					{"total_count", bson.D{
-						{"$sum", fmt.Sprintf("$%s.total_count", field)},
-					}},
-				}},
-			},
-			bson.D{
-				{"$sort", bson.D{
-					{"total_count", -1},
-				}},
-			},
-		},
-		Tags: append(tags, fmt.Sprintf("field:%s", field)),
-	}
-}
-
-func (u *userWorker) buildRankPipelinesByLocation(field string, tags ...string) (pipelines []*model.Pipeline) {
-	for _, location := range resource.Locations {
-		pipelines = append(pipelines, u.buildRankPipeline(field, append(tags, fmt.Sprintf("location:%s", location.Name))...))
-		for _, city := range location.Cities {
-			pipelines = append(pipelines, u.buildRankPipeline(field, append(tags, fmt.Sprintf("location:%s, %s", city.Name, location.Name))...))
-		}
-	}
-	return
-}
-
-func (u *userWorker) buildRepositoryRankPipelinesByLanguage(field string, tags ...string) (pipelines []*model.Pipeline) {
-	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.Pipeline{
-			Pipeline: &mongo.Pipeline{
-				bson.D{
-					{"$match", bson.D{
-						{"tags", bson.D{
-							{"$all", tags},
-						}},
-					}},
-				},
-				bson.D{
-					{"$unwind", "$repositories"},
-				},
-				bson.D{
-					{"$match", bson.D{
-						{"repositories.primary_language.name", language.Name},
-					}},
-				},
-				bson.D{
-					{"$group", bson.D{
-						{"_id", "$_id"},
-						{"image_url", bson.D{
-							{"$first", "$avatar_url"},
-						}},
-						{"total_count", bson.D{
-							{"$sum", fmt.Sprintf("$repositories.%s.total_count", field)},
-						}},
-					}},
-				},
-				bson.D{
-					{"$sort", bson.D{
-						{"total_count", -1},
-					}},
-				},
-			},
-			Tags: append(tags, fmt.Sprintf("field:repositories.%s", field), fmt.Sprintf("language:%s", language.Name)),
-		})
-	}
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.stargazers")...)
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.forks")...)
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.watchers")...)
 	return
 }
 

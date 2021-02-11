@@ -151,8 +151,7 @@ func (o *organizationWorker) Rank() {
 	wg.Wait()
 	o.Worker.seal(TimestampOrganizationRanks, now)
 
-	tags := []string{fmt.Sprintf("type:%s", model.TypeOrganization)}
-	RankModel.Delete(now, tags...)
+	RankModel.Delete(now, model.TypeOrganization)
 }
 
 func (o *organizationWorker) query(q model.Query, res *response.Organization) (err error) {

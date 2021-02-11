@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,29 +11,24 @@ import (
 )
 
 type User struct {
-	AvatarURL    string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
-	CreatedAt    *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
-	Followers    *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
-	Location     string       `json:"location,omitempty" bson:"location,omitempty"`
-	Login        string       `json:"login" bson:"_id"`
-	Name         string       `json:"name,omitempty" bson:"name,omitempty"`
-	Gists        []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
-	Repositories []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
-	Tags         []string     `json:"tags,omitempty" bson:"tags,omitempty"`
+	AvatarURL      string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
+	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
+	Followers      *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
+	Location       string       `json:"location,omitempty" bson:"location,omitempty"`
+	Login          string       `json:"login" bson:"_id"`
+	Name           string       `json:"name,omitempty" bson:"name,omitempty"`
+	Gists          []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
+	Repositories   []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
+	ParsedLocation string       `json:"parsedLocation,omitempty" bson:"parsed_location,omitempty"`
+	ParsedCity     string       `json:"parsedCity,omitempty" bson:"parsed_city,omitempty"`
 }
 
 func (u *User) ID() string {
 	return u.Login
 }
 
-func (u *User) AddTypeTag() {
-	u.Tags = append(u.Tags, fmt.Sprintf("type:%s", TypeUser))
-}
-
-func (u *User) AddLocationTag() {
-	for _, location := range resource.Locate(u.Location) {
-		u.Tags = append(u.Tags, fmt.Sprintf("location:%s", location))
-	}
+func (u *User) parseLocation() {
+	u.ParsedLocation, u.ParsedCity = resource.Locate(u.Location)
 }
 
 type UserModel struct {
@@ -56,8 +50,7 @@ func (u *UserModel) Store(users []User) *mongo.BulkWriteResult {
 	}
 	var models []mongo.WriteModel
 	for _, user := range users {
-		user.AddTypeTag()
-		user.AddLocationTag()
+		user.parseLocation()
 		filter := bson.D{{"_id", user.ID()}}
 		update := bson.D{{"$set", user}}
 		models = append(models, mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true))

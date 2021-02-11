@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,9 +29,9 @@ func (o *Organization) AddTypeTag() {
 }
 
 func (o *Organization) AddLocationTag() {
-	for _, location := range resource.Locate(o.Location) {
-		o.Tags = append(o.Tags, fmt.Sprintf("location:%s", location))
-	}
+	// for _, location := range resource.Locate(o.Location) {
+	// 	o.Tags = append(o.Tags, fmt.Sprintf("location:%s", location))
+	// }
 }
 
 type OrganizationModel struct {
