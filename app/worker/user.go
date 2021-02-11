@@ -220,7 +220,7 @@ func (u *userWorker) buildSearchQuery() string {
 }
 
 func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
-	ownerType := model.TypeUser
+	rankType := model.TypeUser
 	fields := []string{
 		"followers",
 		"gists.forks",
@@ -230,12 +230,12 @@ func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
 		"repositories.watchers",
 	}
 	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankPipeline(ownerType, field))
-		pipelines = append(pipelines, pipeline.RankPipelinesByLocation(ownerType, field)...)
+		pipelines = append(pipelines, pipeline.RankPipeline(rankType, field))
+		pipelines = append(pipelines, pipeline.RankPipelinesByLocation(rankType, field)...)
 	}
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.stargazers")...)
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.forks")...)
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(ownerType, "repositories.watchers")...)
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.stargazers")...)
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.forks")...)
+	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.watchers")...)
 	return
 }
 

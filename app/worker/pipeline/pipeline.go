@@ -8,18 +8,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RankPipeline(ownerType string, field string) *model.Pipeline {
+func RankPipeline(rankType string, field string) *model.Pipeline {
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			stageProject(field),
 			stageSort(),
 		},
-		Type:  ownerType,
+		Type:  rankType,
 		Field: field,
 	}
 }
 
-func RankPipelinesByLocation(ownerType string, field string) (pipelines []*model.Pipeline) {
+func RankPipelinesByLocation(rankType string, field string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -27,7 +27,7 @@ func RankPipelinesByLocation(ownerType string, field string) (pipelines []*model
 				stageProject(field),
 				stageSort(),
 			},
-			Type:     ownerType,
+			Type:     rankType,
 			Field:    field,
 			Location: location.Name,
 		})
@@ -39,7 +39,7 @@ func RankPipelinesByLocation(ownerType string, field string) (pipelines []*model
 					stageProject(field),
 					stageSort(),
 				},
-				Type:     ownerType,
+				Type:     rankType,
 				Field:    field,
 				Location: location,
 			})
@@ -48,7 +48,7 @@ func RankPipelinesByLocation(ownerType string, field string) (pipelines []*model
 	return
 }
 
-func RepositoryRankPipelinesByLanguage(ownerType string, field string) (pipelines []*model.Pipeline) {
+func RepositoryRankPipelinesByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -57,7 +57,7 @@ func RepositoryRankPipelinesByLanguage(ownerType string, field string) (pipeline
 				stageGroup(field),
 				stageSort(),
 			},
-			Type:     ownerType,
+			Type:     rankType,
 			Field:    field,
 			Language: language.Name,
 		})

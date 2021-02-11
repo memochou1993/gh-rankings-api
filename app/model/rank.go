@@ -102,7 +102,6 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 			Field:     p.Field,
 			Language:  p.Language,
 			Location:  p.Location,
-			// Tags:      p.Tags,
 			CreatedAt: createdAt,
 		}
 		models = append(models, mongo.NewInsertOneModel().SetDocument(rank))
@@ -113,10 +112,10 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 	}
 }
 
-func (r *RankModel) Delete(createdAt time.Time, t string) {
+func (r *RankModel) Delete(createdAt time.Time, rankType string) {
 	filter := bson.D{
 		{"$and", []bson.D{{
-			{"type", t},
+			{"type", rankType},
 			{"created_at", bson.D{
 				{"$lt", createdAt},
 			}},

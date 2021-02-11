@@ -149,7 +149,7 @@ func (r *repositoryWorker) buildSearchQuery() string {
 }
 
 func (r *repositoryWorker) buildRankPipeline(field string) *model.Pipeline {
-	tag := fmt.Sprintf("type:%s", model.TypeRepository)
+	// tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			bson.D{
@@ -167,12 +167,12 @@ func (r *repositoryWorker) buildRankPipeline(field string) *model.Pipeline {
 				}},
 			},
 		},
-		Tags: []string{tag, fmt.Sprintf("field:%s", field)},
+		// Tags: []string{tag, fmt.Sprintf("field:%s", field)},
 	}
 }
 
 func (r *repositoryWorker) buildRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
-	tag := fmt.Sprintf("type:%s", model.TypeRepository)
+	// tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -196,7 +196,7 @@ func (r *repositoryWorker) buildRankPipelinesByLanguage(field string) (pipelines
 					}},
 				},
 			},
-			Tags: []string{tag, fmt.Sprintf("field:%s", field), fmt.Sprintf("language:%s", language.Name)},
+			// Tags: []string{tag, fmt.Sprintf("field:%s", field), fmt.Sprintf("language:%s", language.Name)},
 		})
 	}
 	return
