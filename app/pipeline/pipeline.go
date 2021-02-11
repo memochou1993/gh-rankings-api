@@ -2,14 +2,21 @@ package pipeline
 
 import (
 	"fmt"
-	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RankByField(rankType string, field string) *model.Pipeline {
-	return &model.Pipeline{
+type Pipeline struct {
+	Pipeline *mongo.Pipeline
+	Type     string
+	Field    string
+	Language string
+	Location string
+}
+
+func RankByField(rankType string, field string) *Pipeline {
+	return &Pipeline{
 		Pipeline: &mongo.Pipeline{
 			stageProject(field),
 			stageSort(),
@@ -19,9 +26,9 @@ func RankByField(rankType string, field string) *model.Pipeline {
 	}
 }
 
-func RankByLocation(rankType string, field string) (pipelines []*model.Pipeline) {
+func RankByLocation(rankType string, field string) (pipelines []*Pipeline) {
 	for _, location := range resource.Locations {
-		pipelines = append(pipelines, &model.Pipeline{
+		pipelines = append(pipelines, &Pipeline{
 			Pipeline: &mongo.Pipeline{
 				stageMatch("parsed_location", location.Name),
 				stageProject(field),
@@ -33,7 +40,7 @@ func RankByLocation(rankType string, field string) (pipelines []*model.Pipeline)
 		})
 		for _, city := range location.Cities {
 			location := fmt.Sprintf("%s, %s", city.Name, location.Name)
-			pipelines = append(pipelines, &model.Pipeline{
+			pipelines = append(pipelines, &Pipeline{
 				Pipeline: &mongo.Pipeline{
 					stageMatch("parsed_city", location),
 					stageProject(field),
@@ -48,9 +55,9 @@ func RankByLocation(rankType string, field string) (pipelines []*model.Pipeline)
 	return
 }
 
-func RankOwnerRepositoryByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
+func RankOwnerRepositoryByLanguage(rankType string, field string) (pipelines []*Pipeline) {
 	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.Pipeline{
+		pipelines = append(pipelines, &Pipeline{
 			Pipeline: &mongo.Pipeline{
 				stageUnwind("repositories"),
 				stageMatch("repositories.primary_language.name", language.Name),
@@ -65,9 +72,9 @@ func RankOwnerRepositoryByLanguage(rankType string, field string) (pipelines []*
 	return
 }
 
-func RankRepositoryByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
+func RankRepositoryByLanguage(rankType string, field string) (pipelines []*Pipeline) {
 	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.Pipeline{
+		pipelines = append(pipelines, &Pipeline{
 			Pipeline: &mongo.Pipeline{
 				stageMatch("primary_language.name", language.Name),
 				stageProject(field),

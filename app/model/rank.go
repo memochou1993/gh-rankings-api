@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/database"
 	"github.com/memochou1993/gh-rankings/logger"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,26 +38,16 @@ func (r *RankModel) CreateIndexes() {
 
 func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 	ctx := context.Background()
-	cond := mongo.Pipeline{bson.D{{"created_at", createdAt}}}
-	if req.Name != "" {
-		cond = append(cond, bson.D{{"name", req.Name}})
-	}
-	if req.Type != "" {
-		cond = append(cond, bson.D{{"type", req.Type}})
-	}
-	if req.Field != "" {
-		cond = append(cond, bson.D{{"field", req.Field}})
-	}
-	if req.Language != "" {
-		cond = append(cond, bson.D{{"language", req.Language}})
-	}
-	if req.Location != "" {
-		cond = append(cond, bson.D{{"location", req.Location}})
-	}
-	pipeline := mongo.Pipeline{
+	p := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{
-				{"$and", cond},
+				{"$and", []bson.D{
+					{{"created_at", createdAt}},
+					{{"type", req.Type}},
+					{{"field", req.Field}},
+					{{"language", req.Language}},
+					{{"location", req.Location}},
+				}},
 			}},
 		},
 		bson.D{
@@ -66,7 +57,7 @@ func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 			{"$limit", req.Limit},
 		},
 	}
-	cursor := database.Aggregate(ctx, NewRankModel().Name(), pipeline)
+	cursor := database.Aggregate(ctx, NewRankModel().Name(), p)
 	ranks := make([]Rank, req.Limit)
 	if err := cursor.All(ctx, &ranks); err != nil {
 		log.Fatal(err.Error())
@@ -74,7 +65,7 @@ func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 	return ranks
 }
 
-func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
+func (r *RankModel) Store(model Interface, p pipeline.Pipeline, createdAt time.Time) {
 	ctx := context.Background()
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
@@ -124,14 +115,24 @@ func (r *RankModel) Delete(createdAt time.Time, rankType string) {
 	database.DeleteMany(r.Name(), filter)
 }
 
-func (r *RankModel) Count(model Interface, p Pipeline) int {
+func (r *RankModel) Count(model Interface, p pipeline.Pipeline) int {
 	ctx := context.Background()
 	rec := struct {
 		Count int `bson:"count"`
 	}{}
-	pipeline := append(*p.Pipeline, bson.D{{"$match", bson.D{{"total_count", bson.D{{"$gt", 0}}}}}})
-	pipeline = append(pipeline, bson.D{{"$count", "count"}})
-	cursor := database.Aggregate(ctx, model.Name(), pipeline)
+	stages := []bson.D{
+		{
+			{"$match", bson.D{
+				{"total_count", bson.D{
+					{"$gt", 0},
+				}},
+			}},
+		},
+		{
+			{"$count", "count"},
+		},
+	}
+	cursor := database.Aggregate(ctx, model.Name(), append(*p.Pipeline, stages...))
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&rec); err != nil {
@@ -139,14 +140,6 @@ func (r *RankModel) Count(model Interface, p Pipeline) int {
 		}
 	}
 	return rec.Count
-}
-
-type Pipeline struct {
-	Pipeline *mongo.Pipeline
-	Type     string
-	Field    string
-	Language string
-	Location string
 }
 
 func NewRankModel() *RankModel {

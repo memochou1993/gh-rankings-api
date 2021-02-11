@@ -24,7 +24,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		response(w, http.StatusUnprocessableEntity, Payload{Error: err.Error()})
 		return
 	}
-	if req.Name == "" && req.Type == "" {
+	if req.Type == "" {
 		response(w, http.StatusBadRequest, Payload{})
 		return
 	}

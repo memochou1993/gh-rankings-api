@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/response"
-	"github.com/memochou1993/gh-rankings/app/worker/pipeline"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"os"
@@ -91,7 +91,7 @@ func (r *repositoryWorker) Rank() {
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		ch <- struct{}{}
-		go func(p *model.Pipeline) {
+		go func(p *pipeline.Pipeline) {
 			defer wg.Done()
 			RankModel.Store(r.RepositoryModel, *p, timestamp)
 			<-ch
@@ -139,7 +139,7 @@ func (r *repositoryWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (r *repositoryWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
+func (r *repositoryWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	rankType := model.TypeRepository
 	fields := []string{
 		"forks",

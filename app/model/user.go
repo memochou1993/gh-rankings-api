@@ -11,16 +11,16 @@ import (
 )
 
 type User struct {
-	ImageUrl       string       `json:"imageUrl,omitempty" bson:"image_url,omitempty"`
-	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
-	Followers      *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
-	Location       string       `json:"location,omitempty" bson:"location,omitempty"`
+	ImageUrl       string       `json:"imageUrl,omitempty" bson:"image_url"`
+	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at"`
+	Followers      *Items       `json:"followers,omitempty" bson:"followers"`
+	Location       string       `json:"location,omitempty" bson:"location"`
 	Login          string       `json:"login" bson:"_id"`
-	Name           string       `json:"name,omitempty" bson:"name,omitempty"`
+	Name           string       `json:"name,omitempty" bson:"name"`
 	Gists          []Gist       `json:"gists,omitempty" bson:"gists,omitempty"`
 	Repositories   []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
-	ParsedLocation string       `json:"parsedLocation,omitempty" bson:"parsed_location,omitempty"`
-	ParsedCity     string       `json:"parsedCity,omitempty" bson:"parsed_city,omitempty"`
+	ParsedLocation string       `json:"parsedLocation,omitempty" bson:"parsed_location"`
+	ParsedCity     string       `json:"parsedCity,omitempty" bson:"parsed_city"`
 }
 
 func (u *User) ID() string {

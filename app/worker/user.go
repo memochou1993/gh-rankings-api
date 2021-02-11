@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/response"
-	"github.com/memochou1993/gh-rankings/app/worker/pipeline"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"os"
@@ -171,7 +171,7 @@ func (u *userWorker) Rank() {
 	now := time.Now()
 	for i, p := range pipelines {
 		ch <- struct{}{}
-		go func(p *model.Pipeline) {
+		go func(p *pipeline.Pipeline) {
 			defer wg.Done()
 			RankModel.Store(u.UserModel, *p, now)
 			<-ch
@@ -219,7 +219,7 @@ func (u *userWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
+func (u *userWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	rankType := model.TypeUser
 	fields := []string{
 		"followers",
