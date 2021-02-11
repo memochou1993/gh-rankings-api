@@ -79,7 +79,7 @@ func (r *RankModel) Store(model Interface, p Pipeline, createdAt time.Time) {
 	cursor := database.Aggregate(ctx, model.Name(), *p.Pipeline)
 	defer database.CloseCursor(ctx, cursor)
 
-	count := p.Count(model)
+	count := r.Count(model, p)
 
 	var models []mongo.WriteModel
 	for i := 0; cursor.Next(ctx); i++ {
@@ -124,16 +124,7 @@ func (r *RankModel) Delete(createdAt time.Time, rankType string) {
 	database.DeleteMany(r.Name(), filter)
 }
 
-// TODO: should move
-type Pipeline struct {
-	Pipeline *mongo.Pipeline
-	Type     string
-	Field    string
-	Language string
-	Location string
-}
-
-func (p *Pipeline) Count(model Interface) int {
+func (r *RankModel) Count(model Interface, p Pipeline) int {
 	ctx := context.Background()
 	rec := struct {
 		Count int `bson:"count"`
@@ -148,6 +139,14 @@ func (p *Pipeline) Count(model Interface) int {
 		}
 	}
 	return rec.Count
+}
+
+type Pipeline struct {
+	Pipeline *mongo.Pipeline
+	Type     string
+	Field    string
+	Language string
+	Location string
 }
 
 func NewRankModel() *RankModel {
