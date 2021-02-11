@@ -28,14 +28,16 @@ type organizationWorker struct {
 	RepositoryQuery   *model.Query
 }
 
-func (o *organizationWorker) Init() {
-	o.Worker.loadTimestamp(timestampOrganizationRanks)
-}
-
 func (o *organizationWorker) Collect() error {
 	logger.Info("Collecting organizations...")
 	o.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	o.To = time.Now()
+
+	if o.Worker.Timestamp.IsZero() {
+		if organization := o.OrganizationModel.FindLast(); organization.ID() != "" {
+			o.From = organization.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		}
+	}
 
 	return o.Travel()
 }
@@ -148,7 +150,7 @@ func (o *organizationWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	o.Worker.saveTimestamp(timestampOrganizationRanks, now)
+	o.Worker.seal(timestampOrganizationRanks, now)
 
 	tags := []string{fmt.Sprintf("type:%s", model.TypeOrganization)}
 	RankModel.Delete(now, tags...)

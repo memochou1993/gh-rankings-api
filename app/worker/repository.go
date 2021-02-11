@@ -27,14 +27,16 @@ type repositoryWorker struct {
 	SearchQuery     *model.Query
 }
 
-func (r *repositoryWorker) Init() {
-	r.Worker.loadTimestamp(timestampRepositoryRanks)
-}
-
 func (r *repositoryWorker) Collect() error {
 	logger.Info("Collecting repositories...")
 	r.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	r.To = time.Now()
+
+	if r.Worker.Timestamp.IsZero() {
+		if repository := r.RepositoryModel.FindLast(); repository.ID() != "" {
+			r.From = repository.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		}
+	}
 
 	return r.Travel()
 }
@@ -109,7 +111,7 @@ func (r *repositoryWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	r.Worker.saveTimestamp(timestampRepositoryRanks, timestamp)
+	r.Worker.seal(timestampRepositoryRanks, timestamp)
 
 	tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	RankModel.Delete(timestamp, tag)

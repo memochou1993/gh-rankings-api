@@ -29,14 +29,16 @@ type userWorker struct {
 	RepositoryQuery *model.Query
 }
 
-func (u *userWorker) Init() {
-	u.Worker.loadTimestamp(timestampUserRanks)
-}
-
 func (u *userWorker) Collect() error {
 	logger.Info("Collecting users...")
 	u.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	u.To = time.Now()
+
+	if u.Worker.Timestamp.IsZero() {
+		if user := u.UserModel.FindLast(); user.ID() != "" {
+			u.From = user.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		}
+	}
 
 	return u.Travel()
 }
@@ -183,7 +185,7 @@ func (u *userWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	u.Worker.saveTimestamp(timestampUserRanks, now)
+	u.Worker.seal(timestampUserRanks, now)
 
 	tags := []string{fmt.Sprintf("type:%s", model.TypeUser), fmt.Sprintf("type:%s", model.TypeOrganization)}
 	RankModel.Delete(now, tags...)

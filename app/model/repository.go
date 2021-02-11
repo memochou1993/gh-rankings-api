@@ -4,6 +4,8 @@ import (
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"time"
 )
 
@@ -29,6 +31,15 @@ func (r *Repository) ID() string {
 
 type RepositoryModel struct {
 	*Model
+}
+
+func (r *RepositoryModel) FindLast() (repository Repository) {
+	opts := options.FindOne().SetSort(bson.D{{"$natural", -1}})
+	res := database.FindOne(r.Name(), bson.D{}, opts)
+	if err := res.Decode(&repository); err != nil && err != mongo.ErrNoDocuments {
+		log.Fatal(err.Error())
+	}
+	return
 }
 
 func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResult {
