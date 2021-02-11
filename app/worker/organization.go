@@ -145,7 +145,7 @@ func (o *organizationWorker) Rank() {
 			RankModel.Store(o.OrganizationModel, *p, now)
 			<-ch
 		}(p)
-		if (i+1)%100 == 0 || (i+1) == len(pipelines) {
+		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
 			logger.Success(fmt.Sprintf("Executed %d of %d organization rank pipelines!", i+1, len(pipelines)))
 		}
 	}
