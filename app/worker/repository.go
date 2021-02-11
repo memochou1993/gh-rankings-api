@@ -12,7 +12,6 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -119,10 +118,9 @@ func (r *repositoryWorker) Rank() {
 
 func (r *repositoryWorker) query(q model.Query, res *response.Repository) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
-		if os.IsTimeout(err) {
-			logger.Warning(err.Error())
+		if !os.IsTimeout(err) {
+			return err
 		}
-		log.Fatal(err.Error())
 	}
 	if res.Message != "" {
 		err = errors.New(res.Message)
