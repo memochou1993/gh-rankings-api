@@ -127,8 +127,7 @@ func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository)
 
 func (o *organizationWorker) Rank() {
 	logger.Info("Executing organization rank pipelines...")
-	var pipelines []*model.Pipeline
-	pipelines = append(pipelines, o.buildRankPipelines()...)
+	pipelines := o.buildRankPipelines()
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -193,11 +192,9 @@ func (o *organizationWorker) buildRankPipelines() (pipelines []*model.Pipeline) 
 		"repositories.watchers",
 	}
 	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankPipeline(rankType, field))
-		pipelines = append(pipelines, pipeline.RankPipelinesByLocation(rankType, field)...)
-		pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, field)...)
-		pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, field)...)
-		pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, field)...)
+		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
+		pipelines = append(pipelines, pipeline.RankByLocation(rankType, field)...)
+		pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, field)...)
 	}
 	return
 }

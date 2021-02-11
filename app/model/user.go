@@ -11,7 +11,7 @@ import (
 )
 
 type User struct {
-	AvatarURL      string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
+	ImageUrl       string       `json:"imageUrl,omitempty" bson:"image_url,omitempty"`
 	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
 	Followers      *Items       `json:"followers,omitempty" bson:"followers,omitempty"`
 	Location       string       `json:"location,omitempty" bson:"location,omitempty"`

@@ -10,7 +10,7 @@ query Repositories {
           }
           name
           nameWithOwner
-          openGraphImageUrl
+          imageUrl: openGraphImageUrl
           owner {
             login
           }

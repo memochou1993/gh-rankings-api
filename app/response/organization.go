@@ -16,7 +16,7 @@ type Organization struct {
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		Organization struct {
-			AvatarURL    string     `json:"avatarUrl"`
+			ImageUrl     string     `json:"imageUrl"`
 			CreatedAt    *time.Time `json:"createdAt"`
 			Location     string     `json:"location"`
 			Login        string     `json:"login"`

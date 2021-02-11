@@ -10,12 +10,12 @@ import (
 )
 
 type Repository struct {
-	CreatedAt         *time.Time `json:"createdAt,omitempty" bson:"created_at,omitempty"`
-	Forks             *Items     `json:"forks,omitempty" bson:"forks,omitempty"`
-	Name              string     `json:"name,omitempty" bson:"name,omitempty"`
-	NameWithOwner     string     `json:"nameWithOwner" bson:"_id"`
-	OpenGraphImageUrl string     `json:"openGraphImageUrl,omitempty" bson:"open_graph_image_url,omitempty"`
-	Owner             struct {
+	CreatedAt     *time.Time `json:"createdAt,omitempty" bson:"created_at,omitempty"`
+	Forks         *Items     `json:"forks,omitempty" bson:"forks,omitempty"`
+	Name          string     `json:"name,omitempty" bson:"name,omitempty"`
+	NameWithOwner string     `json:"nameWithOwner" bson:"_id"`
+	ImageUrl      string     `json:"imageUrl,omitempty" bson:"image_url,omitempty"`
+	Owner         struct {
 		Login string `json:"login,omitempty" bson:"login,omitempty"`
 	} `json:"owner,omitempty" bson:"owner,omitempty"`
 	PrimaryLanguage struct {

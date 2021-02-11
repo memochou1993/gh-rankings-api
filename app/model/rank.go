@@ -124,6 +124,7 @@ func (r *RankModel) Delete(createdAt time.Time, rankType string) {
 	database.DeleteMany(r.Name(), filter)
 }
 
+// TODO: should move
 type Pipeline struct {
 	Pipeline *mongo.Pipeline
 	Type     string

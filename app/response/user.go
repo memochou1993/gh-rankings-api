@@ -16,7 +16,7 @@ type User struct {
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		User struct {
-			AvatarURL string       `json:"avatarUrl"`
+			ImageUrl  string       `json:"imageUrl"`
 			CreatedAt *time.Time   `json:"createdAt"`
 			Followers *model.Items `json:"followers"`
 			Gists     struct {

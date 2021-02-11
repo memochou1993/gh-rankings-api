@@ -49,13 +49,13 @@ func Init() {
 	RankModel.CreateIndexes()
 
 	UserWorker = NewUserWorker()
-	// go Run(UserWorker)
+	go Run(UserWorker)
 
 	OrganizationWorker = NewOrganizationWorker()
 	go Run(OrganizationWorker)
 
 	RepositoryWorker = NewRepositoryWorker()
-	// go Run(RepositoryWorker)
+	go Run(RepositoryWorker)
 }
 
 func Run(worker Interface) {

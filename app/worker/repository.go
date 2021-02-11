@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
-	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/app/response"
+	"github.com/memochou1993/gh-rankings/app/worker/pipeline"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"os"
 	"strconv"
 	"sync"
@@ -84,14 +82,7 @@ func (r *repositoryWorker) Fetch(repositories *[]model.Repository) error {
 
 func (r *repositoryWorker) Rank() {
 	logger.Info("Executing repository rank pipelines...")
-	pipelines := []*model.Pipeline{
-		r.buildRankPipeline("forks"),
-		r.buildRankPipeline("stargazers"),
-		r.buildRankPipeline("watchers"),
-	}
-	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("forks")...)
-	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("stargazers")...)
-	pipelines = append(pipelines, r.buildRankPipelinesByLanguage("watchers")...)
+	pipelines := r.buildRankPipelines()
 
 	ch := make(chan struct{}, 2)
 	wg := sync.WaitGroup{}
@@ -148,56 +139,16 @@ func (r *repositoryWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (r *repositoryWorker) buildRankPipeline(field string) *model.Pipeline {
-	// tag := fmt.Sprintf("type:%s", model.TypeRepository)
-	return &model.Pipeline{
-		Pipeline: &mongo.Pipeline{
-			bson.D{
-				{"$project", bson.D{
-					{"_id", "$_id"},
-					{"image_url", "$open_graph_image_url"},
-					{"total_count", bson.D{
-						{"$sum", fmt.Sprintf("$%s.total_count", field)},
-					}},
-				}},
-			},
-			bson.D{
-				{"$sort", bson.D{
-					{"total_count", -1},
-				}},
-			},
-		},
-		// Tags: []string{tag, fmt.Sprintf("field:%s", field)},
+func (r *repositoryWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
+	rankType := model.TypeRepository
+	fields := []string{
+		"forks",
+		"stargazers",
+		"watchers",
 	}
-}
-
-func (r *repositoryWorker) buildRankPipelinesByLanguage(field string) (pipelines []*model.Pipeline) {
-	// tag := fmt.Sprintf("type:%s", model.TypeRepository)
-	for _, language := range resource.Languages {
-		pipelines = append(pipelines, &model.Pipeline{
-			Pipeline: &mongo.Pipeline{
-				bson.D{
-					{"$match", bson.D{
-						{"primary_language.name", language.Name},
-					}},
-				},
-				bson.D{
-					{"$project", bson.D{
-						{"_id", "$_id"},
-						{"image_url", "$open_graph_image_url"},
-						{"total_count", bson.D{
-							{"$sum", fmt.Sprintf("$%s.total_count", field)},
-						}},
-					}},
-				},
-				bson.D{
-					{"$sort", bson.D{
-						{"total_count", -1},
-					}},
-				},
-			},
-			// Tags: []string{tag, fmt.Sprintf("field:%s", field), fmt.Sprintf("language:%s", language.Name)},
-		})
+	for _, field := range fields {
+		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
+		pipelines = append(pipelines, pipeline.RankRepositoryByLanguage(rankType, field)...)
 	}
 	return
 }

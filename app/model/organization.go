@@ -11,7 +11,7 @@ import (
 )
 
 type Organization struct {
-	AvatarURL      string       `json:"avatarUrl,omitempty" bson:"avatar_url,omitempty"`
+	ImageUrl       string       `json:"imageUrl,omitempty" bson:"image_url,omitempty"`
 	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at,omitempty"`
 	Location       string       `json:"location,omitempty" bson:"location,omitempty"`
 	Login          string       `json:"login" bson:"_id"`

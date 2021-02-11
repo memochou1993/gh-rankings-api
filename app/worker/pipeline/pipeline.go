@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RankPipeline(rankType string, field string) *model.Pipeline {
+func RankByField(rankType string, field string) *model.Pipeline {
 	return &model.Pipeline{
 		Pipeline: &mongo.Pipeline{
 			stageProject(field),
@@ -19,7 +19,7 @@ func RankPipeline(rankType string, field string) *model.Pipeline {
 	}
 }
 
-func RankPipelinesByLocation(rankType string, field string) (pipelines []*model.Pipeline) {
+func RankByLocation(rankType string, field string) (pipelines []*model.Pipeline) {
 	for _, location := range resource.Locations {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
@@ -48,11 +48,11 @@ func RankPipelinesByLocation(rankType string, field string) (pipelines []*model.
 	return
 }
 
-func RepositoryRankPipelinesByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
+func RankOwnerRepositoryByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
 	for _, language := range resource.Languages {
 		pipelines = append(pipelines, &model.Pipeline{
 			Pipeline: &mongo.Pipeline{
-				stageUnwind("$repositories"),
+				stageUnwind("repositories"),
 				stageMatch("repositories.primary_language.name", language.Name),
 				stageGroup(field),
 				stageSort(),
@@ -65,9 +65,25 @@ func RepositoryRankPipelinesByLanguage(rankType string, field string) (pipelines
 	return
 }
 
+func RankRepositoryByLanguage(rankType string, field string) (pipelines []*model.Pipeline) {
+	for _, language := range resource.Languages {
+		pipelines = append(pipelines, &model.Pipeline{
+			Pipeline: &mongo.Pipeline{
+				stageMatch("primary_language.name", language.Name),
+				stageProject(field),
+				stageSort(),
+			},
+			Type:     rankType,
+			Field:    field,
+			Language: language.Name,
+		})
+	}
+	return
+}
+
 func stageUnwind(field string) bson.D {
 	return bson.D{
-		{"$unwind", field},
+		{"$unwind", fmt.Sprintf("$%s", field)},
 	}
 }
 
@@ -83,7 +99,7 @@ func stageProject(field string) bson.D {
 	return bson.D{
 		{"$project", bson.D{
 			{"_id", "$_id"},
-			{"image_url", "$avatar_url"},
+			{"image_url", "$image_url"},
 			{"total_count", bson.D{
 				{"$sum", fmt.Sprintf("$%s.total_count", field)},
 			}},
@@ -96,7 +112,7 @@ func stageGroup(field string) bson.D {
 		{"$group", bson.D{
 			{"_id", "$_id"},
 			{"image_url", bson.D{
-				{"$first", "$avatar_url"},
+				{"$first", "$image_url"},
 			}},
 			{"total_count", bson.D{
 				{"$sum", fmt.Sprintf("$%s.total_count", field)},

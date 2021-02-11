@@ -230,12 +230,12 @@ func (u *userWorker) buildRankPipelines() (pipelines []*model.Pipeline) {
 		"repositories.watchers",
 	}
 	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankPipeline(rankType, field))
-		pipelines = append(pipelines, pipeline.RankPipelinesByLocation(rankType, field)...)
+		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
+		pipelines = append(pipelines, pipeline.RankByLocation(rankType, field)...)
 	}
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.stargazers")...)
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.forks")...)
-	pipelines = append(pipelines, pipeline.RepositoryRankPipelinesByLanguage(rankType, "repositories.watchers")...)
+	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.stargazers")...)
+	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.forks")...)
+	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.watchers")...)
 	return
 }
 
