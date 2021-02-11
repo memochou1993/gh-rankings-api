@@ -32,9 +32,9 @@ func (r *RankModel) CreateIndexes() {
 	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }
 
-func (r *RankModel) List(req *request.Request, timestamps []time.Time) []Rank {
+func (r *RankModel) List(req *request.Request, timestamp time.Time) []Rank {
 	ctx := context.Background()
-	cond := mongo.Pipeline{bson.D{{"created_at", bson.D{{"$in", timestamps}}}}}
+	cond := mongo.Pipeline{bson.D{{"created_at", timestamp}}}
 	if req.Name != "" {
 		cond = append(cond, bson.D{{"name", req.Name}})
 	}

@@ -149,7 +149,7 @@ func (o *organizationWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	o.Worker.seal(timestampOrganizationRanks, now)
+	o.Worker.seal(TimestampOrganizationRanks, now)
 
 	tags := []string{fmt.Sprintf("type:%s", model.TypeOrganization)}
 	RankModel.Delete(now, tags...)

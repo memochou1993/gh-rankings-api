@@ -110,7 +110,7 @@ func (r *repositoryWorker) Rank() {
 		}
 	}
 	wg.Wait()
-	r.Worker.seal(timestampRepositoryRanks, timestamp)
+	r.Worker.seal(TimestampRepositoryRanks, timestamp)
 
 	tag := fmt.Sprintf("type:%s", model.TypeRepository)
 	RankModel.Delete(timestamp, tag)

@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	timestampUserRanks         = "TIMESTAMP_USER_RANKS"
-	timestampOrganizationRanks = "TIMESTAMP_ORGANIZATION_RANKS"
-	timestampRepositoryRanks   = "TIMESTAMP_REPOSITORY_RANKS"
+	TimestampUserRanks         = "TIMESTAMP_USER_RANKS"
+	TimestampOrganizationRanks = "TIMESTAMP_ORGANIZATION_RANKS"
+	TimestampRepositoryRanks   = "TIMESTAMP_REPOSITORY_RANKS"
 )
 
 var (

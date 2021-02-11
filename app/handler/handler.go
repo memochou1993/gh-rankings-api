@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/worker"
+	"github.com/spf13/viper"
 	"log"
 	"net/http"
 	"time"
@@ -26,12 +28,18 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		response(w, http.StatusBadRequest, Payload{})
 		return
 	}
-	timestamps := []time.Time{
-		worker.UserWorker.Timestamp,
-		worker.OrganizationWorker.Timestamp,
-		worker.RepositoryWorker.Timestamp,
+
+	timestamp := ""
+	switch req.Type {
+	case model.TypeUser:
+		timestamp = worker.TimestampUserRanks
+	case model.TypeOrganization:
+		timestamp = worker.TimestampOrganizationRanks
+	case model.TypeRepository:
+		timestamp = worker.TimestampRepositoryRanks
 	}
-	ranks := worker.RankModel.List(req, timestamps)
+
+	ranks := worker.RankModel.List(req, time.Unix(0, viper.GetInt64(timestamp)))
 
 	response(w, http.StatusOK, Payload{Data: ranks})
 }
