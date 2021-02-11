@@ -77,7 +77,7 @@ func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
 	for _, edge := range res.Data.Search.Edges {
 		*organizations = append(*organizations, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Break(collecting)
 	if !res.Data.Search.PageInfo.HasNextPage {
 		o.SearchQuery.SearchArguments.After = ""
 		return nil
@@ -115,7 +115,7 @@ func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository)
 	for _, edge := range res.Data.Organization.Repositories.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Break(collecting)
 	if !res.Data.Organization.Repositories.PageInfo.HasNextPage {
 		o.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil

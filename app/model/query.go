@@ -90,9 +90,9 @@ type RateLimit struct {
 	Used      int    `json:"used,omitempty"`
 }
 
-func (r RateLimit) Break() {
-	period := 3600.0 / 5000.0
-	time.Sleep(time.Duration(period*3) * time.Second)
+func (r RateLimit) Break(collecting int) {
+	period := float64(3600) / float64(5000)
+	time.Sleep(time.Duration(period*float64(collecting)*1000) * time.Millisecond)
 	logger.Debug(fmt.Sprintf("Rate Limit: %s", strconv.Quote(util.ParseStruct(r, " "))))
 
 	buffer := 10

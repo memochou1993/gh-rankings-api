@@ -78,7 +78,7 @@ func (u *userWorker) Fetch(users *[]model.User) error {
 	for _, edge := range res.Data.Search.Edges {
 		*users = append(*users, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Break(collecting)
 	if !res.Data.Search.PageInfo.HasNextPage {
 		u.SearchQuery.SearchArguments.After = ""
 		return nil
@@ -132,7 +132,7 @@ func (u *userWorker) FetchGists(gists *[]model.Gist) error {
 	for _, edge := range res.Data.User.Gists.Edges {
 		*gists = append(*gists, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Gists.PageInfo.HasNextPage {
 		u.GistQuery.GistsArguments.After = ""
 		return nil
@@ -150,7 +150,7 @@ func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 	for _, edge := range res.Data.User.Repositories.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
-	res.Data.RateLimit.Break()
+	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Repositories.PageInfo.HasNextPage {
 		u.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil

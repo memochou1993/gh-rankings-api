@@ -19,6 +19,10 @@ var (
 )
 
 var (
+	collecting int
+)
+
+var (
 	UserWorker         *userWorker
 	OrganizationWorker *organizationWorker
 	RepositoryWorker   *repositoryWorker
@@ -66,9 +70,11 @@ func Run(worker Interface) {
 	worker.Init()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
+		collecting += 1
 		if err := worker.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
+		collecting -= 1
 		worker.Rank()
 	}
 }
