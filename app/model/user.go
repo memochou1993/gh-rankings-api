@@ -35,43 +35,6 @@ func (u *User) AddLocationTag() {
 	}
 }
 
-type UserResponse struct {
-	Message string `json:"message"`
-	Data    struct {
-		Search struct {
-			Edges []struct {
-				Cursor string `json:"cursor"`
-				Node   User   `json:"node"`
-			} `json:"edges"`
-			PageInfo `json:"pageInfo"`
-		} `json:"search"`
-		User struct {
-			AvatarURL string     `json:"avatarUrl"`
-			CreatedAt *time.Time `json:"createdAt"`
-			Followers *Items     `json:"followers"`
-			Gists     struct {
-				Edges []struct {
-					Cursor string `json:"cursor"`
-					Node   Gist   `json:"node"`
-				} `json:"edges"`
-				PageInfo `json:"pageInfo"`
-			} `json:"gists"`
-			Location     string `json:"location"`
-			Login        string `json:"login"`
-			Name         string `json:"name"`
-			Repositories struct {
-				Edges []struct {
-					Cursor string     `json:"cursor"`
-					Node   Repository `json:"node"`
-				} `json:"edges"`
-				PageInfo `json:"pageInfo"`
-			} `json:"repositories"`
-		} `json:"owner"`
-		RateLimit `json:"rateLimit"`
-	} `json:"data"`
-	Errors []Error `json:"errors"`
-}
-
 type UserModel struct {
 	*Model
 }

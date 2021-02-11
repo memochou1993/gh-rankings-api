@@ -27,21 +27,6 @@ func (r *Repository) ID() string {
 	return r.NameWithOwner
 }
 
-type RepositoryResponse struct {
-	Message string `json:"message"`
-	Data    struct {
-		Search struct {
-			Edges []struct {
-				Cursor string     `json:"cursor"`
-				Node   Repository `json:"node"`
-			} `json:"edges"`
-			PageInfo `json:"pageInfo"`
-		} `json:"search"`
-		RateLimit `json:"rateLimit"`
-	} `json:"data"`
-	Errors []Error `json:"errors"`
-}
-
 type RepositoryModel struct {
 	*Model
 }

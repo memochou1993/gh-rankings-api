@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/resource"
+	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -71,7 +72,7 @@ func (u *userWorker) Travel() error {
 }
 
 func (u *userWorker) Fetch(users *[]model.User) error {
-	res := model.UserResponse{}
+	res := response.User{}
 	if err := u.query(*u.SearchQuery, &res); err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func (u *userWorker) UpdateRepositories(user model.User) error {
 }
 
 func (u *userWorker) FetchGists(gists *[]model.Gist) error {
-	res := model.UserResponse{}
+	res := response.User{}
 	if err := u.query(*u.GistQuery, &res); err != nil {
 		return err
 	}
@@ -143,7 +144,7 @@ func (u *userWorker) FetchGists(gists *[]model.Gist) error {
 }
 
 func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
-	res := model.UserResponse{}
+	res := response.User{}
 	if err := u.query(*u.RepositoryQuery, &res); err != nil {
 		return err
 	}
@@ -188,7 +189,7 @@ func (u *userWorker) Rank() {
 	RankModel.Delete(now, tags...)
 }
 
-func (u *userWorker) query(q model.Query, res *model.UserResponse) (err error) {
+func (u *userWorker) query(q model.Query, res *response.User) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Warning(err.Error())

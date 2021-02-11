@@ -33,35 +33,6 @@ func (o *Organization) AddLocationTag() {
 	}
 }
 
-type OrganizationResponse struct {
-	Message string `json:"message"`
-	Data    struct {
-		Search struct {
-			Edges []struct {
-				Cursor string       `json:"cursor"`
-				Node   Organization `json:"node"`
-			} `json:"edges"`
-			PageInfo `json:"pageInfo"`
-		} `json:"search"`
-		Organization struct {
-			AvatarURL    string     `json:"avatarUrl"`
-			CreatedAt    *time.Time `json:"createdAt"`
-			Location     string     `json:"location"`
-			Login        string     `json:"login"`
-			Name         string     `json:"name"`
-			Repositories struct {
-				Edges []struct {
-					Cursor string     `json:"cursor"`
-					Node   Repository `json:"node"`
-				} `json:"edges"`
-				PageInfo `json:"pageInfo"`
-			} `json:"repositories"`
-		} `json:"owner"`
-		RateLimit `json:"rateLimit"`
-	} `json:"data"`
-	Errors []Error `json:"errors"`
-}
-
 type OrganizationModel struct {
 	*Model
 }

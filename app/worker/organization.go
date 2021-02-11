@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/resource"
+	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,7 +71,7 @@ func (o *organizationWorker) Travel() error {
 }
 
 func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
-	res := model.OrganizationResponse{}
+	res := response.Organization{}
 	if err := o.query(*o.SearchQuery, &res); err != nil {
 		return err
 	}
@@ -108,7 +109,7 @@ func (o *organizationWorker) UpdateRepositories(organization model.Organization)
 }
 
 func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository) error {
-	res := model.OrganizationResponse{}
+	res := response.Organization{}
 	if err := o.query(*o.RepositoryQuery, &res); err != nil {
 		return err
 	}
@@ -153,7 +154,7 @@ func (o *organizationWorker) Rank() {
 	RankModel.Delete(now, tags...)
 }
 
-func (o *organizationWorker) query(q model.Query, res *model.OrganizationResponse) (err error) {
+func (o *organizationWorker) query(q model.Query, res *response.Organization) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Warning(err.Error())

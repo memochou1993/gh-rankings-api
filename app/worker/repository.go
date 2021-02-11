@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/resource"
+	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -63,7 +64,7 @@ func (r *repositoryWorker) Travel() error {
 }
 
 func (r *repositoryWorker) Fetch(repositories *[]model.Repository) error {
-	res := model.RepositoryResponse{}
+	res := response.Repository{}
 	if err := r.query(*r.SearchQuery, &res); err != nil {
 		return err
 	}
@@ -114,7 +115,7 @@ func (r *repositoryWorker) Rank() {
 	RankModel.Delete(timestamp, tag)
 }
 
-func (r *repositoryWorker) query(q model.Query, res *model.RepositoryResponse) (err error) {
+func (r *repositoryWorker) query(q model.Query, res *response.Repository) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if os.IsTimeout(err) {
 			logger.Warning(err.Error())
