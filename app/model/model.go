@@ -27,3 +27,5 @@ func (m *Model) Name() string {
 func (m *Model) Collection() *mongo.Collection {
 	return database.Collection(m.name)
 }
+
+// TODO: should create a NewModel method

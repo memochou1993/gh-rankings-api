@@ -1,8 +1,6 @@
 package worker
 
 import (
-	"github.com/memochou1993/gh-rankings/app/model"
-	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
 	"log"
 	"time"
@@ -12,10 +10,6 @@ const (
 	TimestampUserRanks         = "TIMESTAMP_USER_RANKS"
 	TimestampOrganizationRanks = "TIMESTAMP_ORGANIZATION_RANKS"
 	TimestampRepositoryRanks   = "TIMESTAMP_REPOSITORY_RANKS"
-)
-
-var (
-	RankModel = model.NewRankModel()
 )
 
 var (
@@ -46,7 +40,8 @@ func (w *Worker) seal(key string, t time.Time) {
 }
 
 func Init() {
-	RankModel.CreateIndexes()
+	// FIXME: create indexes
+	// RankModel.CreateIndexes()
 
 	UserWorker = NewUserWorker()
 	go Run(UserWorker)
@@ -61,11 +56,11 @@ func Init() {
 func Run(worker Interface) {
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		collecting += 1
-		if err := worker.Collect(); err != nil {
-			logger.Error(err.Error())
-		}
-		collecting -= 1
+		// collecting += 1
+		// if err := worker.Collect(); err != nil {
+		// 	logger.Error(err.Error())
+		// }
+		// collecting -= 1
 		worker.Rank()
 	}
 }

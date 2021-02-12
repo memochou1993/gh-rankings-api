@@ -21,6 +21,7 @@ type repositoryWorker struct {
 	From            time.Time
 	To              time.Time
 	RepositoryModel *model.RepositoryModel
+	RankModel       *model.RankModel
 	SearchQuery     *model.Query
 }
 
@@ -93,7 +94,7 @@ func (r *repositoryWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *pipeline.Pipeline) {
 			defer wg.Done()
-			RankModel.Store(r.RepositoryModel, *p, timestamp)
+			r.RankModel.Store(r.RepositoryModel, *p, timestamp)
 			<-ch
 		}(p)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
@@ -103,7 +104,7 @@ func (r *repositoryWorker) Rank() {
 	wg.Wait()
 	r.Worker.seal(TimestampRepositoryRanks, timestamp)
 
-	RankModel.Delete(timestamp, model.TypeRepository)
+	r.RankModel.Delete(timestamp, model.TypeRepository)
 }
 
 func (r *repositoryWorker) query(q model.Query, res *response.Repository) (err error) {
@@ -156,7 +157,8 @@ func (r *repositoryWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline)
 func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
 		Worker:          NewWorker(),
-		RepositoryModel: model.NewRepositoryModel(),
+		RepositoryModel: model.NewRepositoryModel(), // FIXME: should rename
+		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
 		SearchQuery:     model.NewRepositoryQuery(),
 	}
 }

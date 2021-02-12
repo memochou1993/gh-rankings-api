@@ -21,6 +21,7 @@ type organizationWorker struct {
 	From              time.Time
 	To                time.Time
 	OrganizationModel *model.OrganizationModel
+	RankModel         *model.RankModel
 	SearchQuery       *model.Query
 	RepositoryQuery   *model.Query
 }
@@ -138,7 +139,7 @@ func (o *organizationWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *pipeline.Pipeline) {
 			defer wg.Done()
-			RankModel.Store(o.OrganizationModel, *p, now)
+			o.RankModel.Store(o.OrganizationModel, *p, now)
 			<-ch
 		}(p)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
@@ -148,7 +149,7 @@ func (o *organizationWorker) Rank() {
 	wg.Wait()
 	o.Worker.seal(TimestampOrganizationRanks, now)
 
-	RankModel.Delete(now, model.TypeOrganization)
+	o.RankModel.Delete(now, model.TypeOrganization)
 }
 
 func (o *organizationWorker) query(q model.Query, res *response.Organization) (err error) {
@@ -202,7 +203,8 @@ func (o *organizationWorker) buildRankPipelines() (pipelines []*pipeline.Pipelin
 func NewOrganizationWorker() *organizationWorker {
 	return &organizationWorker{
 		Worker:            NewWorker(),
-		OrganizationModel: model.NewOrganizationModel(),
+		OrganizationModel: model.NewOrganizationModel(), // FIXME: should rename
+		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
 		SearchQuery:       model.NewOwnerQuery(),
 		RepositoryQuery:   model.NewOwnerRepositoryQuery(),
 	}

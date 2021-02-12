@@ -21,6 +21,7 @@ type userWorker struct {
 	From            time.Time
 	To              time.Time
 	UserModel       *model.UserModel
+	RankModel       *model.RankModel
 	SearchQuery     *model.Query
 	GistQuery       *model.Query
 	RepositoryQuery *model.Query
@@ -173,7 +174,7 @@ func (u *userWorker) Rank() {
 		ch <- struct{}{}
 		go func(p *pipeline.Pipeline) {
 			defer wg.Done()
-			RankModel.Store(u.UserModel, *p, now)
+			u.RankModel.Store(u.UserModel, *p, now)
 			<-ch
 		}(p)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
@@ -183,7 +184,7 @@ func (u *userWorker) Rank() {
 	wg.Wait()
 	u.Worker.seal(TimestampUserRanks, now)
 
-	RankModel.Delete(now, model.TypeUser)
+	u.RankModel.Delete(now, model.TypeUser)
 }
 
 func (u *userWorker) query(q model.Query, res *response.User) (err error) {
@@ -242,7 +243,8 @@ func (u *userWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 func NewUserWorker() *userWorker {
 	return &userWorker{
 		Worker:          NewWorker(),
-		UserModel:       model.NewUserModel(),
+		UserModel:       model.NewUserModel(), // FIXME: should rename
+		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
 		SearchQuery:     model.NewOwnerQuery(),
 		GistQuery:       model.NewOwnerGistQuery(),
 		RepositoryQuery: model.NewOwnerRepositoryQuery(),

@@ -38,16 +38,26 @@ func (r *RankModel) CreateIndexes() {
 
 func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 	ctx := context.Background()
+	cond := mongo.Pipeline{{
+		{"created_at", createdAt},
+		{"name", req.Name},
+	}}
+	if req.Type != "" {
+		cond = append(cond, bson.D{{"type", req.Type}})
+	}
+	if req.Field != "" {
+		cond = append(cond, bson.D{{"type", req.Field}})
+	}
+	if req.Language != "" {
+		cond = append(cond, bson.D{{"type", req.Language}})
+	}
+	if req.Location != "" {
+		cond = append(cond, bson.D{{"type", req.Location}})
+	}
 	p := mongo.Pipeline{
 		bson.D{
 			{"$match", bson.D{
-				{"$and", []bson.D{
-					{{"created_at", createdAt}},
-					{{"type", req.Type}},
-					{{"field", req.Field}},
-					{{"language", req.Language}},
-					{{"location", req.Location}},
-				}},
+				{"$and", cond},
 			}},
 		},
 		bson.D{
@@ -57,7 +67,7 @@ func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 			{"$limit", req.Limit},
 		},
 	}
-	cursor := database.Aggregate(ctx, NewRankModel().Name(), p)
+	cursor := database.Aggregate(ctx, NewRankModel(req.Type).Name(), p)
 	ranks := make([]Rank, req.Limit)
 	if err := cursor.All(ctx, &ranks); err != nil {
 		log.Fatal(err.Error())
@@ -130,10 +140,10 @@ func (r *RankModel) Count(model Interface, p pipeline.Pipeline) int {
 	return rec.Count
 }
 
-func NewRankModel() *RankModel {
+func NewRankModel(name string) *RankModel {
 	return &RankModel{
 		&Model{
-			name: "ranks",
+			name,
 		},
 	}
 }
