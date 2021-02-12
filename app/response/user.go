@@ -2,6 +2,7 @@ package response
 
 import (
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type User struct {
 		User struct {
 			ImageUrl  string       `json:"imageUrl"`
 			CreatedAt *time.Time   `json:"createdAt"`
-			Followers *model.Items `json:"followers"`
+			Followers *query.Items `json:"followers"`
 			Gists     struct {
 				Edges []struct {
 					Cursor string     `json:"cursor"`

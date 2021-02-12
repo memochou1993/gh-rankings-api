@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -8,19 +9,19 @@ import (
 )
 
 type Repository struct {
-	CreatedAt     *time.Time `json:"createdAt,omitempty" bson:"created_at"`
-	Forks         *Items     `json:"forks,omitempty" bson:"forks"`
-	Name          string     `json:"name,omitempty" bson:"name"`
-	NameWithOwner string     `json:"nameWithOwner" bson:"_id"`
-	ImageUrl      string     `json:"imageUrl,omitempty" bson:"image_url"`
+	CreatedAt     *time.Time   `json:"createdAt,omitempty" bson:"created_at"`
+	Forks         *query.Items `json:"forks,omitempty" bson:"forks"`
+	Name          string       `json:"name,omitempty" bson:"name"`
+	NameWithOwner string       `json:"nameWithOwner" bson:"_id"`
+	ImageUrl      string       `json:"imageUrl,omitempty" bson:"image_url"`
 	Owner         struct {
 		Login string `json:"login,omitempty" bson:"login"`
 	} `json:"owner,omitempty" bson:"owner"`
 	PrimaryLanguage struct {
 		Name string `json:"name,omitempty" bson:"name"`
 	} `json:"primaryLanguage,omitempty" bson:"primary_language"`
-	Stargazers *Items `json:"stargazers,omitempty" bson:"stargazers"`
-	Watchers   *Items `json:"watchers,omitempty" bson:"watchers"`
+	Stargazers *query.Items `json:"stargazers,omitempty" bson:"stargazers"`
+	Watchers   *query.Items `json:"watchers,omitempty" bson:"watchers"`
 }
 
 func (r *Repository) ID() string {

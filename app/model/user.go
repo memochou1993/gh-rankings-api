@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,7 +12,7 @@ import (
 type User struct {
 	ImageUrl       string       `json:"imageUrl,omitempty" bson:"image_url"`
 	CreatedAt      *time.Time   `json:"createdAt,omitempty" bson:"created_at"`
-	Followers      *Items       `json:"followers,omitempty" bson:"followers"`
+	Followers      *query.Items `json:"followers,omitempty" bson:"followers"`
 	Location       string       `json:"location,omitempty" bson:"location"`
 	Login          string       `json:"login" bson:"_id"`
 	Name           string       `json:"name,omitempty" bson:"name"`

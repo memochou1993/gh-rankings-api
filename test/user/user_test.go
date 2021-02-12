@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
 	"github.com/memochou1993/gh-rankings/database"
 	"github.com/memochou1993/gh-rankings/logger"
@@ -31,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.SearchQuery = model.NewOwnerQuery()
+	u.SearchQuery = query.NewOwnerQuery()
 	u.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:>=50 repos:>=5 sort:joined-asc")
 
 	var users []model.User
@@ -48,7 +49,7 @@ func TestFetch(t *testing.T) {
 func TestStore(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	user := model.User{Login: "memochou1993", Followers: &model.Items{TotalCount: 1}}
+	user := model.User{Login: "memochou1993", Followers: &query.Items{TotalCount: 1}}
 	users := []model.User{user}
 
 	u.UserModel.Store(users)
@@ -68,8 +69,8 @@ func TestStore(t *testing.T) {
 func TestFetchGists(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.GistQuery = model.NewOwnerGistQuery()
-	u.GistQuery.Field = model.TypeUser
+	u.GistQuery = query.NewOwnerGistQuery()
+	u.GistQuery.Type = model.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
 	var gists []model.Gist
@@ -86,8 +87,8 @@ func TestFetchGists(t *testing.T) {
 func TestFetchRepositories(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.RepositoryQuery = model.NewOwnerRepositoryQuery()
-	u.RepositoryQuery.Field = model.TypeUser
+	u.RepositoryQuery = query.NewOwnerRepositoryQuery()
+	u.RepositoryQuery.Type = model.TypeUser
 	u.RepositoryQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
 	var repositories []model.Repository

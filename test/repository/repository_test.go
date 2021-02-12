@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
 	"github.com/memochou1993/gh-rankings/database"
 	"github.com/memochou1993/gh-rankings/logger"
@@ -31,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
-	r.SearchQuery = model.NewRepositoryQuery()
+	r.SearchQuery = query.NewRepositoryQuery()
 	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
 
 	var repositories []model.Repository

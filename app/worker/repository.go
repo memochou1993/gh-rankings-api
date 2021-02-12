@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
@@ -22,7 +23,7 @@ type repositoryWorker struct {
 	To              time.Time
 	RepositoryModel *model.RepositoryModel
 	RankModel       *model.RankModel
-	SearchQuery     *model.Query
+	SearchQuery     *query.Query
 }
 
 func (r *repositoryWorker) Collect() error {
@@ -108,7 +109,7 @@ func (r *repositoryWorker) Rank() {
 	r.RankModel.Delete(timestamp, model.TypeRepository)
 }
 
-func (r *repositoryWorker) query(q model.Query, res *response.Repository) (err error) {
+func (r *repositoryWorker) query(q query.Query, res *response.Repository) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -132,7 +133,7 @@ func (r *repositoryWorker) query(q model.Query, res *response.Repository) (err e
 func (r *repositoryWorker) buildSearchQuery() string {
 	from := r.From.Format(time.RFC3339)
 	to := r.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := model.SearchQuery{
+	q := query.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from, to),
 		Fork:    "true",
 		Sort:    "stars",
@@ -160,6 +161,6 @@ func NewRepositoryWorker() *repositoryWorker {
 		Worker:          NewWorker(),
 		RepositoryModel: model.NewRepositoryModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
-		SearchQuery:     model.NewRepositoryQuery(),
+		SearchQuery:     query.NewRepositoryQuery(),
 	}
 }

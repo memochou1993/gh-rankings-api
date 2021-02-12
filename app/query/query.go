@@ -1,4 +1,4 @@
-package model
+package query
 
 import (
 	"encoding/json"
@@ -7,30 +7,33 @@ import (
 	"strings"
 )
 
-type Payload struct {
-	Query string `json:"query"`
-}
-
 type Query struct {
 	Schema string
-	Field  string
+	Type   string
 	SearchArguments
 	OwnerArguments
-	GistsArguments
-	RepositoriesArguments
+	GistArguments
+	RepositoryArguments
 }
 
 func (q Query) String() string {
 	query := q.Schema
-	query = strings.Replace(query, "<Field>", q.Field, 1)
+	query = strings.Replace(query, "<Type>", q.Type, 1)
 	query = strings.Replace(query, "<SearchArguments>", util.ParseStruct(q.SearchArguments, ","), 1)
 	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
-	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
-	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
-	b, err := json.Marshal(Payload{Query: query})
+	query = strings.Replace(query, "<GistArguments>", util.ParseStruct(q.GistArguments, ","), 1)
+	query = strings.Replace(query, "<RepositoryArguments>", util.ParseStruct(q.RepositoryArguments, ","), 1)
+
+	payload := struct {
+		Query string `json:"query"`
+	}{
+		Query: query,
+	}
+	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
 	return string(b)
 }
 
@@ -45,13 +48,13 @@ type OwnerArguments struct {
 	Login string `json:"login,omitempty"`
 }
 
-type GistsArguments struct {
+type GistArguments struct {
 	After   string `json:"after,omitempty"`
 	First   int    `json:"first,omitempty"`
 	OrderBy string `json:"orderBy,omitempty"`
 }
 
-type RepositoriesArguments struct {
+type RepositoryArguments struct {
 	After             string `json:"after,omitempty"`
 	First             int    `json:"first,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
@@ -69,7 +72,7 @@ type SearchQuery struct {
 }
 
 type Items struct {
-	TotalCount int `json:"totalCount,omitempty" bson:"total_count,omitempty"`
+	TotalCount int `json:"totalCount,omitempty" bson:"total_count"`
 }
 
 func NewOwnerQuery() *Query {
@@ -85,7 +88,7 @@ func NewOwnerQuery() *Query {
 func NewOwnerGistQuery() *Query {
 	return &Query{
 		Schema: util.ReadQuery("owner_gists"),
-		GistsArguments: GistsArguments{
+		GistArguments: GistArguments{
 			First:   100,
 			OrderBy: "{field:CREATED_AT,direction:ASC}",
 		},
@@ -95,7 +98,7 @@ func NewOwnerGistQuery() *Query {
 func NewOwnerRepositoryQuery() *Query {
 	return &Query{
 		Schema: util.ReadQuery("owner_repositories"),
-		RepositoriesArguments: RepositoriesArguments{
+		RepositoryArguments: RepositoryArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:ASC}",
 			OwnerAffiliations: "OWNER",

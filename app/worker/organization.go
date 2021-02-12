@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
@@ -22,8 +23,8 @@ type organizationWorker struct {
 	To                time.Time
 	OrganizationModel *model.OrganizationModel
 	RankModel         *model.RankModel
-	SearchQuery       *model.Query
-	RepositoryQuery   *model.Query
+	SearchQuery       *query.Query
+	RepositoryQuery   *query.Query
 }
 
 func (o *organizationWorker) Collect() error {
@@ -90,7 +91,7 @@ func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
 }
 
 func (o *organizationWorker) Update(organization model.Organization) error {
-	o.RepositoryQuery.Field = model.TypeOrganization
+	o.RepositoryQuery.Type = model.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(organization.ID())
 	if err := o.UpdateRepositories(organization); err != nil {
 		return err
@@ -119,10 +120,10 @@ func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository)
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.Organization.Repositories.PageInfo.HasNextPage {
-		o.RepositoryQuery.RepositoriesArguments.After = ""
+		o.RepositoryQuery.RepositoryArguments.After = ""
 		return nil
 	}
-	o.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.Organization.Repositories.PageInfo.EndCursor)
+	o.RepositoryQuery.RepositoryArguments.After = strconv.Quote(res.Data.Organization.Repositories.PageInfo.EndCursor)
 
 	return o.FetchRepositories(repositories)
 }
@@ -153,7 +154,7 @@ func (o *organizationWorker) Rank() {
 	o.RankModel.Delete(now, model.TypeOrganization)
 }
 
-func (o *organizationWorker) query(q model.Query, res *response.Organization) (err error) {
+func (o *organizationWorker) query(q query.Query, res *response.Organization) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -177,7 +178,7 @@ func (o *organizationWorker) query(q model.Query, res *response.Organization) (e
 func (o *organizationWorker) buildSearchQuery() string {
 	from := o.From.Format(time.RFC3339)
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := model.SearchQuery{
+	q := query.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from, to),
 		Repos:   ">=25",
 		Sort:    "joined-asc",
@@ -206,7 +207,7 @@ func NewOrganizationWorker() *organizationWorker {
 		Worker:            NewWorker(),
 		OrganizationModel: model.NewOrganizationModel(),
 		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
-		SearchQuery:       model.NewOwnerQuery(),
-		RepositoryQuery:   model.NewOwnerRepositoryQuery(),
+		SearchQuery:       query.NewOwnerQuery(),
+		RepositoryQuery:   query.NewOwnerRepositoryQuery(),
 	}
 }

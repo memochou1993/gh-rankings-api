@@ -7,6 +7,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
@@ -22,9 +23,9 @@ type userWorker struct {
 	To              time.Time
 	UserModel       *model.UserModel
 	RankModel       *model.RankModel
-	SearchQuery     *model.Query
-	GistQuery       *model.Query
-	RepositoryQuery *model.Query
+	SearchQuery     *query.Query
+	GistQuery       *query.Query
+	RepositoryQuery *query.Query
 }
 
 func (u *userWorker) Collect() error {
@@ -91,13 +92,13 @@ func (u *userWorker) Fetch(users *[]model.User) error {
 }
 
 func (u *userWorker) Update(user model.User) error {
-	u.GistQuery.Field = model.TypeUser
+	u.GistQuery.Type = model.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := u.UpdateGists(user); err != nil {
 		return err
 	}
 
-	u.RepositoryQuery.Field = model.TypeUser
+	u.RepositoryQuery.Type = model.TypeUser
 	u.RepositoryQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := u.UpdateRepositories(user); err != nil {
 		return err
@@ -136,10 +137,10 @@ func (u *userWorker) FetchGists(gists *[]model.Gist) error {
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Gists.PageInfo.HasNextPage {
-		u.GistQuery.GistsArguments.After = ""
+		u.GistQuery.GistArguments.After = ""
 		return nil
 	}
-	u.GistQuery.GistsArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
+	u.GistQuery.GistArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
 
 	return u.FetchGists(gists)
 }
@@ -154,10 +155,10 @@ func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Repositories.PageInfo.HasNextPage {
-		u.RepositoryQuery.RepositoriesArguments.After = ""
+		u.RepositoryQuery.RepositoryArguments.After = ""
 		return nil
 	}
-	u.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
+	u.RepositoryQuery.RepositoryArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
 
 	return u.FetchRepositories(repositories)
 }
@@ -188,7 +189,7 @@ func (u *userWorker) Rank() {
 	u.RankModel.Delete(now, model.TypeUser)
 }
 
-func (u *userWorker) query(q model.Query, res *response.User) (err error) {
+func (u *userWorker) query(q query.Query, res *response.User) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -212,7 +213,7 @@ func (u *userWorker) query(q model.Query, res *response.User) (err error) {
 func (u *userWorker) buildSearchQuery() string {
 	from := u.From.Format(time.RFC3339)
 	to := u.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := model.SearchQuery{
+	q := query.SearchQuery{
 		Created:   fmt.Sprintf("%s..%s", from, to),
 		Followers: ">=100",
 		Sort:      "joined-asc",
@@ -246,8 +247,8 @@ func NewUserWorker() *userWorker {
 		Worker:          NewWorker(),
 		UserModel:       model.NewUserModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
-		SearchQuery:     model.NewOwnerQuery(),
-		GistQuery:       model.NewOwnerGistQuery(),
-		RepositoryQuery: model.NewOwnerRepositoryQuery(),
+		SearchQuery:     query.NewOwnerQuery(),
+		GistQuery:       query.NewOwnerGistQuery(),
+		RepositoryQuery: query.NewOwnerRepositoryQuery(),
 	}
 }

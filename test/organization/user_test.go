@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
 	"github.com/memochou1993/gh-rankings/database"
 	"github.com/memochou1993/gh-rankings/logger"
@@ -31,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	o := worker.NewOrganizationWorker()
 
-	o.SearchQuery = model.NewOwnerQuery()
+	o.SearchQuery = query.NewOwnerQuery()
 	o.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:>=50 sort:joined-asc")
 
 	var organizations []model.Organization
@@ -68,8 +69,8 @@ func TestStore(t *testing.T) {
 func TestFetchRepositories(t *testing.T) {
 	o := worker.NewUserWorker()
 
-	o.RepositoryQuery = model.NewOwnerRepositoryQuery()
-	o.RepositoryQuery.Field = model.TypeOrganization
+	o.RepositoryQuery = query.NewOwnerRepositoryQuery()
+	o.RepositoryQuery.Type = model.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote("facebook")
 
 	var repositories []model.Repository
