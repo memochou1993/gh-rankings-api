@@ -12,10 +12,10 @@ import (
 type Query struct {
 	Schema string
 	Type   string
-	SearchArguments
-	OwnerArguments
-	GistsArguments
-	RepositoriesArguments
+	*SearchArguments
+	*OwnerArguments
+	*GistsArguments
+	*RepositoriesArguments
 }
 
 func (q Query) String() string {
@@ -86,7 +86,7 @@ type Items struct {
 func Owners() *Query {
 	return &Query{
 		Schema: read("owners"),
-		SearchArguments: SearchArguments{
+		SearchArguments: &SearchArguments{
 			First: 100,
 			Type:  "USER",
 		},
@@ -95,8 +95,9 @@ func Owners() *Query {
 
 func OwnerGists() *Query {
 	return &Query{
-		Schema: read("owner_gists"),
-		GistsArguments: GistsArguments{
+		Schema:         read("owner_gists"),
+		OwnerArguments: &OwnerArguments{},
+		GistsArguments: &GistsArguments{
 			First:   100,
 			OrderBy: "{field:CREATED_AT,direction:ASC}",
 		},
@@ -105,8 +106,9 @@ func OwnerGists() *Query {
 
 func OwnerRepositories() *Query {
 	return &Query{
-		Schema: read("owner_repositories"),
-		RepositoriesArguments: RepositoriesArguments{
+		Schema:         read("owner_repositories"),
+		OwnerArguments: &OwnerArguments{},
+		RepositoriesArguments: &RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:ASC}",
 			OwnerAffiliations: "OWNER",
@@ -117,7 +119,7 @@ func OwnerRepositories() *Query {
 func Repositories() *Query {
 	return &Query{
 		Schema: read("repositories"),
-		SearchArguments: SearchArguments{
+		SearchArguments: &SearchArguments{
 			First: 100,
 			Type:  "REPOSITORY",
 		},
