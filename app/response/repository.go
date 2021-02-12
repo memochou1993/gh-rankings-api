@@ -3,8 +3,7 @@ package response
 import "github.com/memochou1993/gh-rankings/app/model"
 
 type Repository struct {
-	Message string `json:"message"`
-	Data    struct {
+	Data struct {
 		Search struct {
 			Edges []struct {
 				Cursor string           `json:"cursor"`
@@ -14,5 +13,6 @@ type Repository struct {
 		} `json:"search"`
 		RateLimit `json:"rateLimit"`
 	} `json:"data"`
-	Errors []Error `json:"errors"`
+	Errors  []Error `json:"errors"`
+	Message string  `json:"message"`
 }

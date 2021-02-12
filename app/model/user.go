@@ -16,7 +16,7 @@ type User struct {
 	Location       string       `json:"location" bson:"location"`
 	Login          string       `json:"login" bson:"_id"`
 	Name           string       `json:"name" bson:"name"`
-	Gists          []Gist       `json:"gists" bson:"gists,omitempty"`
+	Gists          []query.Gist `json:"gists" bson:"gists,omitempty"`
 	Repositories   []Repository `json:"repositories" bson:"repositories,omitempty"`
 	ParsedLocation string       `json:"parsedLocation" bson:"parsed_location"`
 	ParsedCity     string       `json:"parsedCity" bson:"parsed_city"`
@@ -48,7 +48,7 @@ func (u *UserModel) Store(users []User) *mongo.BulkWriteResult {
 	return database.BulkWrite(u.Name(), models)
 }
 
-func (u *UserModel) UpdateGists(user User, gists []Gist) {
+func (u *UserModel) UpdateGists(user User, gists []query.Gist) {
 	filter := bson.D{{"_id", user.ID()}}
 	update := bson.D{{"$set", bson.D{{"gists", gists}}}}
 	database.UpdateOne(u.Name(), filter, update)

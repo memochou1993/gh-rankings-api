@@ -73,7 +73,7 @@ func TestFetchGists(t *testing.T) {
 	u.GistQuery.Type = model.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
-	var gists []model.Gist
+	var gists []query.Gist
 	if err := u.FetchGists(&gists); err != nil {
 		t.Error(err.Error())
 	}

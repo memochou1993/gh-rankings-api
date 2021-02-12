@@ -112,7 +112,7 @@ func (u *User) Update(user model.User) error {
 }
 
 func (u *User) UpdateGists(user model.User) error {
-	var gists []model.Gist
+	var gists []query.Gist
 	if err := u.FetchGists(&gists); err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (u *User) UpdateRepositories(user model.User) error {
 	return nil
 }
 
-func (u *User) FetchGists(gists *[]model.Gist) error {
+func (u *User) FetchGists(gists *[]query.Gist) error {
 	res := response.User{}
 	if err := u.query(*u.GistQuery, &res); err != nil {
 		return err

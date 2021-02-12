@@ -6,8 +6,7 @@ import (
 )
 
 type Organization struct {
-	Message string `json:"message"`
-	Data    struct {
+	Data struct {
 		Search struct {
 			Edges []struct {
 				Cursor string             `json:"cursor"`
@@ -16,11 +15,11 @@ type Organization struct {
 			PageInfo `json:"pageInfo"`
 		} `json:"search"`
 		Organization struct {
-			ImageUrl     string     `json:"imageUrl"`
-			CreatedAt    *time.Time `json:"createdAt"`
-			Location     string     `json:"location"`
-			Login        string     `json:"login"`
-			Name         string     `json:"name"`
+			ImageUrl     string    `json:"imageUrl"`
+			CreatedAt    time.Time `json:"createdAt"`
+			Location     string    `json:"location"`
+			Login        string    `json:"login"`
+			Name         string    `json:"name"`
 			Repositories struct {
 				Edges []struct {
 					Cursor string           `json:"cursor"`
@@ -31,5 +30,6 @@ type Organization struct {
 		} `json:"owner"`
 		RateLimit `json:"rateLimit"`
 	} `json:"data"`
-	Errors []Error `json:"errors"`
+	Errors  []Error `json:"errors"`
+	Message string  `json:"message"`
 }

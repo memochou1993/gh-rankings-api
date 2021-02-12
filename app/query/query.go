@@ -73,6 +73,12 @@ type SearchQuery struct {
 	Type      string `json:"type,omitempty"`
 }
 
+type Gist struct {
+	Forks      *Items `json:"forks" bson:"forks"`
+	Name       string `json:"name" bson:"name"`
+	Stargazers *Items `json:"stargazers" bson:"stargazers"`
+}
+
 type Items struct {
 	TotalCount int `json:"totalCount" bson:"total_count"`
 }
