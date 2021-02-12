@@ -26,6 +26,10 @@ type Repository struct {
 	SearchQuery     *query.Query
 }
 
+func (r *Repository) Init() {
+	r.RankModel.CreateIndexes()
+}
+
 func (r *Repository) Collect() error {
 	logger.Info("Collecting repositories...")
 	r.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
@@ -158,7 +162,7 @@ func (r *Repository) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 
 func NewRepositoryWorker() *Repository {
 	return &Repository{
-		Worker:          New(),
+		Worker:          &Worker{},
 		RepositoryModel: model.NewRepositoryModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
 		SearchQuery:     query.Repositories(),

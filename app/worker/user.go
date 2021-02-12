@@ -28,6 +28,10 @@ type User struct {
 	RepositoryQuery *query.Query
 }
 
+func (u *User) Init() {
+	u.RankModel.CreateIndexes()
+}
+
 func (u *User) Collect() error {
 	logger.Info("Collecting users...")
 	u.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
@@ -244,7 +248,7 @@ func (u *User) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 
 func NewUserWorker() *User {
 	return &User{
-		Worker:          New(),
+		Worker:          &Worker{},
 		UserModel:       model.NewUserModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
 		SearchQuery:     query.Owners(),

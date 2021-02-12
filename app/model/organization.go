@@ -53,6 +53,8 @@ func (o *OrganizationModel) UpdateRepositories(organization Organization, reposi
 
 func NewOrganizationModel() *OrganizationModel {
 	return &OrganizationModel{
-		Model: New("organizations"),
+		Model: &Model{
+			name: "organizations",
+		},
 	}
 }

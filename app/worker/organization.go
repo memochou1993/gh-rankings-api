@@ -27,6 +27,10 @@ type Organization struct {
 	RepositoryQuery   *query.Query
 }
 
+func (o *Organization) Init() {
+	o.RankModel.CreateIndexes()
+}
+
 func (o *Organization) Collect() error {
 	logger.Info("Collecting organizations...")
 	o.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
@@ -204,7 +208,7 @@ func (o *Organization) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 
 func NewOrganizationWorker() *Organization {
 	return &Organization{
-		Worker:            New(),
+		Worker:            &Worker{},
 		OrganizationModel: model.NewOrganizationModel(),
 		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
 		SearchQuery:       query.Owners(),

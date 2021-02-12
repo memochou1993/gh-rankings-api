@@ -38,9 +38,3 @@ func (m *Model) Last(v interface{}) {
 		log.Fatal(err.Error())
 	}
 }
-
-func New(name string) *Model {
-	return &Model{
-		name,
-	}
-}

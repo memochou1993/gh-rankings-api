@@ -18,12 +18,13 @@ var (
 )
 
 var (
-	UserWorker         *User
-	OrganizationWorker *Organization
-	RepositoryWorker   *Repository
+	userWorker         *User
+	organizationWorker *Organization
+	repositoryWorker   *Repository
 )
 
 type Interface interface {
+	Init()
 	Collect() error
 	Rank()
 }
@@ -41,20 +42,17 @@ func (w *Worker) seal(key string, t time.Time) {
 }
 
 func Init() {
-	// FIXME: create indexes
-	// RankModel.CreateIndexes()
+	userWorker = NewUserWorker()
+	organizationWorker = NewOrganizationWorker()
+	repositoryWorker = NewRepositoryWorker()
 
-	UserWorker = NewUserWorker()
-	go Run(UserWorker)
-
-	OrganizationWorker = NewOrganizationWorker()
-	go Run(OrganizationWorker)
-
-	RepositoryWorker = NewRepositoryWorker()
-	go Run(RepositoryWorker)
+	go run(userWorker)
+	go run(organizationWorker)
+	go run(repositoryWorker)
 }
 
-func Run(worker Interface) {
+func run(worker Interface) {
+	worker.Init()
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
 		collecting += 1
@@ -64,8 +62,4 @@ func Run(worker Interface) {
 		collecting -= 1
 		worker.Rank()
 	}
-}
-
-func New() *Worker {
-	return &Worker{}
 }
