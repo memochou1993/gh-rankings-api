@@ -120,19 +120,7 @@ func (r *RankModel) Count(model Interface, p pipeline.Pipeline) int {
 	rec := struct {
 		Count int `bson:"count"`
 	}{}
-	stages := []bson.D{
-		{
-			{"$match", bson.D{
-				{"total_count", bson.D{
-					{"$gt", 0},
-				}},
-			}},
-		},
-		{
-			{"$count", "count"},
-		},
-	}
-	cursor := database.Aggregate(ctx, model.Name(), append(*p.Pipeline, stages...))
+	cursor := database.Aggregate(ctx, model.Name(), pipeline.RankCount(*p.Pipeline))
 	defer database.CloseCursor(ctx, cursor)
 	for cursor.Next(ctx) {
 		if err := cursor.Decode(&rec); err != nil {

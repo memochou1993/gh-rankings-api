@@ -88,13 +88,21 @@ func RankRepositoryByLanguage(rankType string, field string) (pipelines []*Pipel
 	return
 }
 
+func RankCount(p mongo.Pipeline) mongo.Pipeline {
+	stages := []bson.D{
+		stageMatch("total_count", bson.D{{"$gt", 0}}),
+		stageCount(),
+	}
+	return append(p, stages...)
+}
+
 func stageUnwind(field string) bson.D {
 	return bson.D{
 		{"$unwind", fmt.Sprintf("$%s", field)},
 	}
 }
 
-func stageMatch(key string, value string) bson.D {
+func stageMatch(key string, value interface{}) bson.D {
 	return bson.D{
 		{"$match", bson.D{
 			{key, value},
@@ -133,5 +141,11 @@ func stageSort() bson.D {
 		{"$sort", bson.D{
 			{"total_count", -1},
 		}},
+	}
+}
+
+func stageCount() bson.D {
+	return bson.D{
+		{"$count", "count"},
 	}
 }
