@@ -31,8 +31,9 @@ func (r *repositoryWorker) Collect() error {
 	r.To = time.Now()
 
 	if r.Worker.Timestamp.IsZero() {
-		if repository := r.RepositoryModel.FindLast(); repository.ID() != "" {
-			r.From = repository.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		last := model.Repository{}
+		if r.RepositoryModel.Model.Last(&last); last.ID() != "" {
+			r.From = last.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
 		}
 	}
 
@@ -157,7 +158,7 @@ func (r *repositoryWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline)
 func NewRepositoryWorker() *repositoryWorker {
 	return &repositoryWorker{
 		Worker:          NewWorker(),
-		RepositoryModel: model.NewRepositoryModel(), // FIXME: should rename
+		RepositoryModel: model.NewRepositoryModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
 		SearchQuery:     model.NewRepositoryQuery(),
 	}

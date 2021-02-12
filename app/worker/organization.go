@@ -32,8 +32,9 @@ func (o *organizationWorker) Collect() error {
 	o.To = time.Now()
 
 	if o.Worker.Timestamp.IsZero() {
-		if organization := o.OrganizationModel.FindLast(); organization.ID() != "" {
-			o.From = organization.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		last := model.Organization{}
+		if o.OrganizationModel.Model.Last(&last); last.ID() != "" {
+			o.From = last.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
 		}
 	}
 
@@ -203,7 +204,7 @@ func (o *organizationWorker) buildRankPipelines() (pipelines []*pipeline.Pipelin
 func NewOrganizationWorker() *organizationWorker {
 	return &organizationWorker{
 		Worker:            NewWorker(),
-		OrganizationModel: model.NewOrganizationModel(), // FIXME: should rename
+		OrganizationModel: model.NewOrganizationModel(),
 		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
 		SearchQuery:       model.NewOwnerQuery(),
 		RepositoryQuery:   model.NewOwnerRepositoryQuery(),

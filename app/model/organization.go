@@ -5,8 +5,6 @@ import (
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 	"time"
 )
 
@@ -31,15 +29,6 @@ func (o *Organization) parseLocation() {
 
 type OrganizationModel struct {
 	*Model
-}
-
-func (o *OrganizationModel) FindLast() (organization Organization) {
-	opts := options.FindOne().SetSort(bson.D{{"$natural", -1}})
-	res := database.FindOne(o.Name(), bson.D{}, opts)
-	if err := res.Decode(&organization); err != nil && err != mongo.ErrNoDocuments {
-		log.Fatal(err.Error())
-	}
-	return
 }
 
 func (o *OrganizationModel) Store(organizations []Organization) *mongo.BulkWriteResult {

@@ -33,8 +33,9 @@ func (u *userWorker) Collect() error {
 	u.To = time.Now()
 
 	if u.Worker.Timestamp.IsZero() {
-		if user := u.UserModel.FindLast(); user.ID() != "" {
-			u.From = user.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
+		last := model.User{}
+		if u.UserModel.Model.Last(&last); last.ID() != "" {
+			u.From = last.CreatedAt.AddDate(0, 0, -7).Truncate(24 * time.Hour)
 		}
 	}
 
@@ -243,7 +244,7 @@ func (u *userWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 func NewUserWorker() *userWorker {
 	return &userWorker{
 		Worker:          NewWorker(),
-		UserModel:       model.NewUserModel(), // FIXME: should rename
+		UserModel:       model.NewUserModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
 		SearchQuery:     model.NewOwnerQuery(),
 		GistQuery:       model.NewOwnerGistQuery(),
