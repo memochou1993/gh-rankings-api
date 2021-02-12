@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-type repositoryWorker struct {
+type Repository struct {
 	*Worker
 	From            time.Time
 	To              time.Time
@@ -26,7 +26,7 @@ type repositoryWorker struct {
 	SearchQuery     *query.Query
 }
 
-func (r *repositoryWorker) Collect() error {
+func (r *Repository) Collect() error {
 	logger.Info("Collecting repositories...")
 	r.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	r.To = time.Now()
@@ -41,7 +41,7 @@ func (r *repositoryWorker) Collect() error {
 	return r.Travel()
 }
 
-func (r *repositoryWorker) Travel() error {
+func (r *Repository) Travel() error {
 	if r.From.After(r.To) {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (r *repositoryWorker) Travel() error {
 	return r.Travel()
 }
 
-func (r *repositoryWorker) Fetch(repositories *[]model.Repository) error {
+func (r *Repository) Fetch(repositories *[]model.Repository) error {
 	res := response.Repository{}
 	if err := r.query(*r.SearchQuery, &res); err != nil {
 		return err
@@ -83,7 +83,7 @@ func (r *repositoryWorker) Fetch(repositories *[]model.Repository) error {
 	return r.Fetch(repositories)
 }
 
-func (r *repositoryWorker) Rank() {
+func (r *Repository) Rank() {
 	logger.Info("Executing repository rank pipelines...")
 	pipelines := r.buildRankPipelines()
 
@@ -109,7 +109,7 @@ func (r *repositoryWorker) Rank() {
 	r.RankModel.Delete(timestamp, model.TypeRepository)
 }
 
-func (r *repositoryWorker) query(q query.Query, res *response.Repository) (err error) {
+func (r *Repository) query(q query.Query, res *response.Repository) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -130,7 +130,7 @@ func (r *repositoryWorker) query(q query.Query, res *response.Repository) (err e
 	return
 }
 
-func (r *repositoryWorker) buildSearchQuery() string {
+func (r *Repository) buildSearchQuery() string {
 	from := r.From.Format(time.RFC3339)
 	to := r.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := query.SearchQuery{
@@ -142,7 +142,7 @@ func (r *repositoryWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (r *repositoryWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
+func (r *Repository) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	rankType := model.TypeRepository
 	fields := []string{
 		"forks",
@@ -156,9 +156,9 @@ func (r *repositoryWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline)
 	return
 }
 
-func NewRepositoryWorker() *repositoryWorker {
-	return &repositoryWorker{
-		Worker:          NewWorker(),
+func NewRepositoryWorker() *Repository {
+	return &Repository{
+		Worker:          New(),
 		RepositoryModel: model.NewRepositoryModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
 		SearchQuery:     query.Repositories(),

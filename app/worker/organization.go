@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-type organizationWorker struct {
+type Organization struct {
 	*Worker
 	From              time.Time
 	To                time.Time
@@ -27,7 +27,7 @@ type organizationWorker struct {
 	RepositoryQuery   *query.Query
 }
 
-func (o *organizationWorker) Collect() error {
+func (o *Organization) Collect() error {
 	logger.Info("Collecting organizations...")
 	o.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	o.To = time.Now()
@@ -42,7 +42,7 @@ func (o *organizationWorker) Collect() error {
 	return o.Travel()
 }
 
-func (o *organizationWorker) Travel() error {
+func (o *Organization) Travel() error {
 	if o.From.After(o.To) {
 		return nil
 	}
@@ -72,7 +72,7 @@ func (o *organizationWorker) Travel() error {
 	return o.Travel()
 }
 
-func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
+func (o *Organization) Fetch(organizations *[]model.Organization) error {
 	res := response.Organization{}
 	if err := o.query(*o.SearchQuery, &res); err != nil {
 		return err
@@ -90,7 +90,7 @@ func (o *organizationWorker) Fetch(organizations *[]model.Organization) error {
 	return o.Fetch(organizations)
 }
 
-func (o *organizationWorker) Update(organization model.Organization) error {
+func (o *Organization) Update(organization model.Organization) error {
 	o.RepositoryQuery.Type = model.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(organization.ID())
 	if err := o.UpdateRepositories(organization); err != nil {
@@ -100,7 +100,7 @@ func (o *organizationWorker) Update(organization model.Organization) error {
 	return nil
 }
 
-func (o *organizationWorker) UpdateRepositories(organization model.Organization) error {
+func (o *Organization) UpdateRepositories(organization model.Organization) error {
 	var repositories []model.Repository
 	if err := o.FetchRepositories(&repositories); err != nil {
 		return err
@@ -110,7 +110,7 @@ func (o *organizationWorker) UpdateRepositories(organization model.Organization)
 	return nil
 }
 
-func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository) error {
+func (o *Organization) FetchRepositories(repositories *[]model.Repository) error {
 	res := response.Organization{}
 	if err := o.query(*o.RepositoryQuery, &res); err != nil {
 		return err
@@ -128,7 +128,7 @@ func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository)
 	return o.FetchRepositories(repositories)
 }
 
-func (o *organizationWorker) Rank() {
+func (o *Organization) Rank() {
 	logger.Info("Executing organization rank pipelines...")
 	pipelines := o.buildRankPipelines()
 
@@ -154,7 +154,7 @@ func (o *organizationWorker) Rank() {
 	o.RankModel.Delete(now, model.TypeOrganization)
 }
 
-func (o *organizationWorker) query(q query.Query, res *response.Organization) (err error) {
+func (o *Organization) query(q query.Query, res *response.Organization) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -175,7 +175,7 @@ func (o *organizationWorker) query(q query.Query, res *response.Organization) (e
 	return
 }
 
-func (o *organizationWorker) buildSearchQuery() string {
+func (o *Organization) buildSearchQuery() string {
 	from := o.From.Format(time.RFC3339)
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := query.SearchQuery{
@@ -187,7 +187,7 @@ func (o *organizationWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (o *organizationWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
+func (o *Organization) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	rankType := model.TypeOrganization
 	fields := []string{
 		"repositories.forks",
@@ -202,9 +202,9 @@ func (o *organizationWorker) buildRankPipelines() (pipelines []*pipeline.Pipelin
 	return
 }
 
-func NewOrganizationWorker() *organizationWorker {
-	return &organizationWorker{
-		Worker:            NewWorker(),
+func NewOrganizationWorker() *Organization {
+	return &Organization{
+		Worker:            New(),
 		OrganizationModel: model.NewOrganizationModel(),
 		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
 		SearchQuery:       query.Owners(),

@@ -39,7 +39,7 @@ func (m *Model) Last(v interface{}) {
 	}
 }
 
-func NewModel(name string) *Model {
+func New(name string) *Model {
 	return &Model{
 		name,
 	}

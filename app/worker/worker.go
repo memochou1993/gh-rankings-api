@@ -18,9 +18,9 @@ var (
 )
 
 var (
-	UserWorker         *userWorker
-	OrganizationWorker *organizationWorker
-	RepositoryWorker   *repositoryWorker
+	UserWorker         *User
+	OrganizationWorker *Organization
+	RepositoryWorker   *Repository
 )
 
 type Interface interface {
@@ -66,6 +66,6 @@ func Run(worker Interface) {
 	}
 }
 
-func NewWorker() *Worker {
+func New() *Worker {
 	return &Worker{}
 }

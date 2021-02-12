@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-type userWorker struct {
+type User struct {
 	*Worker
 	From            time.Time
 	To              time.Time
@@ -28,7 +28,7 @@ type userWorker struct {
 	RepositoryQuery *query.Query
 }
 
-func (u *userWorker) Collect() error {
+func (u *User) Collect() error {
 	logger.Info("Collecting users...")
 	u.From = time.Date(2007, time.October, 1, 0, 0, 0, 0, time.UTC)
 	u.To = time.Now()
@@ -43,7 +43,7 @@ func (u *userWorker) Collect() error {
 	return u.Travel()
 }
 
-func (u *userWorker) Travel() error {
+func (u *User) Travel() error {
 	if u.From.After(u.To) {
 		return nil
 	}
@@ -73,7 +73,7 @@ func (u *userWorker) Travel() error {
 	return u.Travel()
 }
 
-func (u *userWorker) Fetch(users *[]model.User) error {
+func (u *User) Fetch(users *[]model.User) error {
 	res := response.User{}
 	if err := u.query(*u.SearchQuery, &res); err != nil {
 		return err
@@ -91,7 +91,7 @@ func (u *userWorker) Fetch(users *[]model.User) error {
 	return u.Fetch(users)
 }
 
-func (u *userWorker) Update(user model.User) error {
+func (u *User) Update(user model.User) error {
 	u.GistQuery.Type = model.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := u.UpdateGists(user); err != nil {
@@ -107,7 +107,7 @@ func (u *userWorker) Update(user model.User) error {
 	return nil
 }
 
-func (u *userWorker) UpdateGists(user model.User) error {
+func (u *User) UpdateGists(user model.User) error {
 	var gists []model.Gist
 	if err := u.FetchGists(&gists); err != nil {
 		return err
@@ -117,7 +117,7 @@ func (u *userWorker) UpdateGists(user model.User) error {
 	return nil
 }
 
-func (u *userWorker) UpdateRepositories(user model.User) error {
+func (u *User) UpdateRepositories(user model.User) error {
 	var repositories []model.Repository
 	if err := u.FetchRepositories(&repositories); err != nil {
 		return err
@@ -127,7 +127,7 @@ func (u *userWorker) UpdateRepositories(user model.User) error {
 	return nil
 }
 
-func (u *userWorker) FetchGists(gists *[]model.Gist) error {
+func (u *User) FetchGists(gists *[]model.Gist) error {
 	res := response.User{}
 	if err := u.query(*u.GistQuery, &res); err != nil {
 		return err
@@ -145,7 +145,7 @@ func (u *userWorker) FetchGists(gists *[]model.Gist) error {
 	return u.FetchGists(gists)
 }
 
-func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
+func (u *User) FetchRepositories(repositories *[]model.Repository) error {
 	res := response.User{}
 	if err := u.query(*u.RepositoryQuery, &res); err != nil {
 		return err
@@ -163,7 +163,7 @@ func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 	return u.FetchRepositories(repositories)
 }
 
-func (u *userWorker) Rank() {
+func (u *User) Rank() {
 	logger.Info("Executing user rank pipelines...")
 	pipelines := u.buildRankPipelines()
 
@@ -189,7 +189,7 @@ func (u *userWorker) Rank() {
 	u.RankModel.Delete(now, model.TypeUser)
 }
 
-func (u *userWorker) query(q query.Query, res *response.User) (err error) {
+func (u *User) query(q query.Query, res *response.User) (err error) {
 	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
 		if !os.IsTimeout(err) {
 			return err
@@ -210,7 +210,7 @@ func (u *userWorker) query(q query.Query, res *response.User) (err error) {
 	return
 }
 
-func (u *userWorker) buildSearchQuery() string {
+func (u *User) buildSearchQuery() string {
 	from := u.From.Format(time.RFC3339)
 	to := u.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := query.SearchQuery{
@@ -222,7 +222,7 @@ func (u *userWorker) buildSearchQuery() string {
 	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
-func (u *userWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
+func (u *User) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	rankType := model.TypeUser
 	fields := []string{
 		"followers",
@@ -242,9 +242,9 @@ func (u *userWorker) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
 	return
 }
 
-func NewUserWorker() *userWorker {
-	return &userWorker{
-		Worker:          NewWorker(),
+func NewUserWorker() *User {
+	return &User{
+		Worker:          New(),
 		UserModel:       model.NewUserModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
 		SearchQuery:     query.Owners(),

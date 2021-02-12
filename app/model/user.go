@@ -62,6 +62,6 @@ func (u *UserModel) UpdateRepositories(user User, repositories []Repository) {
 
 func NewUserModel() *UserModel {
 	return &UserModel{
-		Model: NewModel("users"),
+		Model: New("users"),
 	}
 }
