@@ -120,10 +120,10 @@ func (o *organizationWorker) FetchRepositories(repositories *[]model.Repository)
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.Organization.Repositories.PageInfo.HasNextPage {
-		o.RepositoryQuery.RepositoryArguments.After = ""
+		o.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil
 	}
-	o.RepositoryQuery.RepositoryArguments.After = strconv.Quote(res.Data.Organization.Repositories.PageInfo.EndCursor)
+	o.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.Organization.Repositories.PageInfo.EndCursor)
 
 	return o.FetchRepositories(repositories)
 }
@@ -207,7 +207,7 @@ func NewOrganizationWorker() *organizationWorker {
 		Worker:            NewWorker(),
 		OrganizationModel: model.NewOrganizationModel(),
 		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
-		SearchQuery:       query.NewOwnerQuery(),
-		RepositoryQuery:   query.NewOwnerRepositoryQuery(),
+		SearchQuery:       query.Owners(),
+		RepositoryQuery:   query.OwnerRepositories(),
 	}
 }

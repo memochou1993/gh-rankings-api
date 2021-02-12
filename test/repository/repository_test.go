@@ -32,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
-	r.SearchQuery = query.NewRepositoryQuery()
+	r.SearchQuery = query.Repositories()
 	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
 
 	var repositories []model.Repository

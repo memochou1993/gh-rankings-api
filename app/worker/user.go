@@ -137,10 +137,10 @@ func (u *userWorker) FetchGists(gists *[]model.Gist) error {
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Gists.PageInfo.HasNextPage {
-		u.GistQuery.GistArguments.After = ""
+		u.GistQuery.GistsArguments.After = ""
 		return nil
 	}
-	u.GistQuery.GistArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
+	u.GistQuery.GistsArguments.After = strconv.Quote(res.Data.User.Gists.PageInfo.EndCursor)
 
 	return u.FetchGists(gists)
 }
@@ -155,10 +155,10 @@ func (u *userWorker) FetchRepositories(repositories *[]model.Repository) error {
 	}
 	res.Data.RateLimit.Break(collecting)
 	if !res.Data.User.Repositories.PageInfo.HasNextPage {
-		u.RepositoryQuery.RepositoryArguments.After = ""
+		u.RepositoryQuery.RepositoriesArguments.After = ""
 		return nil
 	}
-	u.RepositoryQuery.RepositoryArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
+	u.RepositoryQuery.RepositoriesArguments.After = strconv.Quote(res.Data.User.Repositories.PageInfo.EndCursor)
 
 	return u.FetchRepositories(repositories)
 }
@@ -247,8 +247,8 @@ func NewUserWorker() *userWorker {
 		Worker:          NewWorker(),
 		UserModel:       model.NewUserModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
-		SearchQuery:     query.NewOwnerQuery(),
-		GistQuery:       query.NewOwnerGistQuery(),
-		RepositoryQuery: query.NewOwnerRepositoryQuery(),
+		SearchQuery:     query.Owners(),
+		GistQuery:       query.OwnerGists(),
+		RepositoryQuery: query.OwnerRepositories(),
 	}
 }

@@ -32,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	o := worker.NewOrganizationWorker()
 
-	o.SearchQuery = query.NewOwnerQuery()
+	o.SearchQuery = query.Owners()
 	o.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:>=50 sort:joined-asc")
 
 	var organizations []model.Organization
@@ -69,7 +69,7 @@ func TestStore(t *testing.T) {
 func TestFetchRepositories(t *testing.T) {
 	o := worker.NewUserWorker()
 
-	o.RepositoryQuery = query.NewOwnerRepositoryQuery()
+	o.RepositoryQuery = query.OwnerRepositories()
 	o.RepositoryQuery.Type = model.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote("facebook")
 

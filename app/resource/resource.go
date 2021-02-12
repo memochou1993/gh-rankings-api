@@ -1,8 +1,10 @@
 package resource
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/memochou1993/gh-rankings/util"
+	"io/ioutil"
+	"log"
 	"strings"
 )
 
@@ -35,8 +37,8 @@ func (l Location) isUnique() bool {
 }
 
 func Init() {
-	util.LoadAsset("language", &Languages)
-	util.LoadAsset("location", &Locations)
+	read("language", &Languages)
+	read("location", &Locations)
 }
 
 func Locate(text string) (location string, city string) {
@@ -100,4 +102,14 @@ func Locate(text string) (location string, city string) {
 
 func isFuzzy(text string) bool {
 	return len(text) <= 5
+}
+
+func read(name string, v interface{}) {
+	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s/index.json", name))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if err = json.Unmarshal(b, &v); err != nil {
+		log.Fatal(err.Error())
+	}
 }

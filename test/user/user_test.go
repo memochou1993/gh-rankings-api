@@ -32,7 +32,7 @@ func setUp() {
 func TestFetch(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.SearchQuery = query.NewOwnerQuery()
+	u.SearchQuery = query.Owners()
 	u.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:>=50 repos:>=5 sort:joined-asc")
 
 	var users []model.User
@@ -69,7 +69,7 @@ func TestStore(t *testing.T) {
 func TestFetchGists(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.GistQuery = query.NewOwnerGistQuery()
+	u.GistQuery = query.OwnerGists()
 	u.GistQuery.Type = model.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
@@ -87,7 +87,7 @@ func TestFetchGists(t *testing.T) {
 func TestFetchRepositories(t *testing.T) {
 	u := worker.NewUserWorker()
 
-	u.RepositoryQuery = query.NewOwnerRepositoryQuery()
+	u.RepositoryQuery = query.OwnerRepositories()
 	u.RepositoryQuery.Type = model.TypeUser
 	u.RepositoryQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 

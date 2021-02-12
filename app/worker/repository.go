@@ -161,6 +161,6 @@ func NewRepositoryWorker() *repositoryWorker {
 		Worker:          NewWorker(),
 		RepositoryModel: model.NewRepositoryModel(),
 		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeRepository)),
-		SearchQuery:     query.NewRepositoryQuery(),
+		SearchQuery:     query.Repositories(),
 	}
 }

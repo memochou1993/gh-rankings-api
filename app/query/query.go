@@ -2,7 +2,9 @@ package query
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/memochou1993/gh-rankings/util"
+	"io/ioutil"
 	"log"
 	"strings"
 )
@@ -12,8 +14,8 @@ type Query struct {
 	Type   string
 	SearchArguments
 	OwnerArguments
-	GistArguments
-	RepositoryArguments
+	GistsArguments
+	RepositoriesArguments
 }
 
 func (q Query) String() string {
@@ -21,8 +23,8 @@ func (q Query) String() string {
 	query = strings.Replace(query, "<Type>", q.Type, 1)
 	query = strings.Replace(query, "<SearchArguments>", util.ParseStruct(q.SearchArguments, ","), 1)
 	query = strings.Replace(query, "<OwnerArguments>", util.ParseStruct(q.OwnerArguments, ","), 1)
-	query = strings.Replace(query, "<GistArguments>", util.ParseStruct(q.GistArguments, ","), 1)
-	query = strings.Replace(query, "<RepositoryArguments>", util.ParseStruct(q.RepositoryArguments, ","), 1)
+	query = strings.Replace(query, "<GistsArguments>", util.ParseStruct(q.GistsArguments, ","), 1)
+	query = strings.Replace(query, "<RepositoriesArguments>", util.ParseStruct(q.RepositoriesArguments, ","), 1)
 
 	payload := struct {
 		Query string `json:"query"`
@@ -48,13 +50,13 @@ type OwnerArguments struct {
 	Login string `json:"login,omitempty"`
 }
 
-type GistArguments struct {
+type GistsArguments struct {
 	After   string `json:"after,omitempty"`
 	First   int    `json:"first,omitempty"`
 	OrderBy string `json:"orderBy,omitempty"`
 }
 
-type RepositoryArguments struct {
+type RepositoriesArguments struct {
 	After             string `json:"after,omitempty"`
 	First             int    `json:"first,omitempty"`
 	OrderBy           string `json:"orderBy,omitempty"`
@@ -75,9 +77,9 @@ type Items struct {
 	TotalCount int `json:"totalCount,omitempty" bson:"total_count"`
 }
 
-func NewOwnerQuery() *Query {
+func Owners() *Query {
 	return &Query{
-		Schema: util.ReadQuery("owners"),
+		Schema: read("owners"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "USER",
@@ -85,20 +87,20 @@ func NewOwnerQuery() *Query {
 	}
 }
 
-func NewOwnerGistQuery() *Query {
+func OwnerGists() *Query {
 	return &Query{
-		Schema: util.ReadQuery("owner_gists"),
-		GistArguments: GistArguments{
+		Schema: read("owner_gists"),
+		GistsArguments: GistsArguments{
 			First:   100,
 			OrderBy: "{field:CREATED_AT,direction:ASC}",
 		},
 	}
 }
 
-func NewOwnerRepositoryQuery() *Query {
+func OwnerRepositories() *Query {
 	return &Query{
-		Schema: util.ReadQuery("owner_repositories"),
-		RepositoryArguments: RepositoryArguments{
+		Schema: read("owner_repositories"),
+		RepositoriesArguments: RepositoriesArguments{
 			First:             100,
 			OrderBy:           "{field:CREATED_AT,direction:ASC}",
 			OwnerAffiliations: "OWNER",
@@ -106,12 +108,20 @@ func NewOwnerRepositoryQuery() *Query {
 	}
 }
 
-func NewRepositoryQuery() *Query {
+func Repositories() *Query {
 	return &Query{
-		Schema: util.ReadQuery("repositories"),
+		Schema: read("repositories"),
 		SearchArguments: SearchArguments{
 			First: 100,
 			Type:  "REPOSITORY",
 		},
 	}
+}
+
+func read(name string) string {
+	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/query/%s.graphql", name))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return string(b)
 }
