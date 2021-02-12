@@ -37,7 +37,10 @@ func (m *Model) Last(v interface{}) {
 	if err := res.Decode(&v); err != nil && err != mongo.ErrNoDocuments {
 		log.Fatal(err.Error())
 	}
-	return
 }
 
-// TODO: should create a NewModel method
+func NewModel(name string) *Model {
+	return &Model{
+		name,
+	}
+}

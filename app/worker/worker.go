@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
 	"log"
 	"time"
@@ -56,11 +57,11 @@ func Init() {
 func Run(worker Interface) {
 	t := time.NewTicker(24 * time.Hour)
 	for ; true; <-t.C {
-		// collecting += 1
-		// if err := worker.Collect(); err != nil {
-		// 	logger.Error(err.Error())
-		// }
-		// collecting -= 1
+		collecting += 1
+		if err := worker.Collect(); err != nil {
+			logger.Error(err.Error())
+		}
+		collecting -= 1
 		worker.Rank()
 	}
 }

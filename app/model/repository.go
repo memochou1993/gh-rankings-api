@@ -46,8 +46,6 @@ func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResul
 
 func NewRepositoryModel() *RepositoryModel {
 	return &RepositoryModel{
-		&Model{
-			name: "repositories",
-		},
+		Model: NewModel("repositories"),
 	}
 }
