@@ -16,11 +16,7 @@ import (
 var client *http.Client
 
 func init() {
-	client = newClient()
-}
-
-func newClient() *http.Client {
-	return &http.Client{
+	client = &http.Client{
 		Timeout: 10 * time.Second,
 	}
 }
@@ -31,15 +27,17 @@ func Fetch(ctx context.Context, q string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Fatal(err.Error())
-		}
-	}()
+	defer CloseBody(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		logger.Warning(fmt.Sprintf("Request failed with status code %d", resp.StatusCode))
 	}
 	return json.NewDecoder(resp.Body).Decode(v)
+}
+
+func CloseBody(closer io.ReadCloser) {
+	if err := closer.Close(); err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func post(ctx context.Context, body io.Reader) (*http.Response, error) {

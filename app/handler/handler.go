@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
-	"log"
 	"net/http"
 )
 
@@ -13,7 +13,7 @@ type Payload struct {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	defer closeBody(r)
+	defer app.CloseBody(r.Body)
 
 	req, err := request.Validate(r)
 	if err != nil {
@@ -50,11 +50,5 @@ func response(w http.ResponseWriter, code int, payload Payload) {
 
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func closeBody(r *http.Request) {
-	if err := r.Body.Close(); err != nil {
-		log.Fatal(err.Error())
 	}
 }
