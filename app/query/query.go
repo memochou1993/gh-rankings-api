@@ -74,7 +74,7 @@ type SearchQuery struct {
 }
 
 type Items struct {
-	TotalCount int `json:"totalCount,omitempty" bson:"total_count"`
+	TotalCount int `json:"totalCount" bson:"total_count"`
 }
 
 func Owners() *Query {

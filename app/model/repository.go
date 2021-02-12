@@ -9,19 +9,19 @@ import (
 )
 
 type Repository struct {
-	CreatedAt     *time.Time   `json:"createdAt,omitempty" bson:"created_at"`
-	Forks         *query.Items `json:"forks,omitempty" bson:"forks"`
-	Name          string       `json:"name,omitempty" bson:"name"`
+	CreatedAt     *time.Time   `json:"createdAt" bson:"created_at"`
+	Forks         *query.Items `json:"forks" bson:"forks"`
+	Name          string       `json:"name" bson:"name"`
 	NameWithOwner string       `json:"nameWithOwner" bson:"_id"`
-	ImageUrl      string       `json:"imageUrl,omitempty" bson:"image_url"`
+	ImageUrl      string       `json:"imageUrl" bson:"image_url"`
 	Owner         struct {
-		Login string `json:"login,omitempty" bson:"login"`
-	} `json:"owner,omitempty" bson:"owner"`
+		Login string `json:"login" bson:"login"`
+	} `json:"owner" bson:"owner"`
 	PrimaryLanguage struct {
-		Name string `json:"name,omitempty" bson:"name"`
-	} `json:"primaryLanguage,omitempty" bson:"primary_language"`
-	Stargazers *query.Items `json:"stargazers,omitempty" bson:"stargazers"`
-	Watchers   *query.Items `json:"watchers,omitempty" bson:"watchers"`
+		Name string `json:"name" bson:"name"`
+	} `json:"primaryLanguage" bson:"primary_language"`
+	Stargazers *query.Items `json:"stargazers" bson:"stargazers"`
+	Watchers   *query.Items `json:"watchers" bson:"watchers"`
 }
 
 func (r *Repository) ID() string {
