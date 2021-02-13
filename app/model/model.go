@@ -34,7 +34,7 @@ func (m *Model) Collection() *mongo.Collection {
 func (m *Model) Last(v interface{}) {
 	opts := options.FindOne().SetSort(bson.D{{"$natural", -1}})
 	res := database.FindOne(m.Name(), bson.D{}, opts)
-	if err := res.Decode(&v); err != nil && err != mongo.ErrNoDocuments {
+	if err := res.Decode(v); err != nil && err != mongo.ErrNoDocuments {
 		log.Fatal(err.Error())
 	}
 }
