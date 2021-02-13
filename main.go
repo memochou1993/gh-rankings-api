@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"github.com/memochou1993/gh-rankings/app/handler"
-	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/app/worker"
 	"github.com/memochou1993/gh-rankings/database"
 	"github.com/memochou1993/gh-rankings/logger"
@@ -16,7 +15,6 @@ func init() {
 	util.LoadEnv()
 	database.Init()
 	logger.Init()
-	resource.Init()
 	worker.Init()
 }
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -36,12 +38,12 @@ func (l Location) isUnique() bool {
 	return l.Unique
 }
 
-func Init() {
+func init() {
 	read("language", &Languages)
 	read("location", &Locations)
 }
 
-func Locate(text string) (location string, city string) {
+func Locate(text string) (location, city string) {
 	for _, location := range Locations {
 		if location.is(text) {
 			return location.Name, ""
@@ -105,7 +107,9 @@ func isFuzzy(text string) bool {
 }
 
 func read(name string, v interface{}) {
-	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/%s/index.json", name))
+	_, file, _, _ := runtime.Caller(0)
+	root := filepath.Join(filepath.Dir(file), "../..")
+	b, err := ioutil.ReadFile(fmt.Sprintf("%s/assets/%s/index.json", root, name))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -1,26 +1,12 @@
-package language
+package resource
 
 import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app/resource"
-	"github.com/memochou1993/gh-rankings/test"
-	"os"
 	"reflect"
 	"strconv"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	setUp()
-	code := m.Run()
-	tearDown()
-	os.Exit(code)
-}
-
-func setUp() {
-	test.ChangeDirectory()
-	resource.Init()
-}
 
 func TestLocate(t *testing.T) {
 	cases := []struct {
@@ -160,10 +146,6 @@ func TestLocate(t *testing.T) {
 	}
 }
 
-func join(location string, city string) []string {
+func join(location, city string) []string {
 	return []string{location, city}
-}
-
-func tearDown() {
-	//
 }
