@@ -210,7 +210,7 @@ func NewOrganizationWorker() *Organization {
 	return &Organization{
 		Worker:            &Worker{},
 		OrganizationModel: model.NewOrganizationModel(),
-		RankModel:         model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeOrganization)),
+		RankModel:         model.NewRankModel(model.TypeOrganization),
 		SearchQuery:       query.Owners(),
 		RepositoryQuery:   query.OwnerRepositories(),
 	}

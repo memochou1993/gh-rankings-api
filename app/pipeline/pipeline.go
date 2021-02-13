@@ -2,9 +2,11 @@ package pipeline
 
 import (
 	"fmt"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type Pipeline struct {
@@ -96,6 +98,20 @@ func RankCount(p mongo.Pipeline) mongo.Pipeline {
 	return append(p, stages...)
 }
 
+func List(req *request.Request, createdAt time.Time) mongo.Pipeline {
+	return mongo.Pipeline{
+		stageMatch("$and", mongo.Pipeline{{
+			{"type", req.Type},
+			{"field", req.Field},
+			{"language", req.Language},
+			{"location", req.Location},
+			{"created_at", createdAt},
+		}}),
+		stageSkip((req.Page - 1) * req.Limit),
+		stageLimit(req.Limit),
+	}
+}
+
 func stageUnwind(field string) bson.D {
 	return bson.D{
 		{"$unwind", fmt.Sprintf("$%s", field)},
@@ -110,6 +126,7 @@ func stageMatch(key string, value interface{}) bson.D {
 	}
 }
 
+// FIXME: should rename
 func stageProject(field string) bson.D {
 	return bson.D{
 		{"$project", bson.D{
@@ -122,6 +139,7 @@ func stageProject(field string) bson.D {
 	}
 }
 
+// FIXME: should rename
 func stageGroup(field string) bson.D {
 	return bson.D{
 		{"$group", bson.D{
@@ -147,5 +165,17 @@ func stageSort() bson.D {
 func stageCount() bson.D {
 	return bson.D{
 		{"$count", "count"},
+	}
+}
+
+func stageSkip(skip int64) bson.D {
+	return bson.D{
+		{"$skip", skip},
+	}
+}
+
+func stageLimit(limit int64) bson.D {
+	return bson.D{
+		{"$limit", limit},
 	}
 }

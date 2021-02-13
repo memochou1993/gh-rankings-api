@@ -250,7 +250,7 @@ func NewUserWorker() *User {
 	return &User{
 		Worker:          &Worker{},
 		UserModel:       model.NewUserModel(),
-		RankModel:       model.NewRankModel(fmt.Sprintf("%s_ranks", model.TypeUser)),
+		RankModel:       model.NewRankModel(model.TypeUser),
 		SearchQuery:     query.Owners(),
 		GistQuery:       query.OwnerGists(),
 		RepositoryQuery: query.OwnerRepositories(),
