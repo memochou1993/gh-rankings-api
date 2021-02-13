@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 
 func setUp() {
 	util.LoadEnv()
-	database.Init()
+	database.Connect()
 }
 
 func TestFetch(t *testing.T) {

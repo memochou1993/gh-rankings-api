@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
-var client *mongo.Client
+var (
+	client *mongo.Client
+)
 
-func Init() {
+func Connect() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -92,19 +94,6 @@ func CloseCursor(ctx context.Context, cursor *mongo.Cursor) {
 	if err := cursor.Close(ctx); err != nil {
 		log.Fatal(err.Error())
 	}
-}
-
-func Indexes(collection string) (indexes []bson.D) {
-	ctx := context.Background()
-	cursor, err := Collection(collection).Indexes().List(ctx)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	defer CloseCursor(ctx, cursor)
-	if err := cursor.All(ctx, &indexes); err != nil {
-		log.Fatal(err.Error())
-	}
-	return
 }
 
 func CreateIndexes(collection string, keys []string) {

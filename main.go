@@ -12,8 +12,8 @@ import (
 
 func init() {
 	util.LoadEnv()
-	database.Init()
-	worker.Init()
+	database.Connect()
+	worker.Start()
 }
 
 func main() {

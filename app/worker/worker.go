@@ -18,9 +18,9 @@ var (
 )
 
 var (
-	userWorker         *User
-	organizationWorker *Organization
-	repositoryWorker   *Repository
+	userWorker         = NewUserWorker()
+	organizationWorker = NewOrganizationWorker()
+	repositoryWorker   = NewRepositoryWorker()
 )
 
 type Interface interface {
@@ -41,11 +41,7 @@ func (w *Worker) seal(key string, t time.Time) {
 	}
 }
 
-func Init() {
-	userWorker = NewUserWorker()
-	organizationWorker = NewOrganizationWorker()
-	repositoryWorker = NewRepositoryWorker()
-
+func Start() {
 	go run(userWorker)
 	go run(organizationWorker)
 	go run(repositoryWorker)
