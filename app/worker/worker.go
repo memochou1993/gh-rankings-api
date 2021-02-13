@@ -52,11 +52,11 @@ func Start() {
 func List(req *request.Request) (ranks []model.Rank) {
 	switch req.Type {
 	case model.TypeUser:
-		ranks = NewUserWorker().List(req)
+		ranks = userWorker.List(req)
 	case model.TypeOrganization:
-		ranks = NewOrganizationWorker().List(req)
+		ranks = organizationWorker.List(req)
 	case model.TypeRepository:
-		ranks = NewRepositoryWorker().List(req)
+		ranks = repositoryWorker.List(req)
 	}
 	return
 }
