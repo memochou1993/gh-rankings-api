@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
 	"log"
@@ -14,19 +16,20 @@ const (
 )
 
 var (
-	collecting int
-)
-
-var (
 	userWorker         = NewUserWorker()
 	organizationWorker = NewOrganizationWorker()
 	repositoryWorker   = NewRepositoryWorker()
+)
+
+var (
+	collecting int
 )
 
 type Interface interface {
 	Init()
 	Collect() error
 	Rank()
+	List(request *request.Request) []model.Rank
 }
 
 type Worker struct {
@@ -45,6 +48,18 @@ func Start() {
 	go run(userWorker)
 	go run(organizationWorker)
 	go run(repositoryWorker)
+}
+
+func List(req *request.Request) (ranks []model.Rank) {
+	switch req.Type {
+	case model.TypeUser:
+		ranks = NewUserWorker().List(req)
+	case model.TypeOrganization:
+		ranks = NewOrganizationWorker().List(req)
+	case model.TypeRepository:
+		ranks = NewRepositoryWorker().List(req)
+	}
+	return
 }
 
 func run(worker Interface) {

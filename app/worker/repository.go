@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
+	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"sync"
@@ -111,6 +113,10 @@ func (r *Repository) Rank() {
 	r.Worker.seal(TimestampRepositoryRanks, timestamp)
 
 	r.RankModel.Delete(timestamp, model.TypeRepository)
+}
+
+func (r *Repository) List(req *request.Request) []model.Rank {
+	return r.RankModel.List(req, time.Unix(0, viper.GetInt64(TimestampRepositoryRanks)))
 }
 
 func (r *Repository) query(q query.Query, res *response.Repository) (err error) {

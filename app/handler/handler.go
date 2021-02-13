@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
-	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/worker"
-	"github.com/spf13/viper"
 	"net/http"
-	"time"
 )
 
 type Payload struct {
@@ -29,15 +26,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ranks []model.Rank
-	switch req.Type {
-	case model.TypeUser:
-		ranks = worker.NewUserWorker().RankModel.List(req, time.Unix(0, viper.GetInt64(worker.TimestampUserRanks)))
-	case model.TypeOrganization:
-		ranks = worker.NewOrganizationWorker().RankModel.List(req, time.Unix(0, viper.GetInt64(worker.TimestampOrganizationRanks)))
-	case model.TypeRepository:
-		ranks = worker.NewRepositoryWorker().RankModel.List(req, time.Unix(0, viper.GetInt64(worker.TimestampRepositoryRanks)))
-	}
+	ranks := worker.List(req)
 
 	response(w, http.StatusOK, Payload{Data: ranks})
 }
