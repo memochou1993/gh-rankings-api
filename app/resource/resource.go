@@ -3,10 +3,9 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/memochou1993/gh-rankings/util"
 	"io/ioutil"
 	"log"
-	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -107,9 +106,7 @@ func isFuzzy(text string) bool {
 }
 
 func read(name string, v interface{}) {
-	_, file, _, _ := runtime.Caller(0)
-	root := filepath.Join(filepath.Dir(file), "../..")
-	b, err := ioutil.ReadFile(fmt.Sprintf("%s/assets/%s/index.json", root, name))
+	b, err := ioutil.ReadFile(fmt.Sprintf("%s/assets/%s/index.json", util.Root(), name))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

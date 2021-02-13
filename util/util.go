@@ -6,11 +6,13 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
 func LoadEnv() {
-	viper.AddConfigPath("./")
+	viper.AddConfigPath(Root())
 	viper.SetConfigName(os.Getenv("APP_ENV"))
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal(err.Error())
@@ -35,4 +37,9 @@ func ParseStruct(v interface{}, sep string) string {
 	s = strings.TrimSuffix(s, "}")
 
 	return s
+}
+
+func Root() string {
+	_, f, _, _ := runtime.Caller(0)
+	return filepath.Join(filepath.Dir(f), "..")
 }

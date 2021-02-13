@@ -35,8 +35,8 @@ var (
 	purple = color("\033[1;35m%s\033[0m")
 )
 
-func Init() {
-	name := fmt.Sprintf("./storage/logs/%s.txt", time.Now().Format("2006-01-02"))
+func init() {
+	name := fmt.Sprintf("%s/storage/logs/%s.txt", util.Root(), time.Now().Format("2006-01-02"))
 	file, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err.Error())

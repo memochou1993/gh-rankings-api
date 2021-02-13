@@ -127,7 +127,7 @@ func Repositories() *Query {
 }
 
 func read(name string) string {
-	b, err := ioutil.ReadFile(fmt.Sprintf("./assets/query/%s.graphql", name))
+	b, err := ioutil.ReadFile(fmt.Sprintf("%s/assets/query/%s.graphql", util.Root(), name))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

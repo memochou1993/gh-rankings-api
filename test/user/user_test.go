@@ -5,7 +5,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
 	"github.com/memochou1993/gh-rankings/database"
-	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/test"
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,10 +22,8 @@ func TestMain(m *testing.M) {
 }
 
 func setUp() {
-	test.ChangeDirectory()
 	util.LoadEnv()
 	database.Init()
-	logger.Init()
 }
 
 func TestFetch(t *testing.T) {
