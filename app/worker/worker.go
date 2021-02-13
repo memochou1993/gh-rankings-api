@@ -29,7 +29,6 @@ type Interface interface {
 	Init()
 	Collect() error
 	Rank()
-	List(request *request.Request) []model.Rank
 }
 
 type Worker struct {
