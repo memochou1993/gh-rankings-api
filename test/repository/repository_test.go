@@ -30,7 +30,7 @@ func TestFetch(t *testing.T) {
 	r := worker.NewRepositoryWorker()
 
 	r.SearchQuery = query.Repositories()
-	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:>=100")
+	r.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 fork:true sort:stars stars:100..*")
 
 	var repositories []model.Repository
 	if err := r.Fetch(&repositories); err != nil {

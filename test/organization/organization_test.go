@@ -1,4 +1,4 @@
-package user
+package organization
 
 import (
 	"github.com/memochou1993/gh-rankings/app/model"
@@ -9,6 +9,7 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"os"
 	"strconv"
 	"testing"
@@ -30,7 +31,7 @@ func TestFetch(t *testing.T) {
 	o := worker.NewOrganizationWorker()
 
 	o.SearchQuery = query.Owners()
-	o.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:>=50 sort:joined-asc")
+	o.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 repos:50..1000 sort:joined-asc")
 
 	var organizations []model.Organization
 	if err := o.Fetch(&organizations); err != nil {

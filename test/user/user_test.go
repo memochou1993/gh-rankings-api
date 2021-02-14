@@ -30,7 +30,7 @@ func TestFetch(t *testing.T) {
 	u := worker.NewUserWorker()
 
 	u.SearchQuery = query.Owners()
-	u.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:>=50 repos:>=5 sort:joined-asc")
+	u.SearchQuery.SearchArguments.Query = strconv.Quote("created:2020-01-01..2020-01-01 followers:100..* sort:joined-asc")
 
 	var users []model.User
 	if err := u.Fetch(&users); err != nil {

@@ -147,7 +147,7 @@ func (r *Repository) buildSearchQuery() string {
 		Created: fmt.Sprintf("%s..%s", from, to),
 		Fork:    "true",
 		Sort:    "stars",
-		Stars:   ">=100",
+		Stars:   "100..*",
 	}
 	return strconv.Quote(util.ParseStruct(q, " "))
 }

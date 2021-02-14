@@ -190,7 +190,7 @@ func (o *Organization) buildSearchQuery() string {
 	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := query.SearchQuery{
 		Created: fmt.Sprintf("%s..%s", from, to),
-		Repos:   ">=25",
+		Repos:   "25..1000",
 		Sort:    "joined-asc",
 		Type:    model.TypeOrganization,
 	}
