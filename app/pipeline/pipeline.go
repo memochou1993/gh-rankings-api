@@ -138,6 +138,38 @@ func List(req *request.Request, createdAt time.Time) mongo.Pipeline {
 	}
 }
 
+// TODO
+func ListByName(req *request.Request, createdAt time.Time) mongo.Pipeline {
+	// cond := mongo.Pipeline{{
+	// 	{"created_at", createdAt},
+	// 	{"name", req.Name},
+	// }}
+	// if req.Type != "" {
+	// 	cond = append(cond, bson.D{{"type", req.Type}})
+	// }
+	// if req.Field != "" {
+	// 	cond = append(cond, bson.D{{"type", req.Field}})
+	// }
+	// if req.Language != "" {
+	// 	cond = append(cond, bson.D{{"type", req.Language}})
+	// }
+	// if req.Location != "" {
+	// 	cond = append(cond, bson.D{{"type", req.Location}})
+	// }
+
+	return mongo.Pipeline{
+		// operator.Match("$and", mongo.Pipeline{{
+		// 	{"type", req.Type},
+		// 	{"field", req.Field},
+		// 	{"language", req.Language},
+		// 	{"location", req.Location},
+		// 	{"created_at", createdAt},
+		// }}),
+		// operator.Skip((req.Page - 1) * req.Limit),
+		// operator.Limit(req.Limit),
+	}
+}
+
 func id() bson.E {
 	return bson.E{
 		Key:   "_id",
