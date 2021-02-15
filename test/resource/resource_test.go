@@ -17,122 +17,122 @@ func TestLocate(t *testing.T) {
 		{
 			name:     "Taipei, Taiwan",
 			expected: []string{"Taiwan", "Taipei, Taiwan"},
-			actual:   join(resource.Locate("Taipei, Taiwan")),
+			actual:   concat(resource.Locate("Taipei, Taiwan")),
 		},
 		{
 			name:     "taipei, taiwan",
 			expected: []string{"Taiwan", "Taipei, Taiwan"},
-			actual:   join(resource.Locate("taipei, taiwan")),
+			actual:   concat(resource.Locate("taipei, taiwan")),
 		},
 		{
 			name:     "TAIPEI, TAIWAN",
 			expected: []string{"Taiwan", "Taipei, Taiwan"},
-			actual:   join(resource.Locate("TAIPEI, TAIWAN")),
+			actual:   concat(resource.Locate("TAIPEI, TAIWAN")),
 		},
 		{
 			name:     "Taiwan",
 			expected: []string{"Taiwan", ""},
-			actual:   join(resource.Locate("Taiwan")),
+			actual:   concat(resource.Locate("Taiwan")),
 		},
 		{
 			name:     "Taipei",
 			expected: []string{"Taiwan", "Taipei, Taiwan"},
-			actual:   join(resource.Locate("Taipei")),
+			actual:   concat(resource.Locate("Taipei")),
 		},
 		{
 			name:     "Congo",
 			expected: []string{"Congo", ""},
-			actual:   join(resource.Locate("Congo")),
+			actual:   concat(resource.Locate("Congo")),
 		},
 		{
 			name:     "Congo (DRC)",
 			expected: []string{"Congo (DRC)", ""},
-			actual:   join(resource.Locate("Congo (DRC)")),
+			actual:   concat(resource.Locate("Congo (DRC)")),
 		},
 		{
 			name:     "Lubumbashi, Congo (DRC)",
 			expected: []string{"Congo (DRC)", ""},
-			actual:   join(resource.Locate("Lubumbashi, Congo (DRC)")),
+			actual:   concat(resource.Locate("Lubumbashi, Congo (DRC)")),
 		},
 		{
 			name:     "Democratic Republic of the Congo",
 			expected: []string{"Congo (DRC)", ""},
-			actual:   join(resource.Locate("Democratic Republic of the Congo")),
+			actual:   concat(resource.Locate("Democratic Republic of the Congo")),
 		},
 		{
 			name:     "Niger",
 			expected: []string{"Niger", ""},
-			actual:   join(resource.Locate("Niger")),
+			actual:   concat(resource.Locate("Niger")),
 		},
 		{
 			name:     "Nigeria",
 			expected: []string{"Nigeria", ""},
-			actual:   join(resource.Locate("Nigeria")),
+			actual:   concat(resource.Locate("Nigeria")),
 		},
 		{
 			name:     "Lagos, Nigeria",
 			expected: []string{"Nigeria", "Lagos, Nigeria"},
-			actual:   join(resource.Locate("Lagos, Nigeria")),
+			actual:   concat(resource.Locate("Lagos, Nigeria")),
 		},
 		{
 			name:     "Netherlands Antilles",
 			expected: []string{"Curacao", ""},
-			actual:   join(resource.Locate("Netherlands Antilles")),
+			actual:   concat(resource.Locate("Netherlands Antilles")),
 		},
 		{
 			name:     "Brasil",
 			expected: []string{"Brazil", ""},
-			actual:   join(resource.Locate("Brasil")),
+			actual:   concat(resource.Locate("Brasil")),
 		},
 		{
 			name:     "Formosa",
 			expected: []string{"", ""},
-			actual:   join(resource.Locate("Formosa")),
+			actual:   concat(resource.Locate("Formosa")),
 		},
 		{
 			name:     "Taipei, Formosa",
 			expected: []string{"Taiwan", "Taipei, Taiwan"},
-			actual:   join(resource.Locate("Taipei, Formosa")),
+			actual:   concat(resource.Locate("Taipei, Formosa")),
 		},
 		{
 			name:     "Formosa, Argentina",
 			expected: []string{"Argentina", "Formosa, Argentina"},
-			actual:   join(resource.Locate("Formosa, Argentina")),
+			actual:   concat(resource.Locate("Formosa, Argentina")),
 		},
 		{
 			name:     "Ilan",
 			expected: []string{"", ""},
-			actual:   join(resource.Locate("Ilan")),
+			actual:   concat(resource.Locate("Ilan")),
 		},
 		{
 			name:     "Ilan, Taiwan",
 			expected: []string{"Taiwan", "Ilan, Taiwan"},
-			actual:   join(resource.Locate("Ilan, Taiwan")),
+			actual:   concat(resource.Locate("Ilan, Taiwan")),
 		},
 		{
 			name:     "Central",
 			expected: []string{"", ""},
-			actual:   join(resource.Locate("Central")),
+			actual:   concat(resource.Locate("Central")),
 		},
 		{
 			name:     "Taioan, Taiwan",
 			expected: []string{"Taiwan", "Tainan, Taiwan"},
-			actual:   join(resource.Locate("Taioan, Taiwan")),
+			actual:   concat(resource.Locate("Taioan, Taiwan")),
 		},
 		{
 			name:     "Taioan",
 			expected: []string{"Taiwan", "Tainan, Taiwan"},
-			actual:   join(resource.Locate("Taioan")),
+			actual:   concat(resource.Locate("Taioan")),
 		},
 		{
 			name:     "Takao, Taiwan",
 			expected: []string{"Taiwan", ""},
-			actual:   join(resource.Locate("Takao, Taiwan")),
+			actual:   concat(resource.Locate("Takao, Taiwan")),
 		},
 		{
 			name:     "Takao",
 			expected: []string{"", ""},
-			actual:   join(resource.Locate("Takao")),
+			actual:   concat(resource.Locate("Takao")),
 		},
 	}
 
@@ -146,6 +146,6 @@ func TestLocate(t *testing.T) {
 	}
 }
 
-func join(location, city string) []string {
+func concat(location, city string) []string {
 	return []string{location, city}
 }

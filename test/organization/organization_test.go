@@ -9,7 +9,6 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 	"os"
 	"strconv"
 	"testing"
