@@ -109,7 +109,7 @@ func newLogger() *Logger {
 }
 
 func now() string {
-	return time.Now().Format("2006-01-02 03")
+	return time.Now().Format("2006-01-02_03")
 }
 
 func stringify(v interface{}) string {
