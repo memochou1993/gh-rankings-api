@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
-	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"sync"
@@ -30,7 +28,7 @@ type Organization struct {
 }
 
 func (o *Organization) Init() {
-	o.RankModel.CreateIndexes()
+	o.Worker.load(TimestampOrganization)
 }
 
 func (o *Organization) Collect() error {
@@ -155,13 +153,9 @@ func (o *Organization) Rank() {
 		}
 	}
 	wg.Wait()
-	o.Worker.seal(TimestampOrganizationRanks, now)
+	o.Worker.save(TimestampOrganization, now)
 
 	o.RankModel.Delete(now, model.TypeOrganization)
-}
-
-func (o *Organization) List(req *request.Request) []model.Rank {
-	return o.RankModel.List(req, time.Unix(0, viper.GetInt64(TimestampOrganizationRanks)))
 }
 
 func (o *Organization) query(q query.Query, res *response.Organization) (err error) {
@@ -216,7 +210,7 @@ func NewOrganizationWorker() *Organization {
 	return &Organization{
 		Worker:            &Worker{},
 		OrganizationModel: model.NewOrganizationModel(),
-		RankModel:         model.NewRankModel(model.TypeOrganization),
+		RankModel:         model.NewRankModel(),
 		SearchQuery:       query.Owners(),
 		RepositoryQuery:   query.OwnerRepositories(),
 	}

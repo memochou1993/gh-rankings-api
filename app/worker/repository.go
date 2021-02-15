@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
-	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"sync"
@@ -29,7 +27,7 @@ type Repository struct {
 }
 
 func (r *Repository) Init() {
-	r.RankModel.CreateIndexes()
+	r.Worker.load(TimestampRepository)
 }
 
 func (r *Repository) Collect() error {
@@ -110,13 +108,9 @@ func (r *Repository) Rank() {
 		}
 	}
 	wg.Wait()
-	r.Worker.seal(TimestampRepositoryRanks, timestamp)
+	r.Worker.save(TimestampRepository, timestamp)
 
 	r.RankModel.Delete(timestamp, model.TypeRepository)
-}
-
-func (r *Repository) List(req *request.Request) []model.Rank {
-	return r.RankModel.List(req, time.Unix(0, viper.GetInt64(TimestampRepositoryRanks)))
 }
 
 func (r *Repository) query(q query.Query, res *response.Repository) (err error) {
@@ -170,7 +164,7 @@ func NewRepositoryWorker() *Repository {
 	return &Repository{
 		Worker:          &Worker{},
 		RepositoryModel: model.NewRepositoryModel(),
-		RankModel:       model.NewRankModel(model.TypeRepository),
+		RankModel:       model.NewRankModel(),
 		SearchQuery:     query.Repositories(),
 	}
 }

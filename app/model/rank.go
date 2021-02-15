@@ -36,12 +36,12 @@ func (r *RankModel) CreateIndexes() {
 	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }
 
-func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
+func (r *RankModel) List(req *request.Request) []Rank {
 	ctx := context.Background()
 
-	p := pipeline.List(req, createdAt)
-	if req.Name != "" {
-		p = pipeline.ListByName(req, createdAt)
+	p := pipeline.Search(req)
+	if req.Type == "" {
+		p = pipeline.List(req)
 	}
 
 	cursor := database.Aggregate(ctx, r.Model.Name(), p)
@@ -49,6 +49,7 @@ func (r *RankModel) List(req *request.Request, createdAt time.Time) []Rank {
 	if err := cursor.All(ctx, &ranks); err != nil {
 		log.Fatal(err.Error())
 	}
+
 	return ranks
 }
 
@@ -117,10 +118,10 @@ func (r *RankModel) Count(model Interface, p pipeline.Pipeline) int {
 	return rec.Count
 }
 
-func NewRankModel(name string) *RankModel {
+func NewRankModel() *RankModel {
 	return &RankModel{
 		&Model{
-			name: fmt.Sprintf("%s_ranks", name),
+			name: "ranks",
 		},
 	}
 }

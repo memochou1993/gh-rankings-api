@@ -7,7 +7,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"time"
 )
 
 const (
@@ -124,49 +123,47 @@ func RankCount(pipeline mongo.Pipeline) mongo.Pipeline {
 	return append(pipeline, stages...)
 }
 
-func List(req *request.Request, createdAt time.Time) mongo.Pipeline {
+func Search(req *request.Request) mongo.Pipeline {
+	cond := mongo.Pipeline{{
+		{"type", req.Type},
+		{"field", req.Field},
+		{"language", req.Language},
+		{"location", req.Location},
+		{"created_at", operator.In(req.Timestamps)},
+	}}
+	if req.Name != "" {
+		cond = append(cond, bson.D{{"name", req.Name}})
+	}
 	return mongo.Pipeline{
-		operator.Match("$and", mongo.Pipeline{{
-			{"type", req.Type},
-			{"field", req.Field},
-			{"language", req.Language},
-			{"location", req.Location},
-			{"created_at", createdAt},
-		}}),
+		operator.Match("$and", cond),
 		operator.Skip((req.Page - 1) * req.Limit),
 		operator.Limit(req.Limit),
 	}
 }
 
-// TODO
-func ListByName(req *request.Request, createdAt time.Time) mongo.Pipeline {
-	// cond := mongo.Pipeline{{
-	// 	{"created_at", createdAt},
-	// 	{"name", req.Name},
-	// }}
-	// if req.Type != "" {
-	// 	cond = append(cond, bson.D{{"type", req.Type}})
-	// }
-	// if req.Field != "" {
-	// 	cond = append(cond, bson.D{{"type", req.Field}})
-	// }
-	// if req.Language != "" {
-	// 	cond = append(cond, bson.D{{"type", req.Language}})
-	// }
-	// if req.Location != "" {
-	// 	cond = append(cond, bson.D{{"type", req.Location}})
-	// }
-
+func List(req *request.Request) mongo.Pipeline {
+	cond := mongo.Pipeline{{
+		{"created_at", operator.In(req.Timestamps)},
+	}}
+	if req.Name != "" {
+		cond = append(cond, bson.D{{"name", req.Name}})
+	}
+	if req.Type != "" {
+		cond = append(cond, bson.D{{"type", req.Type}})
+	}
+	if req.Field != "" {
+		cond = append(cond, bson.D{{"field", req.Field}})
+	}
+	if req.Language != "" {
+		cond = append(cond, bson.D{{"language", req.Language}})
+	}
+	if req.Location != "" {
+		cond = append(cond, bson.D{{"location", req.Location}})
+	}
 	return mongo.Pipeline{
-		// operator.Match("$and", mongo.Pipeline{{
-		// 	{"type", req.Type},
-		// 	{"field", req.Field},
-		// 	{"language", req.Language},
-		// 	{"location", req.Location},
-		// 	{"created_at", createdAt},
-		// }}),
-		// operator.Skip((req.Page - 1) * req.Limit),
-		// operator.Limit(req.Limit),
+		operator.Match("$and", cond),
+		operator.Skip((req.Page - 1) * req.Limit),
+		operator.Limit(req.Limit),
 	}
 }
 

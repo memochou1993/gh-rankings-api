@@ -11,17 +11,17 @@ func Unwind(field string) bson.D {
 	}
 }
 
-func Match(field string, cond interface{}) bson.D {
+func Match(field string, v interface{}) bson.D {
 	return bson.D{
 		{"$match", bson.D{
-			{field, cond},
+			{field, v},
 		}},
 	}
 }
 
-func Project(project interface{}) bson.D {
+func Project(v interface{}) bson.D {
 	return bson.D{
-		{"$project", project},
+		{"$project", v},
 	}
 }
 
@@ -31,15 +31,21 @@ func First(field string) bson.D {
 	}
 }
 
+func In(v interface{}) bson.D {
+	return bson.D{
+		{"$in", v},
+	}
+}
+
 func Sum(field string) bson.D {
 	return bson.D{
 		{"$sum", fmt.Sprintf("$%s", field)},
 	}
 }
 
-func Group(group interface{}) bson.D {
+func Group(v interface{}) bson.D {
 	return bson.D{
-		{"$group", group},
+		{"$group", v},
 	}
 }
 

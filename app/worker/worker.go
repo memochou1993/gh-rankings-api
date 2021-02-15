@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
@@ -10,15 +9,15 @@ import (
 )
 
 const (
-	TimestampUserRanks         = "TIMESTAMP_USER_RANKS"
-	TimestampOrganizationRanks = "TIMESTAMP_ORGANIZATION_RANKS"
-	TimestampRepositoryRanks   = "TIMESTAMP_REPOSITORY_RANKS"
+	TimestampUser         = "TIMESTAMP_USER"
+	TimestampOrganization = "TIMESTAMP_ORGANIZATION"
+	TimestampRepository   = "TIMESTAMP_REPOSITORY"
 )
 
 var (
-	userWorker         = NewUserWorker()
-	organizationWorker = NewOrganizationWorker()
-	repositoryWorker   = NewRepositoryWorker()
+	UserWorker         = NewUserWorker()
+	OrganizationWorker = NewOrganizationWorker()
+	RepositoryWorker   = NewRepositoryWorker()
 )
 
 var (
@@ -35,7 +34,13 @@ type Worker struct {
 	Timestamp time.Time
 }
 
-func (w *Worker) seal(key string, t time.Time) {
+func (w *Worker) load(timestamp string) {
+	if timestamp := viper.GetInt64(timestamp); timestamp > 0 {
+		w.Timestamp = time.Unix(0, timestamp)
+	}
+}
+
+func (w *Worker) save(key string, t time.Time) {
 	w.Timestamp = t
 	viper.Set(key, t.UnixNano())
 	if err := viper.WriteConfig(); err != nil {
@@ -44,21 +49,11 @@ func (w *Worker) seal(key string, t time.Time) {
 }
 
 func Start() {
-	go run(userWorker)
-	go run(organizationWorker)
-	go run(repositoryWorker)
-}
+	model.NewRankModel().CreateIndexes()
 
-func List(req *request.Request) (ranks []model.Rank) {
-	switch req.Type {
-	case model.TypeUser:
-		ranks = userWorker.List(req)
-	case model.TypeOrganization:
-		ranks = organizationWorker.List(req)
-	case model.TypeRepository:
-		ranks = repositoryWorker.List(req)
-	}
-	return
+	go run(UserWorker)
+	go run(OrganizationWorker)
+	go run(RepositoryWorker)
 }
 
 func run(worker Interface) {

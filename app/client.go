@@ -13,7 +13,9 @@ import (
 	"time"
 )
 
-var client *http.Client
+var (
+	client *http.Client
+)
 
 func init() {
 	client = &http.Client{

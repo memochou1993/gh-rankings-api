@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
-	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/memochou1993/gh-rankings/util"
-	"github.com/spf13/viper"
 	"os"
 	"strconv"
 	"sync"
@@ -31,7 +29,7 @@ type User struct {
 }
 
 func (u *User) Init() {
-	u.RankModel.CreateIndexes()
+	u.Worker.load(TimestampUser)
 }
 
 func (u *User) Collect() error {
@@ -190,13 +188,9 @@ func (u *User) Rank() {
 		}
 	}
 	wg.Wait()
-	u.Worker.seal(TimestampUserRanks, now)
+	u.Worker.save(TimestampUser, now)
 
 	u.RankModel.Delete(now, model.TypeUser)
-}
-
-func (u *User) List(req *request.Request) []model.Rank {
-	return u.RankModel.List(req, time.Unix(0, viper.GetInt64(TimestampUserRanks)))
 }
 
 func (u *User) query(q query.Query, res *response.User) (err error) {
@@ -256,7 +250,7 @@ func NewUserWorker() *User {
 	return &User{
 		Worker:          &Worker{},
 		UserModel:       model.NewUserModel(),
-		RankModel:       model.NewRankModel(model.TypeUser),
+		RankModel:       model.NewRankModel(),
 		SearchQuery:     query.Owners(),
 		GistQuery:       query.OwnerGists(),
 		RepositoryQuery: query.OwnerRepositories(),
