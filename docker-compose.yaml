@@ -16,7 +16,7 @@ services:
     networks:
       - backend
     volumes:
-      - ./storage:/root/storage
+      - ./storage:/app/storage
 
   mongo:
     image: mongo:latest
