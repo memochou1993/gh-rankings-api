@@ -16,6 +16,7 @@ services:
     networks:
       - backend
     volumes:
+      - ./docker.env:/app/docker.env
       - ./storage:/app/storage
 
   mongo:
