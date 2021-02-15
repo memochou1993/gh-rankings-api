@@ -36,8 +36,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		req.Timestamps = append(req.Timestamps, worker.RepositoryWorker.Timestamp)
 	default:
 		req.Timestamps = append(req.Timestamps, worker.UserWorker.Timestamp)
-		req.Timestamps = append(req.Timestamps, worker.UserWorker.Timestamp)
-		req.Timestamps = append(req.Timestamps, worker.UserWorker.Timestamp)
+		req.Timestamps = append(req.Timestamps, worker.OrganizationWorker.Timestamp)
+		req.Timestamps = append(req.Timestamps, worker.RepositoryWorker.Timestamp)
 	}
 
 	ranks := RankModel.List(req)
