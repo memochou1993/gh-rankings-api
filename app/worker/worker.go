@@ -21,7 +21,7 @@ var (
 )
 
 var (
-	collecting int
+	collecting int64
 )
 
 type Interface interface {

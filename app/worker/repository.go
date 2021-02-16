@@ -77,7 +77,7 @@ func (r *Repository) Fetch(repositories *[]model.Repository) error {
 	for _, edge := range res.Data.Search.Edges {
 		*repositories = append(*repositories, edge.Node)
 	}
-	res.Data.RateLimit.Break(collecting)
+	res.Data.RateLimit.Throttle(collecting)
 	if !res.Data.Search.PageInfo.HasNextPage {
 		r.SearchQuery.SearchArguments.After = ""
 		return nil
