@@ -24,21 +24,18 @@ type RateLimit struct {
 }
 
 func (r RateLimit) Break(collecting int) {
-	period := float64(3600) / float64(5000)
-	time.Sleep(time.Duration(period*float64(collecting)*1000) * time.Millisecond)
 	logger.Debug(fmt.Sprintf("Rate Limit: %s", strconv.Quote(util.ParseStruct(r, " "))))
-
-	buffer := 10
-	if r.Remaining > buffer {
-		return
-	}
 	resetAt, err := time.Parse(time.RFC3339, r.ResetAt)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
+	remainingTime := resetAt.Add(time.Second).Sub(time.Now().UTC())
+	time.Sleep(remainingTime / time.Duration(r.Remaining) * time.Duration(collecting))
+	if r.Remaining > collecting {
+		return
+	}
 	logger.Warning("Take a break...")
-	time.Sleep(resetAt.Add(time.Second).Sub(time.Now().UTC()))
+	time.Sleep(remainingTime)
 }
 
 type Error struct {
