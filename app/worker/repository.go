@@ -121,9 +121,10 @@ func (r *Repository) query(q query.Query, res *response.Repository) (err error) 
 	}
 	if res.Message != "" {
 		err = errors.New(res.Message)
+		res.Message = ""
 	}
 	for _, err = range res.Errors {
-		break
+		return err
 	}
 	if err != nil {
 		logger.Error(err.Error())
