@@ -166,9 +166,10 @@ func (o *Organization) query(q query.Query, res *response.Organization) (err err
 	}
 	if res.Message != "" {
 		err = errors.New(res.Message)
+		res.Message = ""
 	}
 	for _, err = range res.Errors {
-		break
+		return err
 	}
 	if err != nil {
 		logger.Error(err.Error())
