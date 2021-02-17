@@ -201,9 +201,10 @@ func (u *User) query(q query.Query, res *response.User) (err error) {
 	}
 	if res.Message != "" {
 		err = errors.New(res.Message)
+		res.Message = ""
 	}
-	for _, err = range res.Errors {
-		break
+	for _, err := range res.Errors {
+		logger.Error(err.Error())
 	}
 	if err != nil {
 		logger.Error(err.Error())
