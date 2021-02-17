@@ -219,7 +219,7 @@ func (u *User) buildSearchQuery() string {
 	to := u.From.AddDate(0, 0, 7).Format(time.RFC3339)
 	q := query.SearchQuery{
 		Created:   fmt.Sprintf("%s..%s", from, to),
-		Followers: "100..*",
+		Followers: "250..*",
 		Sort:      "joined-asc",
 		Type:      model.TypeUser,
 	}
