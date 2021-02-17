@@ -2,7 +2,7 @@ version: "3"
 
 services:
   app:
-    container_name: gh-rankings-server
+    container_name: gh-rankings
     build: .
     restart: always
     env_file:
