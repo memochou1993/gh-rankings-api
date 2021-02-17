@@ -30,7 +30,7 @@ func (r RateLimit) Throttle(collecting int64) {
 		log.Fatal(err.Error())
 	}
 	remainingTime := resetAt.Add(time.Second).Sub(time.Now().UTC())
-	time.Sleep(time.Duration(remainingTime.Milliseconds()/r.Remaining*collecting-500) * time.Millisecond)
+	time.Sleep(time.Duration(remainingTime.Milliseconds()/r.Remaining*collecting) * time.Millisecond)
 	if r.Remaining > collecting {
 		return
 	}
