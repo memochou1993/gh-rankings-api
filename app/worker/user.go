@@ -167,7 +167,7 @@ func (u *User) FetchRepositories(repositories *[]model.Repository) error {
 
 func (u *User) Rank() {
 	logger.Info("Executing user rank pipelines...")
-	pipelines := u.buildRankPipelines()
+	pipelines := pipeline.User()
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		u.RankModel.Store(u.UserModel, *p, timestamp)
@@ -198,26 +198,6 @@ func (u *User) query(q query.Query, res *response.User) (err error) {
 		time.Sleep(10 * time.Second)
 		return u.query(q, res)
 	}
-	return
-}
-
-func (u *User) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
-	rankType := model.TypeUser
-	fields := []string{
-		"followers",
-		"gists.forks",
-		"gists.stargazers",
-		"repositories.forks",
-		"repositories.stargazers",
-		"repositories.watchers",
-	}
-	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
-		pipelines = append(pipelines, pipeline.RankByLocation(rankType, field)...)
-	}
-	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.stargazers")...)
-	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.forks")...)
-	pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, "repositories.watchers")...)
 	return
 }
 

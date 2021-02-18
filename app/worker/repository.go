@@ -87,7 +87,7 @@ func (r *Repository) Fetch(repositories *[]model.Repository) error {
 
 func (r *Repository) Rank() {
 	logger.Info("Executing repository rank pipelines...")
-	pipelines := r.buildRankPipelines()
+	pipelines := pipeline.Repository()
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		r.RankModel.Store(r.RepositoryModel, *p, timestamp)
@@ -117,20 +117,6 @@ func (r *Repository) query(q query.Query, res *response.Repository) (err error) 
 		logger.Warning("Retrying...")
 		time.Sleep(10 * time.Second)
 		return r.query(q, res)
-	}
-	return
-}
-
-func (r *Repository) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
-	rankType := model.TypeRepository
-	fields := []string{
-		"forks",
-		"stargazers",
-		"watchers",
-	}
-	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
-		pipelines = append(pipelines, pipeline.RankRepositoryByLanguage(rankType, field)...)
 	}
 	return
 }

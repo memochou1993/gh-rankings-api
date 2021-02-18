@@ -132,7 +132,7 @@ func (o *Organization) FetchRepositories(repositories *[]model.Repository) error
 
 func (o *Organization) Rank() {
 	logger.Info("Executing organization rank pipelines...")
-	pipelines := o.buildRankPipelines()
+	pipelines := pipeline.Organization()
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		o.RankModel.Store(o.OrganizationModel, *p, timestamp)
@@ -162,21 +162,6 @@ func (o *Organization) query(q query.Query, res *response.Organization) (err err
 		logger.Warning("Retrying...")
 		time.Sleep(10 * time.Second)
 		return o.query(q, res)
-	}
-	return
-}
-
-func (o *Organization) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
-	rankType := model.TypeOrganization
-	fields := []string{
-		"repositories.forks",
-		"repositories.stargazers",
-		"repositories.watchers",
-	}
-	for _, field := range fields {
-		pipelines = append(pipelines, pipeline.RankByField(rankType, field))
-		pipelines = append(pipelines, pipeline.RankByLocation(rankType, field)...)
-		pipelines = append(pipelines, pipeline.RankOwnerRepositoryByLanguage(rankType, field)...)
 	}
 	return
 }

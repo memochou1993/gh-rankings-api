@@ -8,6 +8,7 @@ import (
 	"log"
 )
 
+// FIXME: should move to app
 const (
 	TypeUser         = "user"
 	TypeOrganization = "organization"
