@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
-	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
 	"time"
@@ -52,7 +51,7 @@ func (u *User) Travel() error {
 	}
 
 	var users []model.User
-	u.SearchQuery.SearchArguments.Query = u.buildSearchQuery()
+	u.SearchQuery.SearchArguments.SetQuery(query.SearchUsers(u.From, u.From.AddDate(0, 0, 7)))
 	logger.Debug(fmt.Sprintf("User Query: %s", u.SearchQuery.SearchArguments.Query))
 	if err := u.Fetch(&users); err != nil {
 		return err
@@ -200,19 +199,6 @@ func (u *User) query(q query.Query, res *response.User) (err error) {
 		return u.query(q, res)
 	}
 	return
-}
-
-func (u *User) buildSearchQuery() string {
-	from := u.From.Format(time.RFC3339)
-	to := u.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := query.SearchQuery{
-		Created:   fmt.Sprintf("%s..%s", from, to),
-		Followers: "250..*",
-		Repos:     "*..1000",
-		Sort:      "joined-asc",
-		Type:      model.TypeUser,
-	}
-	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
 func (u *User) buildRankPipelines() (pipelines []*pipeline.Pipeline) {

@@ -6,7 +6,9 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Query struct {
@@ -46,6 +48,10 @@ type SearchArguments struct {
 	Type  string `json:"type,omitempty"`
 }
 
+func (s *SearchArguments) SetQuery(q *SearchQuery) {
+	s.Query = fmt.Sprint(q)
+}
+
 type OwnerArguments struct {
 	Login string `json:"login,omitempty"`
 }
@@ -71,6 +77,10 @@ type SearchQuery struct {
 	Sort      string `json:"sort,omitempty"`
 	Stars     string `json:"stars,omitempty"`
 	Type      string `json:"type,omitempty"`
+}
+
+func (s SearchQuery) String() string {
+	return strconv.Quote(util.ParseStruct(s, " "))
 }
 
 type Gist struct {
@@ -123,6 +133,34 @@ func Repositories() *Query {
 			First: 100,
 			Type:  "REPOSITORY",
 		},
+	}
+}
+
+func SearchUsers(from, to time.Time) *SearchQuery {
+	return &SearchQuery{
+		Created:   fmt.Sprintf("%s..%s", from.Format(time.RFC3339), to.Format(time.RFC3339)),
+		Followers: "250..*",
+		Repos:     "*..1000",
+		Sort:      "joined-asc",
+		Type:      "user",
+	}
+}
+
+func SearchOrganizations(from, to time.Time) *SearchQuery {
+	return &SearchQuery{
+		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), to.Format(time.RFC3339)),
+		Repos:   "25..1000",
+		Sort:    "joined-asc",
+		Type:    "organization",
+	}
+}
+
+func SearchRepositories(from, to time.Time) *SearchQuery {
+	return &SearchQuery{
+		Created: fmt.Sprintf("%s..%s", from.Format(time.RFC3339), to.Format(time.RFC3339)),
+		Fork:    "true",
+		Sort:    "stars",
+		Stars:   "100..*",
 	}
 }
 

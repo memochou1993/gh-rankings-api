@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
-	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
 	"time"
@@ -50,7 +49,7 @@ func (r *Repository) Travel() error {
 	}
 
 	var repositories []model.Repository
-	r.SearchQuery.SearchArguments.Query = r.buildSearchQuery()
+	r.SearchQuery.SearchArguments.SetQuery(query.SearchRepositories(r.From, r.From.AddDate(0, 0, 7)))
 	logger.Debug(fmt.Sprintf("Repository Query: %s", r.SearchQuery.SearchArguments.Query))
 	if err := r.Fetch(&repositories); err != nil {
 		return err
@@ -120,18 +119,6 @@ func (r *Repository) query(q query.Query, res *response.Repository) (err error) 
 		return r.query(q, res)
 	}
 	return
-}
-
-func (r *Repository) buildSearchQuery() string {
-	from := r.From.Format(time.RFC3339)
-	to := r.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := query.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", from, to),
-		Fork:    "true",
-		Sort:    "stars",
-		Stars:   "100..*",
-	}
-	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
 func (r *Repository) buildRankPipelines() (pipelines []*pipeline.Pipeline) {

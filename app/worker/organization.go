@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
-	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
 	"time"
@@ -51,7 +50,7 @@ func (o *Organization) Travel() error {
 	}
 
 	var organizations []model.Organization
-	o.SearchQuery.SearchArguments.Query = o.buildSearchQuery()
+	o.SearchQuery.SearchArguments.SetQuery(query.SearchOrganizations(o.From, o.From.AddDate(0, 0, 7)))
 	logger.Debug(fmt.Sprintf("Organization Query: %s", o.SearchQuery.SearchArguments.Query))
 	if err := o.Fetch(&organizations); err != nil {
 		return err
@@ -165,18 +164,6 @@ func (o *Organization) query(q query.Query, res *response.Organization) (err err
 		return o.query(q, res)
 	}
 	return
-}
-
-func (o *Organization) buildSearchQuery() string {
-	from := o.From.Format(time.RFC3339)
-	to := o.From.AddDate(0, 0, 7).Format(time.RFC3339)
-	q := query.SearchQuery{
-		Created: fmt.Sprintf("%s..%s", from, to),
-		Repos:   "25..1000",
-		Sort:    "joined-asc",
-		Type:    model.TypeOrganization,
-	}
-	return strconv.Quote(util.ParseStruct(q, " "))
 }
 
 func (o *Organization) buildRankPipelines() (pipelines []*pipeline.Pipeline) {
