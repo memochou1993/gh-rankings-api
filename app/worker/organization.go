@@ -13,7 +13,6 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -135,27 +134,15 @@ func (o *Organization) FetchRepositories(repositories *[]model.Repository) error
 func (o *Organization) Rank() {
 	logger.Info("Executing organization rank pipelines...")
 	pipelines := o.buildRankPipelines()
-
-	ch := make(chan struct{}, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(len(pipelines))
-
-	now := time.Now()
+	timestamp := time.Now()
 	for i, p := range pipelines {
-		ch <- struct{}{}
-		go func(p *pipeline.Pipeline) {
-			defer wg.Done()
-			o.RankModel.Store(o.OrganizationModel, *p, now)
-			<-ch
-		}(p)
+		o.RankModel.Store(o.OrganizationModel, *p, timestamp)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
 			logger.Success(fmt.Sprintf("Executed %d of %d organization rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	wg.Wait()
-	o.Worker.save(TimestampOrganization, now)
-
-	o.RankModel.Delete(now, model.TypeOrganization)
+	o.Worker.save(TimestampOrganization, timestamp)
+	o.RankModel.Delete(timestamp, model.TypeOrganization)
 }
 
 func (o *Organization) query(q query.Query, res *response.Organization) (err error) {

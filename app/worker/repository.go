@@ -13,7 +13,6 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -90,26 +89,14 @@ func (r *Repository) Fetch(repositories *[]model.Repository) error {
 func (r *Repository) Rank() {
 	logger.Info("Executing repository rank pipelines...")
 	pipelines := r.buildRankPipelines()
-
-	ch := make(chan struct{}, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(len(pipelines))
-
 	timestamp := time.Now()
 	for i, p := range pipelines {
-		ch <- struct{}{}
-		go func(p *pipeline.Pipeline) {
-			defer wg.Done()
-			r.RankModel.Store(r.RepositoryModel, *p, timestamp)
-			<-ch
-		}(p)
+		r.RankModel.Store(r.RepositoryModel, *p, timestamp)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
 			logger.Success(fmt.Sprintf("Executed %d of %d repository rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	wg.Wait()
 	r.Worker.save(TimestampRepository, timestamp)
-
 	r.RankModel.Delete(timestamp, model.TypeRepository)
 }
 

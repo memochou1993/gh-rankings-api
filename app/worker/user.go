@@ -13,7 +13,6 @@ import (
 	"github.com/memochou1993/gh-rankings/util"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -170,27 +169,15 @@ func (u *User) FetchRepositories(repositories *[]model.Repository) error {
 func (u *User) Rank() {
 	logger.Info("Executing user rank pipelines...")
 	pipelines := u.buildRankPipelines()
-
-	ch := make(chan struct{}, 2)
-	wg := sync.WaitGroup{}
-	wg.Add(len(pipelines))
-
-	now := time.Now()
+	timestamp := time.Now()
 	for i, p := range pipelines {
-		ch <- struct{}{}
-		go func(p *pipeline.Pipeline) {
-			defer wg.Done()
-			u.RankModel.Store(u.UserModel, *p, now)
-			<-ch
-		}(p)
+		u.RankModel.Store(u.UserModel, *p, timestamp)
 		if (i+1)%10 == 0 || (i+1) == len(pipelines) {
 			logger.Success(fmt.Sprintf("Executed %d of %d user rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	wg.Wait()
-	u.Worker.save(TimestampUser, now)
-
-	u.RankModel.Delete(now, model.TypeUser)
+	u.Worker.save(TimestampUser, timestamp)
+	u.RankModel.Delete(timestamp, model.TypeUser)
 }
 
 func (u *User) query(q query.Query, res *response.User) (err error) {
