@@ -50,7 +50,7 @@ func New(r *http.Request) (req *Request, err error) {
 }
 
 func sanitize(text string) string {
-	symbols := []string{"@", "#", "$", "%", "^", "&", "*", "(", ")", "[", "]", "{", "}", "<", ">"}
+	symbols := []string{"@", "$", "%", "^", "&", "[", "]", "{", "}", "<", ">"}
 	for _, symbol := range symbols {
 		text = strings.Trim(text, symbol)
 	}
