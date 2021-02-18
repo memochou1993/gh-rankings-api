@@ -8,13 +8,6 @@ import (
 	"log"
 )
 
-// FIXME: should move to app
-const (
-	TypeUser         = "user"
-	TypeOrganization = "organization"
-	TypeRepository   = "repository"
-)
-
 type Interface interface {
 	Name() string
 	Collection() *mongo.Collection

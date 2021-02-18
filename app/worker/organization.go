@@ -93,7 +93,7 @@ func (o *Organization) Fetch(organizations *[]model.Organization) error {
 }
 
 func (o *Organization) Update(organization model.Organization) error {
-	o.RepositoryQuery.Type = model.TypeOrganization
+	o.RepositoryQuery.Type = app.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote(organization.ID())
 	if err := o.UpdateRepositories(organization); err != nil {
 		return err
@@ -108,7 +108,7 @@ func (o *Organization) UpdateRepositories(organization model.Organization) error
 		return err
 	}
 	o.OrganizationModel.UpdateRepositories(organization, repositories)
-	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), model.TypeOrganization))
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), app.TypeOrganization))
 	return nil
 }
 
@@ -141,7 +141,7 @@ func (o *Organization) Rank() {
 		}
 	}
 	o.Worker.save(TimestampOrganization, timestamp)
-	o.RankModel.Delete(timestamp, model.TypeOrganization)
+	o.RankModel.Delete(timestamp, app.TypeOrganization)
 }
 
 func (o *Organization) query(q query.Query, res *response.Organization) (err error) {

@@ -28,11 +28,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch req.Type {
-	case model.TypeUser:
+	case app.TypeUser:
 		req.Timestamps = append(req.Timestamps, worker.UserWorker.Timestamp)
-	case model.TypeOrganization:
+	case app.TypeOrganization:
 		req.Timestamps = append(req.Timestamps, worker.OrganizationWorker.Timestamp)
-	case model.TypeRepository:
+	case app.TypeRepository:
 		req.Timestamps = append(req.Timestamps, worker.RepositoryWorker.Timestamp)
 	default:
 		req.Timestamps = append(req.Timestamps, worker.UserWorker.Timestamp)

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
@@ -67,7 +68,7 @@ func TestFetchGists(t *testing.T) {
 	u := worker.NewUserWorker()
 
 	u.GistQuery = query.OwnerGists()
-	u.GistQuery.Type = model.TypeUser
+	u.GistQuery.Type = app.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
 	var gists []query.Gist
@@ -85,7 +86,7 @@ func TestFetchRepositories(t *testing.T) {
 	u := worker.NewUserWorker()
 
 	u.RepositoryQuery = query.OwnerRepositories()
-	u.RepositoryQuery.Type = model.TypeUser
+	u.RepositoryQuery.Type = app.TypeUser
 	u.RepositoryQuery.OwnerArguments.Login = strconv.Quote("memochou1993")
 
 	var repositories []model.Repository

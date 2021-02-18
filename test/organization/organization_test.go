@@ -1,6 +1,7 @@
 package organization
 
 import (
+	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/worker"
@@ -67,7 +68,7 @@ func TestFetchRepositories(t *testing.T) {
 	o := worker.NewUserWorker()
 
 	o.RepositoryQuery = query.OwnerRepositories()
-	o.RepositoryQuery.Type = model.TypeOrganization
+	o.RepositoryQuery.Type = app.TypeOrganization
 	o.RepositoryQuery.OwnerArguments.Login = strconv.Quote("facebook")
 
 	var repositories []model.Repository

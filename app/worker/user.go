@@ -94,13 +94,13 @@ func (u *User) Fetch(users *[]model.User) error {
 }
 
 func (u *User) Update(user model.User) error {
-	u.GistQuery.Type = model.TypeUser
+	u.GistQuery.Type = app.TypeUser
 	u.GistQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := u.UpdateGists(user); err != nil {
 		return err
 	}
 
-	u.RepositoryQuery.Type = model.TypeUser
+	u.RepositoryQuery.Type = app.TypeUser
 	u.RepositoryQuery.OwnerArguments.Login = strconv.Quote(user.ID())
 	if err := u.UpdateRepositories(user); err != nil {
 		return err
@@ -115,7 +115,7 @@ func (u *User) UpdateGists(user model.User) error {
 		return err
 	}
 	u.UserModel.UpdateGists(user, gists)
-	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), model.TypeUser))
+	logger.Success(fmt.Sprintf("Updated %d %s gists!", len(gists), app.TypeUser))
 	return nil
 }
 
@@ -125,7 +125,7 @@ func (u *User) UpdateRepositories(user model.User) error {
 		return err
 	}
 	u.UserModel.UpdateRepositories(user, repositories)
-	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), model.TypeUser))
+	logger.Success(fmt.Sprintf("Updated %d %s repositories!", len(repositories), app.TypeUser))
 	return nil
 }
 
@@ -176,7 +176,7 @@ func (u *User) Rank() {
 		}
 	}
 	u.Worker.save(TimestampUser, timestamp)
-	u.RankModel.Delete(timestamp, model.TypeUser)
+	u.RankModel.Delete(timestamp, app.TypeUser)
 }
 
 func (u *User) query(q query.Query, res *response.User) (err error) {

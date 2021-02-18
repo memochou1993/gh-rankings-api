@@ -96,7 +96,7 @@ func (r *Repository) Rank() {
 		}
 	}
 	r.Worker.save(TimestampRepository, timestamp)
-	r.RankModel.Delete(timestamp, model.TypeRepository)
+	r.RankModel.Delete(timestamp, app.TypeRepository)
 }
 
 func (r *Repository) query(q query.Query, res *response.Repository) (err error) {
