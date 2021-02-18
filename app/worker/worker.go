@@ -51,20 +51,26 @@ func (w *Worker) save(key string, t time.Time) {
 func Start() {
 	model.NewRankModel().CreateIndexes()
 
-	go run(UserWorker)
-	go run(OrganizationWorker)
-	go run(RepositoryWorker)
+	go run(UserWorker, 24*time.Hour)
+	go run(OrganizationWorker, 24*time.Hour)
+	go run(RepositoryWorker, 7*24*time.Hour)
 }
 
-func run(worker Interface) {
+func run(worker Interface, d time.Duration) {
 	worker.Init()
-	t := time.NewTicker(24 * time.Hour)
+
+	t := time.NewTicker(d)
 	for ; true; <-t.C {
+		var err error
+
 		collecting += 1
-		if err := worker.Collect(); err != nil {
+		if err = worker.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 		collecting -= 1
-		worker.Rank()
+
+		if err == nil {
+			worker.Rank()
+		}
 	}
 }
