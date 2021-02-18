@@ -221,6 +221,7 @@ func (u *User) buildSearchQuery() string {
 	q := query.SearchQuery{
 		Created:   fmt.Sprintf("%s..%s", from, to),
 		Followers: "250..*",
+		Repos:     "*..1000",
 		Sort:      "joined-asc",
 		Type:      model.TypeUser,
 	}
