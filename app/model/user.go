@@ -34,6 +34,11 @@ type UserModel struct {
 	*Model
 }
 
+func (u *UserModel) FindByName(name string) (user User) {
+	u.Model.FindByName(name, &user)
+	return
+}
+
 func (u *UserModel) Store(users []User) *mongo.BulkWriteResult {
 	if len(users) == 0 {
 		return nil

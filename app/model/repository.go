@@ -32,6 +32,11 @@ type RepositoryModel struct {
 	*Model
 }
 
+func (r *RepositoryModel) FindByName(name string) (repository Repository) {
+	r.Model.FindByName(name, &repository)
+	return
+}
+
 func (r *RepositoryModel) Store(repositories []Repository) *mongo.BulkWriteResult {
 	if len(repositories) == 0 {
 		return nil

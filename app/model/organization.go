@@ -31,6 +31,11 @@ type OrganizationModel struct {
 	*Model
 }
 
+func (o *OrganizationModel) FindByName(name string) (organization Organization) {
+	o.Model.FindByName(name, &organization)
+	return
+}
+
 func (o *OrganizationModel) Store(organizations []Organization) *mongo.BulkWriteResult {
 	if len(organizations) == 0 {
 		return nil
