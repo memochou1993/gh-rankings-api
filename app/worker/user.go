@@ -27,7 +27,7 @@ type User struct {
 }
 
 func (u *User) Init() {
-	u.Worker.load(TimestampUser)
+	u.Worker.load(timestampUser)
 }
 
 func (u *User) Collect() error {
@@ -175,7 +175,7 @@ func (u *User) Rank() {
 			logger.Success(fmt.Sprintf("Executed %d of %d user rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	u.Worker.save(TimestampUser, timestamp)
+	u.Worker.save(timestampUser, timestamp)
 	u.RankModel.Delete(timestamp, app.TypeUser)
 }
 

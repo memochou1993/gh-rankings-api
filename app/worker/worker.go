@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	TimestampUser         = "TIMESTAMP_USER"
-	TimestampOrganization = "TIMESTAMP_ORGANIZATION"
-	TimestampRepository   = "TIMESTAMP_REPOSITORY"
+	timestampUser         = "TIMESTAMP_USER"
+	timestampOrganization = "TIMESTAMP_ORGANIZATION"
+	timestampRepository   = "TIMESTAMP_REPOSITORY"
 )
 
 var (
@@ -62,15 +62,14 @@ func run(worker Interface, d time.Duration) {
 	t := time.NewTicker(d)
 	for ; true; <-t.C {
 		var err error
-
 		collecting += 1
 		if err = worker.Collect(); err != nil {
 			logger.Error(err.Error())
 		}
 		collecting -= 1
-
-		if err == nil {
-			worker.Rank()
+		if err != nil {
+			return
 		}
+		worker.Rank()
 	}
 }

@@ -25,7 +25,7 @@ type Repository struct {
 }
 
 func (r *Repository) Init() {
-	r.Worker.load(TimestampRepository)
+	r.Worker.load(timestampRepository)
 }
 
 func (r *Repository) Collect() error {
@@ -95,7 +95,7 @@ func (r *Repository) Rank() {
 			logger.Success(fmt.Sprintf("Executed %d of %d repository rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	r.Worker.save(TimestampRepository, timestamp)
+	r.Worker.save(timestampRepository, timestamp)
 	r.RankModel.Delete(timestamp, app.TypeRepository)
 }
 

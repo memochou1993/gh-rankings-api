@@ -26,7 +26,7 @@ type Organization struct {
 }
 
 func (o *Organization) Init() {
-	o.Worker.load(TimestampOrganization)
+	o.Worker.load(timestampOrganization)
 }
 
 func (o *Organization) Collect() error {
@@ -140,7 +140,7 @@ func (o *Organization) Rank() {
 			logger.Success(fmt.Sprintf("Executed %d of %d organization rank pipelines!", i+1, len(pipelines)))
 		}
 	}
-	o.Worker.save(TimestampOrganization, timestamp)
+	o.Worker.save(timestampOrganization, timestamp)
 	o.RankModel.Delete(timestamp, app.TypeOrganization)
 }
 
