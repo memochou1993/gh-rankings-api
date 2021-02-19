@@ -3,6 +3,7 @@ package operator
 import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Unwind(field string) bson.D {
@@ -72,5 +73,11 @@ func Skip(skip int64) bson.D {
 func Limit(limit int64) bson.D {
 	return bson.D{
 		{"$limit", limit},
+	}
+}
+
+func Regex(pattern, options string) bson.D {
+	return bson.D{
+		{"$regex", primitive.Regex{Pattern: pattern, Options: options}},
 	}
 }

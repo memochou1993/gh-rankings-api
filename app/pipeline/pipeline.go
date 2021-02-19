@@ -89,7 +89,7 @@ func Search(req *request.Request) mongo.Pipeline {
 		{"created_at", operator.In(req.Timestamps)},
 	}}
 	if req.Name != "" {
-		cond = append(cond, bson.D{{"name", req.Name}})
+		cond = append(cond, bson.D{{"name", operator.Regex(fmt.Sprintf(".*%s.*", req.Name), "i")}})
 	}
 	return mongo.Pipeline{
 		operator.Match("$and", cond),
