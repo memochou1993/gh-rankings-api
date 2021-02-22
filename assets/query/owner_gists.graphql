@@ -4,6 +4,9 @@ query OwnerGists {
       edges {
         cursor
         node {
+          files {
+            name
+          }
           forks {
             totalCount
           }

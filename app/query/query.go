@@ -84,6 +84,9 @@ func (s SearchQuery) String() string {
 }
 
 type Gist struct {
+	Files []struct {
+		Name string `json:"name" bson:"name"`
+	} `json:"files" bson:"files"`
 	Forks      *Items `json:"forks" bson:"forks"`
 	Name       string `json:"name" bson:"name"`
 	Stargazers *Items `json:"stargazers" bson:"stargazers"`
