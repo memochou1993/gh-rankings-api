@@ -132,7 +132,7 @@ func (o *Organization) FetchRepositories(repositories *[]model.Repository) error
 
 func (o *Organization) Rank() {
 	logger.Info("Executing organization rank pipelines...")
-	pipelines := pipeline.Organization()
+	pipelines := pipeline.RankOrganization()
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		o.RankModel.Store(o.OrganizationModel, *p, timestamp)

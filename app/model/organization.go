@@ -1,10 +1,14 @@
 package model
 
 import (
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/net/context"
+	"log"
 	"time"
 )
 
@@ -14,7 +18,7 @@ type Organization struct {
 	Location       string       `json:"location" bson:"location"`
 	Login          string       `json:"login" bson:"_id"`
 	Name           string       `json:"name" bson:"name"`
-	Repositories   []Repository `json:"repositories" bson:"repositories,omitempty"`
+	Repositories   []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
 	ParsedLocation string       `json:"parsedLocation" bson:"parsed_location"`
 	ParsedCity     string       `json:"parsedCity" bson:"parsed_city"`
 }
@@ -29,6 +33,23 @@ func (o *Organization) parseLocation() {
 
 type OrganizationModel struct {
 	*Model
+}
+
+func (o *OrganizationModel) List(req *request.Organization) (organizations []Organization) {
+	ctx := context.Background()
+
+	p := pipeline.ListOrganizations(req)
+	if req.Q != "" {
+		p = pipeline.SearchOrganizations(req)
+	}
+
+	cursor := database.Aggregate(ctx, o.Model.Name(), p)
+	organizations = make([]Organization, req.Limit)
+	if err := cursor.All(ctx, &organizations); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return
 }
 
 func (o *OrganizationModel) FindByName(name string) (organization Organization) {

@@ -50,6 +50,14 @@ func BulkWrite(collection string, models []mongo.WriteModel) *mongo.BulkWriteRes
 	return res
 }
 
+func Find(collection string, filter bson.D, opts ...*options.FindOptions) *mongo.Cursor {
+	cursor, err := Collection(collection).Find(context.Background(), filter, opts...)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return cursor
+}
+
 func FindOne(collection string, filter bson.D, opts ...*options.FindOneOptions) *mongo.SingleResult {
 	return Collection(collection).FindOne(context.Background(), filter, opts...)
 }

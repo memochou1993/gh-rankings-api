@@ -36,12 +36,12 @@ func (r *RankModel) CreateIndexes() {
 	logger.Success(fmt.Sprintf("Created %d indexes on %s collection!", len(indexes), r.Name()))
 }
 
-func (r *RankModel) List(req *request.Request) []Rank {
+func (r *RankModel) List(req *request.Rank) []Rank {
 	ctx := context.Background()
 
-	p := pipeline.Search(req)
-	if req.Type == "" {
-		p = pipeline.List(req)
+	p := pipeline.ListRanks(req)
+	if req.Type != "" {
+		p = pipeline.SearchRanks(req)
 	}
 
 	cursor := database.Aggregate(ctx, r.Model.Name(), p)

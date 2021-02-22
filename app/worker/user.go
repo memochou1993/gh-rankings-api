@@ -167,7 +167,7 @@ func (u *User) FetchRepositories(repositories *[]model.Repository) error {
 
 func (u *User) Rank() {
 	logger.Info("Executing user rank pipelines...")
-	pipelines := pipeline.User()
+	pipelines := pipeline.RankUser()
 	timestamp := time.Now()
 	for i, p := range pipelines {
 		u.RankModel.Store(u.UserModel, *p, timestamp)

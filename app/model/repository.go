@@ -1,10 +1,14 @@
 package model
 
 import (
+	"context"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"time"
 )
 
@@ -30,6 +34,23 @@ func (r *Repository) ID() string {
 
 type RepositoryModel struct {
 	*Model
+}
+
+func (r *RepositoryModel) List(req *request.Repository) (repositories []Repository) {
+	ctx := context.Background()
+
+	p := pipeline.ListRepositories(req)
+	if req.Q != "" {
+		p = pipeline.SearchRepositories(req)
+	}
+
+	cursor := database.Aggregate(ctx, r.Model.Name(), p)
+	repositories = make([]Repository, req.Limit)
+	if err := cursor.All(ctx, &repositories); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return
 }
 
 func (r *RepositoryModel) FindByName(name string) (repository Repository) {

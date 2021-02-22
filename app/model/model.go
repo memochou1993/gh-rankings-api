@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,6 +24,13 @@ func (m *Model) Name() string {
 
 func (m *Model) Collection() *mongo.Collection {
 	return database.Collection(m.name)
+}
+
+func (m *Model) List(filter bson.D, v interface{}) {
+	cursor := database.Find(m.Name(), filter)
+	if err := cursor.All(context.Background(), v); err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func (m *Model) FindByName(name string, v interface{}) {

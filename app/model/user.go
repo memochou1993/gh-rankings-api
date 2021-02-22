@@ -1,11 +1,15 @@
 package model
 
 import (
+	"context"
+	"github.com/memochou1993/gh-rankings/app/handler/request"
+	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"time"
 )
 
@@ -16,8 +20,8 @@ type User struct {
 	Location       string       `json:"location" bson:"location"`
 	Login          string       `json:"login" bson:"_id"`
 	Name           string       `json:"name" bson:"name"`
-	Gists          []query.Gist `json:"gists" bson:"gists,omitempty"`
-	Repositories   []Repository `json:"repositories" bson:"repositories,omitempty"`
+	Gists          []query.Gist `json:"gists,omitempty" bson:"gists,omitempty"`
+	Repositories   []Repository `json:"repositories,omitempty" bson:"repositories,omitempty"`
 	ParsedLocation string       `json:"parsedLocation" bson:"parsed_location"`
 	ParsedCity     string       `json:"parsedCity" bson:"parsed_city"`
 }
@@ -32,6 +36,23 @@ func (u *User) parseLocation() {
 
 type UserModel struct {
 	*Model
+}
+
+func (u *UserModel) List(req *request.User) (users []User) {
+	ctx := context.Background()
+
+	p := pipeline.ListUsers(req)
+	if req.Q != "" {
+		p = pipeline.SearchUsers(req)
+	}
+
+	cursor := database.Aggregate(ctx, u.Model.Name(), p)
+	users = make([]User, req.Limit)
+	if err := cursor.All(ctx, &users); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return
 }
 
 func (u *UserModel) FindByName(name string) (user User) {
