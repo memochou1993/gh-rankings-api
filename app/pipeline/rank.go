@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/pipeline/operator"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +16,7 @@ func SearchRanks(req *request.Rank) mongo.Pipeline {
 		{"created_at", operator.In(req.Timestamps)},
 	}}
 	if req.Name != "" {
-		cond = append(cond, bson.D{{"name", operator.Regex(fmt.Sprintf(".*%s.*", req.Name), "i")}})
+		cond = append(cond, bson.D{{"name", req.Name}})
 	}
 	return mongo.Pipeline{
 		operator.Match("$and", cond),
