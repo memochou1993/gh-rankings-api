@@ -51,8 +51,8 @@ func (w *Worker) save(key string, t time.Time) {
 func Start() {
 	model.NewRankModel().CreateIndexes()
 
-	go run(UserWorker, 24*time.Hour)
-	go run(OrganizationWorker, 24*time.Hour)
+	go run(UserWorker, 7*24*time.Hour)
+	go run(OrganizationWorker, 7*24*time.Hour)
 	go run(RepositoryWorker, 7*24*time.Hour)
 }
 
