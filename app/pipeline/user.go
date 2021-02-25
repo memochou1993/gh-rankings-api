@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/pipeline/operator"
@@ -32,7 +31,7 @@ func RankUser() (pipelines []*Pipeline) {
 func SearchUsers(req *request.User) mongo.Pipeline {
 	cond := mongo.Pipeline{}
 	if req.Q != "" {
-		cond = append(cond, bson.D{{"_id", operator.Regex(fmt.Sprintf(".*%s.*", req.Q), "i")}})
+		cond = append(cond, bson.D{{"_id", operator.Regex(req.Q, "i")}})
 	}
 	return mongo.Pipeline{
 		operator.Match("$or", cond),
