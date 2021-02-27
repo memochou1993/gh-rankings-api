@@ -43,6 +43,6 @@ APP_ENV=local go run main.go
 
 ## Contributors
 
-<a href="https://github.com/memochou1993/gh-rankings-ui/graphs/contributors">
+<a href="https://github.com/memochou1993/gh-rankings/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=memochou1993/gh-rankings" />
 </a>
