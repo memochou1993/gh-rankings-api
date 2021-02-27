@@ -5,7 +5,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/pipeline/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 func SearchRanks(req *request.Rank) mongo.Pipeline {
@@ -45,7 +44,6 @@ func ListRanks(req *request.Rank) mongo.Pipeline {
 	if req.Location != "" {
 		cond = append(cond, bson.D{{"location", req.Location}})
 	}
-	log.Println(50, cond)
 	return mongo.Pipeline{
 		operator.Match("$and", cond),
 		operator.Skip((req.Page - 1) * req.Limit),
