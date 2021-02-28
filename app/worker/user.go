@@ -8,6 +8,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
+	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"strconv"
@@ -41,7 +42,38 @@ func (u *User) Collect() error {
 		}
 	}
 
+	if err := u.Prepare(); err != nil {
+		return err
+	}
+
 	return u.Travel()
+}
+
+func (u *User) Prepare() error {
+	for _, user := range resource.SpecifiedUsers {
+		var users []model.User
+		u.SearchQuery.SearchArguments.SetQuery(query.SearchSpecifiedUser(user.Login))
+		logger.Debug(fmt.Sprintf("User Query: %s", u.SearchQuery.SearchArguments.Query))
+		if err := u.Fetch(&users); err != nil {
+			return err
+		}
+
+		if res := u.UserModel.Store(users); res != nil {
+			if res.ModifiedCount > 0 {
+				logger.Success(fmt.Sprintf("Updated %d users!", res.ModifiedCount))
+			}
+			if res.UpsertedCount > 0 {
+				logger.Success(fmt.Sprintf("Inserted %d users!", res.UpsertedCount))
+			}
+		}
+		for _, user := range users {
+			if err := u.Update(user); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (u *User) Travel() error {

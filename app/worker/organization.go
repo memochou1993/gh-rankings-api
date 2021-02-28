@@ -8,6 +8,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/pipeline"
 	"github.com/memochou1993/gh-rankings/app/query"
+	"github.com/memochou1993/gh-rankings/app/resource"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
 	"strconv"
@@ -40,7 +41,38 @@ func (o *Organization) Collect() error {
 		}
 	}
 
+	if err := o.Prepare(); err != nil {
+		return err
+	}
+
 	return o.Travel()
+}
+
+func (o *Organization) Prepare() error {
+	for _, organization := range resource.SpecifiedOrganizations {
+		var organizations []model.Organization
+		o.SearchQuery.SearchArguments.SetQuery(query.SearchSpecifiedOrganization(organization.Login))
+		logger.Debug(fmt.Sprintf("Organization Query: %s", o.SearchQuery.SearchArguments.Query))
+		if err := o.Fetch(&organizations); err != nil {
+			return err
+		}
+
+		if res := o.OrganizationModel.Store(organizations); res != nil {
+			if res.ModifiedCount > 0 {
+				logger.Success(fmt.Sprintf("Updated %d organizations!", res.ModifiedCount))
+			}
+			if res.UpsertedCount > 0 {
+				logger.Success(fmt.Sprintf("Inserted %d organizations!", res.UpsertedCount))
+			}
+		}
+		for _, organization := range organizations {
+			if err := o.Update(organization); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (o *Organization) Travel() error {

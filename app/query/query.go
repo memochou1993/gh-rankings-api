@@ -73,10 +73,12 @@ type SearchQuery struct {
 	Created   string `json:"created,omitempty"`
 	Followers string `json:"followers,omitempty"`
 	Fork      string `json:"fork,omitempty"`
+	Org       string `json:"org,omitempty"`
 	Repos     string `json:"repos,omitempty"`
 	Sort      string `json:"sort,omitempty"`
 	Stars     string `json:"stars,omitempty"`
 	Type      string `json:"type,omitempty"`
+	User      string `json:"user,omitempty"`
 }
 
 func (s SearchQuery) String() string {
@@ -136,6 +138,18 @@ func Repositories() *Query {
 			First: 100,
 			Type:  "REPOSITORY",
 		},
+	}
+}
+
+func SearchSpecifiedUser(login string) *SearchQuery {
+	return &SearchQuery{
+		User: login,
+	}
+}
+
+func SearchSpecifiedOrganization(login string) *SearchQuery {
+	return &SearchQuery{
+		Org: login,
 	}
 }
 

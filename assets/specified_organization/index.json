@@ -1,0 +1,44 @@
+[
+  {
+    "login": "30-seconds"
+  },
+  {
+    "login": "apache"
+  },
+  {
+    "login": "azure"
+  },
+  {
+    "login": "django"
+  },
+  {
+    "login": "FortAwesome"
+  },
+  {
+    "login": "google"
+  },
+  {
+    "login": "jenkinsci"
+  },
+  {
+    "login": "microsoft"
+  },
+  {
+    "login": "moby"
+  },
+  {
+    "login": "mui-org"
+  },
+  {
+    "login": "ohmyzsh"
+  },
+  {
+    "login": "ossu"
+  },
+  {
+    "login": "pallets"
+  },
+  {
+    "login": "redis"
+  }
+]

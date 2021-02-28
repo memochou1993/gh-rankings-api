@@ -10,9 +10,15 @@ import (
 )
 
 var (
-	Languages []Language
-	Locations []Location
+	SpecifiedOrganizations []SpecifiedOwner
+	SpecifiedUsers         []SpecifiedOwner
+	Languages              []Language
+	Locations              []Location
 )
+
+type SpecifiedOwner struct {
+	Login string
+}
 
 type Language struct {
 	Name string
@@ -38,6 +44,8 @@ func (l Location) isUnique() bool {
 }
 
 func init() {
+	read("specified_organization", &SpecifiedOrganizations)
+	read("specified_user", &SpecifiedUsers)
 	read("language", &Languages)
 	read("location", &Locations)
 }
