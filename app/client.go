@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/memochou1993/gh-rankings/logger"
 	"github.com/spf13/viper"
 	"io"
 	"log"
@@ -31,7 +31,7 @@ func Fetch(ctx context.Context, q string, v interface{}) error {
 	}
 	defer CloseBody(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		logger.Warning(fmt.Sprintf("Request failed with status code %d", resp.StatusCode))
+		return errors.New(fmt.Sprintf("Request failed with status code %d", resp.StatusCode))
 	}
 	return json.NewDecoder(resp.Body).Decode(v)
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/memochou1993/gh-rankings/app/query"
 	"github.com/memochou1993/gh-rankings/app/response"
 	"github.com/memochou1993/gh-rankings/logger"
-	"os"
 	"strconv"
 	"time"
 )
@@ -180,11 +179,7 @@ func (u *User) Rank() {
 }
 
 func (u *User) query(q query.Query, res *response.User) (err error) {
-	if err = app.Fetch(context.Background(), fmt.Sprint(q), res); err != nil {
-		if !os.IsTimeout(err) {
-			return err
-		}
-	}
+	err = app.Fetch(context.Background(), fmt.Sprint(q), res)
 	if res.Message != "" {
 		err = errors.New(res.Message)
 		res.Message = ""
