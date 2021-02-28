@@ -1,6 +1,5 @@
 package handler
 
-import "C"
 import (
 	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
