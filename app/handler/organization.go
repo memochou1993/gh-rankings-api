@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/patrickmn/go-cache"
 	"net/http"
 )
 
@@ -21,7 +23,12 @@ func ListOrganizations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	organizations := organizationModel.List(req)
+	cacheKey := fmt.Sprint(req)
+	organizations, found := app.Cache.Get(cacheKey)
+	if !found {
+		organizations = organizationModel.List(req)
+		app.Cache.Set(cacheKey, &organizations, cache.DefaultExpiration)
+	}
 
 	response(w, http.StatusOK, Payload{Data: organizations})
 }

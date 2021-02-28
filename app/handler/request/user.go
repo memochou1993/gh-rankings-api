@@ -1,6 +1,7 @@
 package request
 
 import (
+	"github.com/memochou1993/gh-rankings/util"
 	"net/http"
 	"strconv"
 )
@@ -9,6 +10,10 @@ type User struct {
 	Q     string `json:"q" validate:"omitempty"`
 	Page  int64  `json:"page" validate:"omitempty,numeric"`
 	Limit int64  `json:"limit" validate:"omitempty,numeric"`
+}
+
+func (u *User) String() string {
+	return util.ParseStruct(u, ",")
 }
 
 func NewUserRequest(r *http.Request) (req *User, err error) {

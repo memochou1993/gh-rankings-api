@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/patrickmn/go-cache"
 	"net/http"
 )
 
@@ -21,7 +23,12 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users := userModel.List(req)
+	cacheKey := fmt.Sprint(req)
+	users, found := app.Cache.Get(cacheKey)
+	if !found {
+		users = userModel.List(req)
+		app.Cache.Set(cacheKey, &users, cache.DefaultExpiration)
+	}
 
 	response(w, http.StatusOK, Payload{Data: users})
 }

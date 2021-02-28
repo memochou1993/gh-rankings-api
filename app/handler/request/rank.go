@@ -1,6 +1,7 @@
 package request
 
 import (
+	"github.com/memochou1993/gh-rankings/util"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,6 +16,10 @@ type Rank struct {
 	Page       int64  `json:"page" validate:"omitempty,numeric"`
 	Limit      int64  `json:"limit" validate:"omitempty,numeric"`
 	Timestamps []time.Time
+}
+
+func (r *Rank) String() string {
+	return util.ParseStruct(r, ",")
 }
 
 func NewRankRequest(r *http.Request) (req *Rank, err error) {

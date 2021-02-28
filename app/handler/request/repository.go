@@ -1,6 +1,7 @@
 package request
 
 import (
+	"github.com/memochou1993/gh-rankings/util"
 	"net/http"
 	"strconv"
 )
@@ -9,6 +10,10 @@ type Repository struct {
 	Q     string `json:"q" validate:"omitempty"`
 	Page  int64  `json:"page" validate:"omitempty,numeric"`
 	Limit int64  `json:"limit" validate:"omitempty,numeric"`
+}
+
+func (r *Repository) String() string {
+	return util.ParseStruct(r, ",")
 }
 
 func NewRepositoryRequest(r *http.Request) (req *Repository, err error) {

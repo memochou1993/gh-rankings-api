@@ -1,10 +1,13 @@
 package handler
 
+import "C"
 import (
+	"fmt"
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
 	"github.com/memochou1993/gh-rankings/app/worker"
+	"github.com/patrickmn/go-cache"
 	"net/http"
 )
 
@@ -34,7 +37,12 @@ func ListRanks(w http.ResponseWriter, r *http.Request) {
 		req.Timestamps = append(req.Timestamps, worker.RepositoryWorker.Timestamp)
 	}
 
-	ranks := rankModel.List(req)
+	cacheKey := fmt.Sprint(req)
+	ranks, found := app.Cache.Get(cacheKey)
+	if !found {
+		ranks = rankModel.List(req)
+		app.Cache.Set(cacheKey, &ranks, cache.DefaultExpiration)
+	}
 
 	response(w, http.StatusOK, Payload{Data: ranks})
 }

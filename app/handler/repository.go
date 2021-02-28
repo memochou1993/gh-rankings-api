@@ -6,6 +6,7 @@ import (
 	"github.com/memochou1993/gh-rankings/app"
 	"github.com/memochou1993/gh-rankings/app/handler/request"
 	"github.com/memochou1993/gh-rankings/app/model"
+	"github.com/patrickmn/go-cache"
 	"net/http"
 )
 
@@ -22,7 +23,12 @@ func ListRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories := repositoryModel.List(req)
+	cacheKey := fmt.Sprint(req)
+	repositories, found := app.Cache.Get(cacheKey)
+	if !found {
+		repositories = repositoryModel.List(req)
+		app.Cache.Set(cacheKey, &repositories, cache.DefaultExpiration)
+	}
 
 	response(w, http.StatusOK, Payload{Data: repositories})
 }
