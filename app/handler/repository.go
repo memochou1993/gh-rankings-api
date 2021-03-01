@@ -23,27 +23,32 @@ func ListRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cacheKey := fmt.Sprint(req)
-	repositories, found := app.Cache.Get(cacheKey)
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeRepository, fmt.Sprint(req))
+	items, found := app.Cache.Get(cacheKey)
 	if !found {
-		repositories = repositoryModel.List(req)
-		app.Cache.Set(cacheKey, &repositories, cache.DefaultExpiration)
+		items = repositoryModel.List(req)
+		app.Cache.Set(cacheKey, &items, cache.DefaultExpiration)
 	}
 
-	response(w, http.StatusOK, Payload{Data: repositories})
+	response(w, http.StatusOK, Payload{Data: items})
 }
 
 func ShowRepository(w http.ResponseWriter, r *http.Request) {
 	defer app.CloseBody(r.Body)
 
-	owner := mux.Vars(r)["owner"]
-	name := mux.Vars(r)["name"]
+	id := fmt.Sprintf("%s/%s", mux.Vars(r)["owner"], mux.Vars(r)["name"])
 
-	repository := repositoryModel.FindByName(fmt.Sprintf("%s/%s", owner, name))
-	if repository.ID() == "" {
-		response(w, http.StatusNotFound, Payload{Data: nil})
-		return
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeRepository, id)
+	item, found := app.Cache.Get(cacheKey)
+	if !found {
+		repository := repositoryModel.FindByID(id)
+		if repository.ID() == "" {
+			response(w, http.StatusNotFound, Payload{Data: nil})
+			return
+		}
+		app.Cache.Set(cacheKey, &repository, cache.DefaultExpiration)
+		item = repository
 	}
 
-	response(w, http.StatusOK, Payload{Data: repository})
+	response(w, http.StatusOK, Payload{Data: item})
 }

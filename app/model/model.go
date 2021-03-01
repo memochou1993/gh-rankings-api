@@ -33,8 +33,8 @@ func (m *Model) List(filter bson.D, v interface{}) {
 	}
 }
 
-func (m *Model) FindByName(name string, v interface{}) {
-	res := database.FindOne(m.Name(), bson.D{{"_id", name}})
+func (m *Model) FindByID(id string, v interface{}) {
+	res := database.FindOne(m.Name(), bson.D{{"_id", id}})
 	if err := res.Decode(v); err != nil && err != mongo.ErrNoDocuments {
 		log.Fatal(err.Error())
 	}

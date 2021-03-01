@@ -23,26 +23,32 @@ func ListOrganizations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cacheKey := fmt.Sprint(req)
-	organizations, found := app.Cache.Get(cacheKey)
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeOrganization, fmt.Sprint(req))
+	items, found := app.Cache.Get(cacheKey)
 	if !found {
-		organizations = organizationModel.List(req)
-		app.Cache.Set(cacheKey, &organizations, cache.DefaultExpiration)
+		items = organizationModel.List(req)
+		app.Cache.Set(cacheKey, &items, cache.DefaultExpiration)
 	}
 
-	response(w, http.StatusOK, Payload{Data: organizations})
+	response(w, http.StatusOK, Payload{Data: items})
 }
 
 func ShowOrganization(w http.ResponseWriter, r *http.Request) {
 	defer app.CloseBody(r.Body)
 
-	name := mux.Vars(r)["name"]
+	id := mux.Vars(r)["login"]
 
-	organization := organizationModel.FindByName(name)
-	if organization.ID() == "" {
-		response(w, http.StatusNotFound, Payload{Data: nil})
-		return
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeOrganization, id)
+	item, found := app.Cache.Get(cacheKey)
+	if !found {
+		organization := organizationModel.FindByID(id)
+		if organization.ID() == "" {
+			response(w, http.StatusNotFound, Payload{Data: nil})
+			return
+		}
+		app.Cache.Set(cacheKey, &organization, cache.DefaultExpiration)
+		item = organization
 	}
 
-	response(w, http.StatusOK, Payload{Data: organization})
+	response(w, http.StatusOK, Payload{Data: item})
 }

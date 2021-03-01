@@ -53,8 +53,8 @@ func (r *RepositoryModel) List(req *request.Repository) (repositories []Reposito
 	return
 }
 
-func (r *RepositoryModel) FindByName(name string) (repository Repository) {
-	r.Model.FindByName(name, &repository)
+func (r *RepositoryModel) FindByID(id string) (repository Repository) {
+	r.Model.FindByID(id, &repository)
 	return
 }
 

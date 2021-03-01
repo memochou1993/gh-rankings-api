@@ -55,8 +55,8 @@ func (u *UserModel) List(req *request.User) (users []User) {
 	return
 }
 
-func (u *UserModel) FindByName(name string) (user User) {
-	u.Model.FindByName(name, &user)
+func (u *UserModel) FindByID(id string) (user User) {
+	u.Model.FindByID(id, &user)
 	return
 }
 

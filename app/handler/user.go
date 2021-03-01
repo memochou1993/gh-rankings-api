@@ -23,26 +23,32 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cacheKey := fmt.Sprint(req)
-	users, found := app.Cache.Get(cacheKey)
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeUser, fmt.Sprint(req))
+	items, found := app.Cache.Get(cacheKey)
 	if !found {
-		users = userModel.List(req)
-		app.Cache.Set(cacheKey, &users, cache.DefaultExpiration)
+		items = userModel.List(req)
+		app.Cache.Set(cacheKey, &items, cache.DefaultExpiration)
 	}
 
-	response(w, http.StatusOK, Payload{Data: users})
+	response(w, http.StatusOK, Payload{Data: items})
 }
 
 func ShowUser(w http.ResponseWriter, r *http.Request) {
 	defer app.CloseBody(r.Body)
 
-	name := mux.Vars(r)["name"]
+	id := mux.Vars(r)["login"]
 
-	user := userModel.FindByName(name)
-	if user.ID() == "" {
-		response(w, http.StatusNotFound, Payload{Data: nil})
-		return
+	cacheKey := fmt.Sprintf("%s:%s", app.TypeUser, id)
+	item, found := app.Cache.Get(cacheKey)
+	if !found {
+		user := userModel.FindByID(id)
+		if user.ID() == "" {
+			response(w, http.StatusNotFound, Payload{Data: nil})
+			return
+		}
+		app.Cache.Set(cacheKey, &user, cache.DefaultExpiration)
+		item = user
 	}
 
-	response(w, http.StatusOK, Payload{Data: user})
+	response(w, http.StatusOK, Payload{Data: item})
 }

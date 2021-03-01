@@ -52,8 +52,8 @@ func (o *OrganizationModel) List(req *request.Organization) (organizations []Org
 	return
 }
 
-func (o *OrganizationModel) FindByName(name string) (organization Organization) {
-	o.Model.FindByName(name, &organization)
+func (o *OrganizationModel) FindByID(id string) (organization Organization) {
+	o.Model.FindByID(id, &organization)
 	return
 }
 
